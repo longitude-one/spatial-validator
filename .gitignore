@@ -1,0 +1,10 @@
+/vendor/
+/quality/*/vendor/
+/node_modules/
+/.phpunit-cache/
+/.php-cs-fixer.cache
+/quality/php-cs-fixer/.php-cs-fixer.cache
+/.phpcs-cache
+/build/
+composer.lock
+package-lock.json

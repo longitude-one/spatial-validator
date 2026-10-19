@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ruleset name="Spatial Validator">
+    <description>PSR-12 source and test coding rules.</description>
+    <file>../../lib</file>
+    <file>../../tests</file>
+    <arg name="extensions" value="php"/>
+    <rule ref="PSR12"/>
+</ruleset>
