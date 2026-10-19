@@ -1,0 +1,12 @@
+{
+    "name": "longitude-one/spatial-validator-php-mess-detector",
+    "description": "Isolated development tooling.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "phpmd/phpmd": "^3.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

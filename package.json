@@ -1,0 +1,13 @@
+{
+  "name": "spatial-validator-quality",
+  "private": true,
+  "scripts": {
+    "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#vendor/**\" \"#quality/**/vendor/**\" \"#node_modules/**\"",
+    "release": "commit-and-tag-version"
+  },
+  "devDependencies": {
+    "commit-and-tag-version": "^13.3.0",
+    "markdownlint-cli2": "^0.23.3"
+  },
+  "version": "0.0.0"
+}

@@ -1,0 +1,77 @@
+{
+    "name": "longitude-one/spatial-validator",
+    "description": "Geometric validation for LongitudeOne spatial types using Symfony Validator.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "symfony/validator": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13",
+        "ext-pcov": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "LongitudeOne\\SpatialValidator\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LongitudeOne\\SpatialValidator\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "install-tools": [
+            "composer install --working-dir=quality/php-cs-fixer",
+            "composer install --working-dir=quality/php-stan",
+            "composer install --working-dir=quality/php-mess-detector",
+            "composer install --working-dir=quality/php-code-sniffer"
+        ],
+        "test": "phpunit",
+        "coverage": "@php -d pcov.enabled=1 -d pcov.directory=lib vendor/bin/phpunit --coverage-text=build/coverage.txt --coverage-clover=build/clover.xml --coverage-html=build/coverage",
+        "coverage-check": "@php tools/check-coverage.php",
+        "cs-check": "quality/php-cs-fixer/vendor/bin/php-cs-fixer fix --config=quality/php-cs-fixer/.php-cs-fixer.php --dry-run --diff",
+        "cs-fix": "quality/php-cs-fixer/vendor/bin/php-cs-fixer fix --config=quality/php-cs-fixer/.php-cs-fixer.php",
+        "phpstan": "quality/php-stan/vendor/bin/phpstan analyse -c quality/php-stan/php-stan.neon",
+        "phpmd": [
+            "quality/php-mess-detector/vendor/bin/phpmd analyze lib --format text --ruleset quality/php-mess-detector/ruleset.xml",
+            "quality/php-mess-detector/vendor/bin/phpmd analyze tests --format text --ruleset quality/php-mess-detector/test-ruleset.xml"
+        ],
+        "phpcs": "quality/php-code-sniffer/vendor/bin/phpcs --standard=quality/php-code-sniffer/phpcs.xml",
+        "markdown": "npm run lint:markdown",
+        "quality": [
+            "@cs-check",
+            "@phpstan",
+            "@phpmd",
+            "@phpcs",
+            "@markdown"
+        ],
+        "check": [
+            "@composer validate --strict",
+            "@test",
+            "@coverage",
+            "@coverage-check",
+            "@quality"
+        ]
+    },
+    "keywords": [
+        "validation",
+        "validator",
+        "symfony",
+        "spatial",
+        "geometry",
+        "geography",
+        "gis"
+    ],
+    "authors": [
+        {
+            "name": "Alexandre Tranchant",
+            "email": "alexandre.tranchant@gmail.com",
+            "role": "Lead maintainer"
+        }
+    ]
+}

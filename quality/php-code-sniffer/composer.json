@@ -1,0 +1,12 @@
+{
+    "name": "longitude-one/spatial-validator-php-code-sniffer",
+    "description": "Isolated development tooling.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "squizlabs/php_codesniffer": "^4.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
