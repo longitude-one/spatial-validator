@@ -52,10 +52,18 @@
         ],
         "check": [
             "@composer validate --strict",
+            "@audit-dependencies",
             "@test",
             "@coverage",
             "@coverage-check",
             "@quality"
+        ],
+        "audit-dependencies": [
+            "@composer audit",
+            "@composer audit --working-dir=quality/php-cs-fixer",
+            "@composer audit --working-dir=quality/php-stan",
+            "@composer audit --working-dir=quality/php-mess-detector",
+            "@composer audit --working-dir=quality/php-code-sniffer"
         ]
     },
     "keywords": [
