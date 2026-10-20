@@ -55,7 +55,6 @@
         "check": [
             "@composer validate --strict",
             "@audit-dependencies",
-            "@test",
             "@coverage",
             "@coverage-check",
             "@quality"
