@@ -8,4 +8,4 @@ Run `composer cs-fix` to apply coding style fixes; CI uses the non-mutating `com
 Do not commit dependencies, caches or generated reports. Lockfiles remain local and are ignored.
 
 Changes require independent review. Public API, architectural, breaking and unresolved normative decisions require
-approval from the project's technical architect. Do not treat the temporary tooling constraint as a stable API.
+approval from the project's technical architect.

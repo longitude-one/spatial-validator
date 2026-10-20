@@ -4,6 +4,8 @@
     "type": "library",
     "license": "MIT",
     "require": {
+        "longitude-one/spatial-core": "^1.3",
+        "longitude-one/spatial-types": "^1.0@beta",
         "php": "^8.4",
         "symfony/validator": "^5.4 || ^6.0 || ^7.0 || ^8.0"
     },
