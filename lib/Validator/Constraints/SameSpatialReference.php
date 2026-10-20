@@ -28,7 +28,7 @@ final class SameSpatialReference extends Constraint
     /**
      * @param SpatialReference $reference Required spatial reference
      * @param string           $member    Member type for the violation message
-     * @param string[]|null    $groups    Validation groups
+     * @param null|string[]    $groups    Validation groups
      * @param mixed            $payload   Constraint payload
      */
     public function __construct(

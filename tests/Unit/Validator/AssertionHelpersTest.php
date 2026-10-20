@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * This file is part of the spatial project.
+ *
+ * PHP 8.4 | 8.5
+ *
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
+ * Copyright Longitude One 2024-2026
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Tests\Unit\Validator;
@@ -21,15 +33,13 @@ use LongitudeOne\SpatialValidator\Validator\RingValidation;
 use LongitudeOne\SpatialValidator\Validator\SpatialReferenceValidation;
 use LongitudeOne\SpatialValidator\Validator\TriangleValidation;
 
-/** @internal */
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class AssertionHelpersTest extends SpatialCandidates
 {
-    public function testDimensionSuccess(): void
-    {
-        DimensionValidation::assertSame(CoordinateDimensionEnum::XY, new Point(1, 2), 'dimension');
-        $this->addToAssertionCount(1);
-    }
-
     public function testDimensionException(): void
     {
         $this->expectException(InvalidDimensionException::class);
@@ -37,9 +47,9 @@ final class AssertionHelpersTest extends SpatialCandidates
         DimensionValidation::assertSame(CoordinateDimensionEnum::XYZ, new Point(1, 2), 'dimension');
     }
 
-    public function testFamilySuccess(): void
+    public function testDimensionSuccess(): void
     {
-        FamilyValidation::assertSame(SpatialModelEnum::GEOMETRY, new Point(1, 2), 'family');
+        DimensionValidation::assertSame(CoordinateDimensionEnum::XY, new Point(1, 2), 'dimension');
         $this->addToAssertionCount(1);
     }
 
@@ -50,9 +60,22 @@ final class AssertionHelpersTest extends SpatialCandidates
         FamilyValidation::assertSame(SpatialModelEnum::GEOGRAPHY, new Point(1, 2), 'family');
     }
 
-    public function testReferenceSuccess(): void
+    public function testFamilySuccess(): void
     {
-        SpatialReferenceValidation::assertSame(SpatialReference::fromSrid(4326), new Point(1, 2, 4326), 'point');
+        FamilyValidation::assertSame(SpatialModelEnum::GEOMETRY, new Point(1, 2), 'family');
+        $this->addToAssertionCount(1);
+    }
+
+    public function testLineException(): void
+    {
+        $this->expectException(InvalidValueException::class);
+        $this->expectExceptionMessage('A line string must not contain consecutive duplicate points.');
+        LineStringValidation::assertNoConsecutiveDuplicatePoints($this->lineCandidate([[0, 0, 0], [0, 0, 0]]));
+    }
+
+    public function testLineSuccess(): void
+    {
+        LineStringValidation::assertNoConsecutiveDuplicatePoints($this->lineCandidate([[0, 0, 0], [1, 0, 0]]));
         $this->addToAssertionCount(1);
     }
 
@@ -64,22 +87,9 @@ final class AssertionHelpersTest extends SpatialCandidates
         SpatialReferenceValidation::assertSame(SpatialReference::fromSrid(4326), new Point(1, 2), 'point');
     }
 
-    public function testLineSuccess(): void
+    public function testReferenceSuccess(): void
     {
-        LineStringValidation::assertNoConsecutiveDuplicatePoints($this->lineCandidate([[0, 0, 0], [1, 0, 0]]));
-        $this->addToAssertionCount(1);
-    }
-
-    public function testLineException(): void
-    {
-        $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A line string must not contain consecutive duplicate points.');
-        LineStringValidation::assertNoConsecutiveDuplicatePoints($this->lineCandidate([[0, 0, 0], [0, 0, 0]]));
-    }
-
-    public function testRingSuccess(): void
-    {
-        RingValidation::assertValid($this->lineCandidate([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 0]]));
+        SpatialReferenceValidation::assertSame(SpatialReference::fromSrid(4326), new Point(1, 2, 4326), 'point');
         $this->addToAssertionCount(1);
     }
 
@@ -90,9 +100,23 @@ final class AssertionHelpersTest extends SpatialCandidates
         RingValidation::assertValid($this->lineCandidate([]));
     }
 
-    public function testTriangleSuccess(): void
+    public function testRingSuccess(): void
     {
-        TriangleValidation::assertValid($this->polygonCandidate([]));
+        RingValidation::assertValid($this->lineCandidate([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 0]]));
+        $this->addToAssertionCount(1);
+    }
+
+    public function testSurfaceException(): void
+    {
+        $this->expectException(InvalidValueException::class);
+        $this->expectExceptionMessage('A polyhedral surface must have connected, consistently oriented 3D patches '
+            . 'with at most two faces along each edge.');
+        PolyhedralSurfaceValidation::assertValid($this->surfaceCandidate([[]]));
+    }
+
+    public function testSurfaceSuccess(): void
+    {
+        PolyhedralSurfaceValidation::assertValid($this->surfaceCandidate([]));
         $this->addToAssertionCount(1);
     }
 
@@ -103,17 +127,9 @@ final class AssertionHelpersTest extends SpatialCandidates
         TriangleValidation::assertValid($this->polygonCandidate([[[0, 0, 0], [1, 0, 0], [0, 0, 0]]]));
     }
 
-    public function testSurfaceSuccess(): void
+    public function testTriangleSuccess(): void
     {
-        PolyhedralSurfaceValidation::assertValid($this->surfaceCandidate([]));
+        TriangleValidation::assertValid($this->polygonCandidate([]));
         $this->addToAssertionCount(1);
-    }
-
-    public function testSurfaceException(): void
-    {
-        $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A polyhedral surface must have connected, consistently oriented 3D patches '
-            . 'with at most two faces along each edge.');
-        PolyhedralSurfaceValidation::assertValid($this->surfaceCandidate([[]]));
     }
 }

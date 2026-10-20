@@ -25,7 +25,7 @@ final class SameDimension extends Constraint
     /**
      * @param CoordinateDimensionEnum $dimension Required coordinate dimension
      * @param string                  $message   Violation message
-     * @param string[]|null           $groups    Validation groups
+     * @param null|string[]           $groups    Validation groups
      * @param mixed                   $payload   Constraint payload
      */
     public function __construct(

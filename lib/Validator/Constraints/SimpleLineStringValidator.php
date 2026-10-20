@@ -26,6 +26,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Validates the two-dimensional simplicity of a line string. */
 final class SimpleLineStringValidator extends ConstraintValidator
 {
+    /** Determine whether signed areas lie on opposite sides of a segment. */
+    private static function oppositeSigns(float $first, float $second): bool
+    {
+        return 0.0 < $first && 0.0 > $second || 0.0 > $first && 0.0 < $second;
+    }
+
     /**
      * Validate that non-neighbouring segments do not meet.
      *
@@ -192,12 +198,6 @@ final class SimpleLineStringValidator extends ConstraintValidator
             || $this->touchesSegment($firstEndOrientation, $firstStart, $firstEnd, $secondEnd)
             || $this->touchesSegment($secondStartOrientation, $secondStart, $secondEnd, $firstStart)
             || $this->touchesSegment($secondEndOrientation, $secondStart, $secondEnd, $firstEnd);
-    }
-
-    /** Determine whether signed areas lie on opposite sides of a segment. */
-    private static function oppositeSigns(float $first, float $second): bool
-    {
-        return 0.0 < $first && 0.0 > $second || 0.0 > $first && 0.0 < $second;
     }
 
     /** Check a collinear endpoint against the closed segment. */

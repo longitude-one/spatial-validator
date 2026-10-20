@@ -43,6 +43,7 @@ final class DimensionValidation
         $violations = Validation::createValidator()->validate($spatial, new SameDimension($dimension, $message));
         if (0 !== count($violations)) {
             $message = DiagnosticValueFormatter::format((string) $violations->get(0)->getMessage());
+
             throw new InvalidDimensionException($message);
         }
     }
