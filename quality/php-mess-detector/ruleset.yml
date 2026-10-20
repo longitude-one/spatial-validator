@@ -1,0 +1,12 @@
+# PHPMD configuration, see https://phpmd.org/documentation/creating-a-ruleset.html
+name: 'Spatial Validator source'
+description: 'All PHPMD rules: clean code, code size, controversial, design, naming and unused code.'
+rules:
+  - ref: rulesets/cleancode.xml
+    exclude:
+      - StaticAccess
+  - ref: rulesets/codesize.xml
+  - ref: rulesets/controversial.xml
+  - ref: rulesets/design.xml
+  - ref: rulesets/naming.xml
+  - ref: rulesets/unusedcode.xml

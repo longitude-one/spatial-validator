@@ -182,22 +182,22 @@ final class SimpleLineStringValidator extends ConstraintValidator
         PointInterface $secondStart,
         PointInterface $secondEnd,
     ): bool {
-        $firstStartOrientation = $this->orientation($firstStart, $firstEnd, $secondStart);
-        $firstEndOrientation = $this->orientation($firstStart, $firstEnd, $secondEnd);
-        $secondStartOrientation = $this->orientation($secondStart, $secondEnd, $firstStart);
-        $secondEndOrientation = $this->orientation($secondStart, $secondEnd, $firstEnd);
+        $firstStartSide = $this->orientation($firstStart, $firstEnd, $secondStart);
+        $firstEndSide = $this->orientation($firstStart, $firstEnd, $secondEnd);
+        $secondStartSide = $this->orientation($secondStart, $secondEnd, $firstStart);
+        $secondEndSide = $this->orientation($secondStart, $secondEnd, $firstEnd);
 
         if (
-            self::oppositeSigns($firstStartOrientation, $firstEndOrientation)
-            && self::oppositeSigns($secondStartOrientation, $secondEndOrientation)
+            self::oppositeSigns($firstStartSide, $firstEndSide)
+            && self::oppositeSigns($secondStartSide, $secondEndSide)
         ) {
             return true;
         }
 
-        return $this->touchesSegment($firstStartOrientation, $firstStart, $firstEnd, $secondStart)
-            || $this->touchesSegment($firstEndOrientation, $firstStart, $firstEnd, $secondEnd)
-            || $this->touchesSegment($secondStartOrientation, $secondStart, $secondEnd, $firstStart)
-            || $this->touchesSegment($secondEndOrientation, $secondStart, $secondEnd, $firstEnd);
+        return $this->touchesSegment($firstStartSide, $firstStart, $firstEnd, $secondStart)
+            || $this->touchesSegment($firstEndSide, $firstStart, $firstEnd, $secondEnd)
+            || $this->touchesSegment($secondStartSide, $secondStart, $secondEnd, $firstStart)
+            || $this->touchesSegment($secondEndSide, $secondStart, $secondEnd, $firstEnd);
     }
 
     /** Check a collinear endpoint against the closed segment. */

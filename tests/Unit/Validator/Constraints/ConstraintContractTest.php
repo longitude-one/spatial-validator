@@ -87,7 +87,7 @@ final class ConstraintContractTest extends TestCase
     public function testThreeDimensionalConstraintRejectsMissingZ(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        (new Constraints\SimpleThreeDimensionalLineStringValidator())->validate(
+        (new Constraints\Simple3dLineStringValidator())->validate(
             new LineString([]),
             new Constraints\SimpleThreeDimensionalLineString()
         );
