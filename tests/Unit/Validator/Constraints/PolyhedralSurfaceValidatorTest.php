@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialValidator\Tests\Unit\Validator\Constraints;
 
 use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PolyhedralSurface;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PolyhedralSurface as PolyhedralSurface4zm;
 use LongitudeOne\SpatialValidator\Tests\Support\SpatialCandidates;
 use LongitudeOne\SpatialValidator\Validator\Constraints\PolyhedralSurface as SurfaceConstraint;
 use LongitudeOne\SpatialValidator\Validator\Constraints\PolyhedralSurfaceValidator;
@@ -110,7 +111,7 @@ class PolyhedralSurfaceValidatorTest extends SpatialCandidates
     /** Measures are not spatial coordinates of shared edges. */
     public function testDifferentMeasuresDoNotChangeAdjacency(): void
     {
-        $surface = new \LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PolyhedralSurface([
+        $surface = new PolyhedralSurface4zm([
             [[[0, 0, 0, 1], [2, 0, 0, 1], [0, 2, 0, 1], [0, 0, 0, 1]]],
             [[[2, 0, 0, 8], [0, 0, 0, 8], [0, 0, 2, 8], [2, 0, 0, 8]]],
         ]);

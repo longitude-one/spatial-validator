@@ -22,4 +22,9 @@ use Symfony\Component\Validator\Constraint;
 final class SimpleThreeDimensionalLineString extends Constraint
 {
     public string $message = 'A three-dimensional line string must not self-intersect, self-touch, or overlap.';
+
+    public function validatedBy(): string
+    {
+        return Simple3dLineStringValidator::class;
+    }
 }

@@ -26,6 +26,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Validates the two-dimensional simplicity of a line string. */
 final class SimpleLineStringValidator extends ConstraintValidator
 {
+    /** Determine whether signed areas lie on opposite sides of a segment. */
+    private static function oppositeSigns(float $first, float $second): bool
+    {
+        return 0.0 < $first && 0.0 > $second || 0.0 > $first && 0.0 < $second;
+    }
+
     /**
      * Validate that non-neighbouring segments do not meet.
      *
@@ -176,28 +182,22 @@ final class SimpleLineStringValidator extends ConstraintValidator
         PointInterface $secondStart,
         PointInterface $secondEnd,
     ): bool {
-        $firstStartOrientation = $this->orientation($firstStart, $firstEnd, $secondStart);
-        $firstEndOrientation = $this->orientation($firstStart, $firstEnd, $secondEnd);
-        $secondStartOrientation = $this->orientation($secondStart, $secondEnd, $firstStart);
-        $secondEndOrientation = $this->orientation($secondStart, $secondEnd, $firstEnd);
+        $firstStartSide = $this->orientation($firstStart, $firstEnd, $secondStart);
+        $firstEndSide = $this->orientation($firstStart, $firstEnd, $secondEnd);
+        $secondStartSide = $this->orientation($secondStart, $secondEnd, $firstStart);
+        $secondEndSide = $this->orientation($secondStart, $secondEnd, $firstEnd);
 
         if (
-            self::oppositeSigns($firstStartOrientation, $firstEndOrientation)
-            && self::oppositeSigns($secondStartOrientation, $secondEndOrientation)
+            self::oppositeSigns($firstStartSide, $firstEndSide)
+            && self::oppositeSigns($secondStartSide, $secondEndSide)
         ) {
             return true;
         }
 
-        return $this->touchesSegment($firstStartOrientation, $firstStart, $firstEnd, $secondStart)
-            || $this->touchesSegment($firstEndOrientation, $firstStart, $firstEnd, $secondEnd)
-            || $this->touchesSegment($secondStartOrientation, $secondStart, $secondEnd, $firstStart)
-            || $this->touchesSegment($secondEndOrientation, $secondStart, $secondEnd, $firstEnd);
-    }
-
-    /** Determine whether signed areas lie on opposite sides of a segment. */
-    private static function oppositeSigns(float $first, float $second): bool
-    {
-        return 0.0 < $first && 0.0 > $second || 0.0 > $first && 0.0 < $second;
+        return $this->touchesSegment($firstStartSide, $firstStart, $firstEnd, $secondStart)
+            || $this->touchesSegment($firstEndSide, $firstStart, $firstEnd, $secondEnd)
+            || $this->touchesSegment($secondStartSide, $secondStart, $secondEnd, $firstStart)
+            || $this->touchesSegment($secondEndSide, $secondStart, $secondEnd, $firstEnd);
     }
 
     /** Check a collinear endpoint against the closed segment. */

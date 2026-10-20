@@ -24,7 +24,7 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 /** Validates the three-dimensional simplicity of a line string. */
-final class SimpleThreeDimensionalLineStringValidator extends ConstraintValidator
+final class Simple3dLineStringValidator extends ConstraintValidator
 {
     /**
      * Validate that non-neighbouring segments do not meet in XYZ space.

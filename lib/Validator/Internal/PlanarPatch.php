@@ -78,6 +78,12 @@ final class PlanarPatch
         return true;
     }
 
+    /** @param Vector $position XYZ position */
+    private static function isFinite(array $position): bool
+    {
+        return is_finite($position[0]) && is_finite($position[1]) && is_finite($position[2]);
+    }
+
     /**
      * @param list<array{float, float, float}> $positions Ring positions
      *
@@ -108,11 +114,5 @@ final class PlanarPatch
     private static function subtract(array $first, array $second): array
     {
         return [$first[0] - $second[0], $first[1] - $second[1], $first[2] - $second[2]];
-    }
-
-    /** @param Vector $position XYZ position */
-    private static function isFinite(array $position): bool
-    {
-        return is_finite($position[0]) && is_finite($position[1]) && is_finite($position[2]);
     }
 }

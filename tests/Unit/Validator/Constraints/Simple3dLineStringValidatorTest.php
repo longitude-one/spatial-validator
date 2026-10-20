@@ -23,11 +23,11 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Validation;
 
 /**
- * @covers \LongitudeOne\SpatialValidator\Validator\Constraints\SimpleThreeDimensionalLineStringValidator
+ * @covers \LongitudeOne\SpatialValidator\Validator\Constraints\Simple3dLineStringValidator
  *
  * @internal
  */
-class SimpleThreeDimensionalLineStringValidatorTest extends TestCase
+class Simple3dLineStringValidatorTest extends TestCase
 {
     /** Test that crossing only in the XY projection remains simple in XYZ space. */
     public function testAcceptsSegmentsAtDifferentElevations(): void
