@@ -1,7 +1,7 @@
 # Spatial Validator
 
 Standalone Symfony validation for LongitudeOne spatial types. MIT licensed; requires PHP 8.4 or later within PHP 8.
-Symfony Validator 5.4, 6, 7 and 8 are supported. There is no dependency on `spatial-types`.
+Symfony Validator 5.4, 6, 7 and 8 are supported. `spatial-types` supplies the spatial objects and interfaces being validated.
 
 ## Installation
 
@@ -49,15 +49,22 @@ Read `build/coverage.txt`, `build/clover.xml`, or `build/coverage/index.html` af
 Markdown checks use `markdownlint-cli`. Transitive overrides select patched KaTeX, TOML and YAML
 versions until the CLI updates its own requirements; keep `npm audit` clean when updating these tools.
 
-## Temporary constraint
+## Explicit validation
 
-`LongitudeOne\SpatialValidator\Temporary\NonNegativeInteger` exists only to exercise the Symfony Validator engine
-and the quality pipeline. It accepts positive integers and zero and reports a violation for negative integers.
-Other types are rejected by the engine. It has no stable public API commitment.
+Use the transferred constraints with Symfony Validator:
 
-The temporary constraint, its validator and their tests will be removed in
-[Story 2 (#3)](https://github.com/longitude-one/spatial-validator/issues/3), when existing validators are transferred.
-No geometric validation or normative conformity is claimed by this scaffold.
+```php
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Ring;
+use Symfony\Component\Validator\Validation;
+
+$line = new LineString([[0, 0], [1, 0], [0, 1], [0, 0]]);
+$violations = Validation::createValidator()->validate($line, new Ring());
+```
+
+Constraints and assertion helpers live under `LongitudeOne\SpatialValidator\Validator`.
+The transferred rules retain their existing behavior, messages and exceptions.
+The companion `spatial-types` removal task makes functional validation an explicit consumer operation.
 
 ## Continuous integration
 

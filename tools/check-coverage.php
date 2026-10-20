@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-$report = simplexml_load_file(__DIR__.'/../build/clover.xml');
+$report = simplexml_load_file(__DIR__ . '/../build/clover.xml');
 if (false === $report) {
     fwrite(STDERR, "Cannot read the Clover coverage report.\n");
     exit(1);
