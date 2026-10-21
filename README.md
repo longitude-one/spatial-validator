@@ -84,3 +84,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
 `commit-and-tag-version` uses `.versionrc.json`, copied from `spatial-types`, for the `v` tag prefix
 and Conventional Commits changelog sections. See [CHANGELOG.md](CHANGELOG.md).
 Actual releases require the maintainer's authorization.
+
+## Input compatibility
+
+Spatial constraints now ignore PHP `null` and the empty string `''`. Compose them
+with Symfony `NotNull` or `NotBlank` when a value is required. EMPTY spatial
+objects still undergo the applicable geometric checks and specialized interface
+preconditions. Historical assertion helpers retain their existing contracts.
+
+A direct constraint-validator call throws Symfony `UnexpectedValueException` for
+an unsupported non-empty value; the Symfony Validator service converts it into a
+standard type violation. A wrong constraint always raises Symfony
+`UnexpectedTypeException`, even for `null` or `''`. No library input exception
+hierarchy is introduced, and dependency exceptions are not wrapped.
+
+This changes the previous rejection of `null` and `''`. Consumers relying on that
+rejection must add presence constraints. The release must explicitly account for
+this breaking input-policy change; merge and release approval remain with the
+maintainer.

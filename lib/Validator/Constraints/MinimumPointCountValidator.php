@@ -37,6 +37,10 @@ final class MinimumPointCountValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, MinimumPointCount::class);
         }
 
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof LineStringInterface) {
             throw new UnexpectedValueException($value, LineStringInterface::class);
         }

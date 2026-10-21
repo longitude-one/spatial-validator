@@ -38,6 +38,10 @@ final class SameSpatialReferenceValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, SameSpatialReference::class);
         }
 
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof SpatialInterface) {
             throw new UnexpectedValueException($value, SpatialInterface::class);
         }

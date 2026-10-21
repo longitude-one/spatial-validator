@@ -38,6 +38,10 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         if (!$constraint instanceof PolyhedralSurface) {
             throw new UnexpectedTypeException($constraint, PolyhedralSurface::class);
         }
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof PolyhedralSurfaceInterface) {
             throw new UnexpectedValueException($value, PolyhedralSurfaceInterface::class);
         }

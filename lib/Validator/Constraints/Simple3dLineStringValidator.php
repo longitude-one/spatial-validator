@@ -38,7 +38,15 @@ final class Simple3dLineStringValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, SimpleThreeDimensionalLineString::class);
         }
 
-        if (!$value instanceof LineStringInterface || !$value->hasZ()) {
+        if (null === $value || '' === $value) {
+            return;
+        }
+
+        if (!$value instanceof LineStringInterface) {
+            throw new UnexpectedValueException($value, LineStringInterface::class);
+        }
+
+        if (!$value->hasZ()) {
             throw new UnexpectedValueException($value, 'a line string with a Z ordinate');
         }
 

@@ -188,7 +188,7 @@ Un appel direct au validateur de contrainte laisse sortir cette exception.
 Aucune exception dédiée à ces entrées n’est ajoutée par la bibliothèque.
 
 Référence : [documentation officielle Symfony][symfony-input].
-Le code actuel rejette encore `null` et `''` : la story #10 doit l’aligner sur ce contrat.
+La story #10 applique ce contrat aux validateurs de contrainte existants.
 
 [story10]: https://github.com/longitude-one/spatial-validator/issues/10
 [symfony-input]: https://symfony.com/doc/7.4/validation/custom_constraint.html#creating-the-validator-itself

@@ -38,6 +38,10 @@ final class NoConsecutiveDuplicatePointsValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, NoConsecutiveDuplicatePoints::class);
         }
 
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof LineStringInterface) {
             throw new UnexpectedValueException($value, LineStringInterface::class);
         }
