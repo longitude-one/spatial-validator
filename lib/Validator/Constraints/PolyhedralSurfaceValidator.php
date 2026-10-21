@@ -50,11 +50,27 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
 
             return;
         }
+        if (!$this->validatePatches($value, $constraint)) {
+            return;
+        }
+        if (!PolyhedralSurfaceTopology::isValid($value->getPatches())) {
+            $this->context->buildViolation($constraint->message)->addViolation();
+        }
+    }
+
+    /**
+     * Validate each patch and its rings before checking the surface topology.
+     *
+     * @param PolyhedralSurfaceInterface $value      Surface to validate
+     * @param PolyhedralSurface          $constraint Applied constraint
+     */
+    private function validatePatches(PolyhedralSurfaceInterface $value, PolyhedralSurface $constraint): bool
+    {
         foreach ($value->getPatches() as $patch) {
             if ($patch->isEmpty() || !$patch->hasZ() || !PlanarPatch::isValid($patch)) {
                 $this->context->buildViolation($constraint->message)->addViolation();
 
-                return;
+                return false;
             }
             foreach ($patch->getRings() as $ring) {
                 $this->context->getValidator()->inContext($this->context)->validate(
@@ -64,8 +80,7 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
                 );
             }
         }
-        if (!PolyhedralSurfaceTopology::isValid($value->getPatches())) {
-            $this->context->buildViolation($constraint->message)->addViolation();
-        }
+
+        return true;
     }
 }
