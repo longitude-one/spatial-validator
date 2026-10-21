@@ -61,7 +61,7 @@ final class ConstraintContractTest extends TestCase
     public function testRejectsWrongValue(Constraint $constraint, string $validator): void
     {
         $this->expectException(UnexpectedValueException::class);
-        (new $validator())->validate(null, $constraint);
+        (new $validator())->validate(42, $constraint);
     }
 
     /** @return iterable<string, array{Constraint, class-string<ConstraintValidator>}> */

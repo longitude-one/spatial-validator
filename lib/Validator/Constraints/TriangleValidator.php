@@ -37,6 +37,10 @@ final class TriangleValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, Triangle::class);
         }
 
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof PolygonInterface) {
             throw new UnexpectedValueException($value, PolygonInterface::class);
         }

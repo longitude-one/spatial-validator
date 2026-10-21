@@ -139,6 +139,6 @@ class PolyhedralSurfaceValidatorTest extends SpatialCandidates
     public function testUnexpectedValue(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        (new PolyhedralSurfaceValidator())->validate(null, new SurfaceConstraint());
+        (new PolyhedralSurfaceValidator())->validate(42, new SurfaceConstraint());
     }
 }

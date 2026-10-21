@@ -37,6 +37,10 @@ final class SameDimensionValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, SameDimension::class);
         }
 
+        if (null === $value || '' === $value) {
+            return;
+        }
+
         if (!$value instanceof SpatialInterface) {
             throw new UnexpectedValueException($value, SpatialInterface::class);
         }

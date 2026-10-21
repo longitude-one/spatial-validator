@@ -1,0 +1,4 @@
+# Recompute PHPMD metrics instead of reusing the user-wide PDepend cache.
+pdepend:
+  cache:
+    driver: memory
