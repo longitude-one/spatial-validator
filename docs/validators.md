@@ -123,6 +123,8 @@ consecutive-position rule also rejects members that cannot supply a finite non-e
 
 Equality uses the approved coordinate formula and XYZ when Z exists, otherwise XY. Explicit simplicity uses
 exact binary orientation/coplanarity signs and allows only neighbouring endpoint contacts (including closure).
+For first/last segments, that exception requires their actual shared endpoint; approximate Q02 endpoint
+equality never exempts an interior crossing or moves the contact.
 This dimension-aware API follows the LongitudeOne policy: ISO-CD 5.1.8 defines XY ST_IsSimple while 5.1.9
 separately defines ST_3DIsSimple. The new API does not claim the XY-only semantics of ST_IsSimple on XYZ objects.
 

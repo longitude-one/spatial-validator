@@ -93,8 +93,12 @@ final class SegmentIntersections
             return true;
         }
 
+        // Q02 endpoint equality does not move the actual contact onto those endpoints.
+        $last = $positions[count($positions) - 1];
+
         return 0 === $first && $second === count($positions) - 2
-            && PointCoordinates::same($positions[0], $positions[count($positions) - 1]);
+            && PointCoordinates::same($positions[0], $last)
+            && $positions[0] === $last;
     }
 
     /**

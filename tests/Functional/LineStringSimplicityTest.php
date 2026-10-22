@@ -19,6 +19,9 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 use InvalidArgumentException as InvalidCoordinates;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
+use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as PlanarLine;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\LineString as ElevatedLine;
 use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
 use LongitudeOne\SpatialValidator\Internal\RobustPredicates;
 use LongitudeOne\SpatialValidator\Internal\SegmentIntersections;
@@ -172,6 +175,8 @@ final class LineStringSimplicityTest extends TestCase
 
         yield 'closed triangle' => [[[0, 0], [2, 0], [1, 1], [0, 0]], $layout, true];
 
+        yield 'closed XYZ triangle' => [[[0, 0, 5], [2, 0, 5], [1, 1, 5], [0, 0, 5]], $xyz, true];
+
         yield 'crossing' => [[[0, 0], [2, 2], [0, 2], [2, 0]], $layout, false];
 
         yield 'backtracking' => [[[0, 0], [2, 0], [1, 0]], $layout, false];
@@ -249,6 +254,30 @@ final class LineStringSimplicityTest extends TestCase
                 - ($second[1] - $first[1]) * ($third[0] - $first[0]);
             self::assertSame($determinant <=> 0.0, RobustPredicates::orientation($first, $second, $third));
         }
+    }
+
+    #[DataProvider('nearClosureLines')]
+    public function testNearClosureDoesNotPermitInteriorCrossing(LineStringInterface $line): void
+    {
+        $epsilon = PHP_FLOAT_EPSILON / 4;
+        self::assertTrue(PointCoordinates::same([0.0, 0.0], [$epsilon, -$epsilon]));
+        $service = Validation::createValidator();
+        self::assertCount(0, $service->validate($line, new SpatialAssert\LineString()));
+        $violations = $service->validate($line, new SpatialAssert\SimpleLineString());
+        self::assertCount(1, $violations);
+        self::assertSame(SpatialAssert\SimpleLineString::INVALID_ERROR, $violations->get(0)->getCode());
+    }
+
+    /** @return iterable<string, array{LineStringInterface}> */
+    public static function nearClosureLines(): iterable
+    {
+        $epsilon = PHP_FLOAT_EPSILON / 4;
+
+        yield 'XY interior crossing near closure' => [new PlanarLine([[0, 0], [1, 0], [0, 1], [$epsilon, -$epsilon]])];
+
+        yield 'XYZ coplanar interior crossing near closure' => [
+            new ElevatedLine([[0, 0, 5], [1, 0, 5], [0, 1, 5], [$epsilon, -$epsilon, 5]]),
+        ];
     }
 
     public function testNonFinitePredicateInputIsRejected(): void
