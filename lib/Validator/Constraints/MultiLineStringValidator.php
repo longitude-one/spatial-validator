@@ -23,7 +23,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Report unavailable validation without claiming geometric validity. */
+/** Validate every member through the shared recursive component contract. */
 final class MultiLineStringValidator extends ConstraintValidator
 {
     /**
@@ -49,7 +49,6 @@ final class MultiLineStringValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::MULTILINESTRING->value);
         }
 
-        $this->context->buildViolation('MultiLineString validation is not implemented yet.')->addViolation();
         $this->context->getValidator()->inContext($this->context)
             ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
         ;

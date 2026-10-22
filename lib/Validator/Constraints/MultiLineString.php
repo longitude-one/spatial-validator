@@ -18,14 +18,14 @@ namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
 
-/** Configure the unavailable MultiLineString validation warning. */
+/** Compose member validity without requiring simplicity or closure. */
 final class MultiLineString extends Constraint
 {
     /**
      * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     * @param mixed         $payload Consumer metadata
      */
-    public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
+    public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
     }

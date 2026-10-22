@@ -28,11 +28,11 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [EllipticalCurve](../lib/Validator/Constraints/EllipticalCurve.php) · [Validator](../lib/Validator/Constraints/EllipticalCurveValidator.php) | Reports unavailable EllipticalCurve validation |
 | [GeodesicString](../lib/Validator/Constraints/GeodesicString.php) · [Validator](../lib/Validator/Constraints/GeodesicStringValidator.php) | Reports unavailable GeodesicString validation |
 | [Geometry](../lib/Validator/Constraints/Geometry.php) · [Validator](../lib/Validator/Constraints/GeometryValidator.php) | Reports unavailable Geometry validation |
-| [GeometryCollection](../lib/Validator/Constraints/GeometryCollection.php) · [Validator](../lib/Validator/Constraints/GeometryCollectionValidator.php) | Reports unavailable GeometryCollection validation |
+| [GeometryCollection](../lib/Validator/Constraints/GeometryCollection.php) · [Validator](../lib/Validator/Constraints/GeometryCollectionValidator.php) | Composes heterogeneous member validity |
 | [LineString](../lib/Validator/Constraints/LineString.php) · [Validator](../lib/Validator/Constraints/LineStringValidator.php) | Validates line points, cardinality and consecutive positions |
 | [MultiCurve](../lib/Validator/Constraints/MultiCurve.php) · [Validator](../lib/Validator/Constraints/MultiCurveValidator.php) | Reports unavailable MultiCurve validation |
-| [MultiLineString](../lib/Validator/Constraints/MultiLineString.php) · [Validator](../lib/Validator/Constraints/MultiLineStringValidator.php) | Reports unavailable MultiLineString validation |
-| [MultiPoint](../lib/Validator/Constraints/MultiPoint.php) · [Validator](../lib/Validator/Constraints/MultiPointValidator.php) | Reports unavailable MultiPoint validation |
+| [MultiLineString](../lib/Validator/Constraints/MultiLineString.php) · [Validator](../lib/Validator/Constraints/MultiLineStringValidator.php) | Composes LineString member validity |
+| [MultiPoint](../lib/Validator/Constraints/MultiPoint.php) · [Validator](../lib/Validator/Constraints/MultiPointValidator.php) | Composes Point member validity |
 | [MultiPolygon](../lib/Validator/Constraints/MultiPolygon.php) · [Validator](../lib/Validator/Constraints/MultiPolygonValidator.php) | Reports unavailable MultiPolygon validation |
 | [MultiSurface](../lib/Validator/Constraints/MultiSurface.php) · [Validator](../lib/Validator/Constraints/MultiSurfaceValidator.php) | Reports unavailable MultiSurface validation |
 | [NURBSCurve](../lib/Validator/Constraints/NURBSCurve.php) · [Validator](../lib/Validator/Constraints/NURBSCurveValidator.php) | Reports unavailable NURBSCurve validation |
@@ -91,7 +91,7 @@ spatial reference (authority and identifier). No CRS lookup, axis verification o
 Direct and indirect cycles produce an error at the cyclic reference and stop that branch; other branches
 continue. A shared object reached along independent paths is validated at each path.
 Members are visited even when the parent reports EMPTY. Valid EMPTY members in GeometryCollection, MultiPoint
-and MultiLineString are retained; this does not approve EMPTY Points inside lines or establish the remaining
+and MultiLineString are retained; this does not approve EMPTY Points inside lines or establish unrelated
 parent geometry rules. General collections may mix geometry types and topological dimensions.
 
 ## Line rules
@@ -304,3 +304,63 @@ References: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clause
 8.3.1 Description 2–4 (linear exterior/interior boundaries and planar surface); OGC SFA 1.2.1, 6.1.11.1;
 Alexandre's approved #19 composition and numerical decisions. Ring semantics and approved Geography
 limitations remain those documented above. No vendor behavior defines these rules.
+
+## Collection rules
+
+All constraints below use the standard null/string input contract and accept `groups` and `payload`.
+Ordinary collection constraints now default to null payload; only genuinely unavailable member/property checks
+carry the warning default. Delegation retains root, nesting, member order and active group.
+
+| Constraint | Contract | Diagnostics |
+| --- | --- | --- |
+| `GeometryCollection` | Any spatial member type | Member codes at `geometries[index]` |
+| `MultiPoint` | Point interface and type, including valid EMPTY | Member codes at `points[index]` |
+| `MultiLineString` | LineString interface and type, including valid EMPTY | Member codes at `lineStrings[index]` |
+| `SimpleMultiPoint` | Distinct non-empty spatial positions | `simplemultipoint-invalid` at repeated Point |
+| `SimpleMultiLineString` | Simple lines, boundary-only inter-line contacts | Member/pair errors at later line |
+| `ClosedMultiLineString` | Non-EMPTY aggregate, every member closed | Aggregate/member closure errors |
+
+All explicit properties compose ordinary validity first. Inter-line errors use `simplemultilinestring-invalid`
+at the later `lineStrings[index]`; member simplicity retains SimpleLineString codes. An EMPTY aggregate closure
+error uses `closedmultilinestring-invalid` at the aggregate. Each failing member closure retains
+FirstPointEqualsLastPoint codes at `lineStrings[index]`.
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
+
+$validity = $validator->validate($multiLine, new SpatialAssert\MultiLineString());
+$simplicity = $validator->validate($multiLine, new SpatialAssert\SimpleMultiLineString());
+$closure = $validator->validate($multiLine, new SpatialAssert\ClosedMultiLineString());
+```
+
+EMPTY members are retained and validated for strict family, exact XY/XYZ/XYM/XYZM and reference authority/identifier.
+An aggregate represents EMPTY when it has no members or every member represents the empty set. Validation never
+skips members because of the parent EMPTY flag. No model objects are normalized or modified.
+
+Simplicity skips EMPTY members' absent positions. Repeated non-consecutive Points fail only explicit simplicity.
+Geometry position equality uses the approved scaled finite-coordinate comparison, including Z and ignoring M.
+Line contacts use exact supplied-coordinate intersection predicates, without determinant epsilon, snapping or
+proximity merging. A closed line has empty boundary, so even contact at its closing vertex is forbidden between
+members. Overlaps, crossings and endpoints in another line's interior fail. Pair errors identify the earlier
+member through `{{ other }}`. A shared endpoint must be the actual contact; approximate equality never moves it.
+
+An EMPTY MultiLineString is not closed. In a mixed aggregate, each EMPTY member fails closure because it has no
+endpoints. Closed members may still form a non-simple aggregate; simplicity and closure remain independent.
+Geography member simplicity and aggregate simplicity emit their respective warnings, with aggregate codes
+`simplemultipoint-unavailable` or `simplemultilinestring-unavailable`; member closure uses
+`firstpointequalslastpoint-unavailable`. Each warning clones its constraint, retains explicit payload and defaults
+to `['severity' => 'warning']`. Entirely EMPTY aggregates need no geodetic simplicity calculation.
+
+Normative traceability: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, 9.2.1 Description 7 and
+9.4.1 Description 3 define well-formedness by members; 9.3.1 Description 4 defines boundary-only simple curve
+aggregates; 9.3.3–9.3.4 return false for EMPTY closure. The approved #22 contract requires every member closed and
+selects XYZ behavior when Z is present. This library does not claim equivalence to every SQL/MM operation.
+
+The approved EMPTY-member policy distinguishes geometric validity from SQL/MM construction/mutation/cast paths:
+9.2.3 → 16.1.8 → 16.1.6 and 9.4.3 → 16.1.10 → 16.1.6 reject EMPTY elements in those operations. Their restrictions
+are not applied as a blanket geometric membership prohibition. OGC SFA 1.2.1 6.1.5 and 6.1.8–6.1.9 have no explicit
+typed EMPTY-member prohibition. The current validation API validates spatial objects, not those SQL routines.
+
+General collection members can intersect and have different topological dimensions. Available member validity
+is still enforced: a Polygon currently yields its public unavailable-validation warning, rather than a claim
+of complete Polygon validity. This Story adds no polygon topology rule or mandatory general-collection simplicity.
