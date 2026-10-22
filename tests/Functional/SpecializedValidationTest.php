@@ -20,6 +20,7 @@ use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Components;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -28,6 +29,8 @@ use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Validator\ContextualValidatorInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
 
 /**
@@ -79,6 +82,27 @@ final class SpecializedValidationTest extends TestCase
         $context = $this->createMock(ExecutionContextInterface::class);
         $context->expects(self::once())->method('buildViolation')
             ->with($type->value . ' validation is not implemented yet.')->willReturn($builder)
+        ;
+        // Symfony 5.4's untyped methods do not get automatic PHPUnit return stubs.
+        $service = $this->createMock(ValidatorInterface::class);
+        $contextual = $this->createMock(ContextualValidatorInterface::class);
+        $delegations = in_array($type, [
+            GeometryTypeEnum::CIRCULARSTRING,
+            GeometryTypeEnum::COMPOUNDCURVE,
+            GeometryTypeEnum::GEOMETRYCOLLECTION,
+            GeometryTypeEnum::LINESTRING,
+            GeometryTypeEnum::MULTILINESTRING,
+            GeometryTypeEnum::MULTIPOINT,
+            GeometryTypeEnum::MULTIPOLYGON,
+            GeometryTypeEnum::POLYGON,
+            GeometryTypeEnum::POLYHEDRALSURFACE,
+            GeometryTypeEnum::TRIANGLE,
+        ], true) ? 1 : 0;
+        $context->expects(self::exactly($delegations))->method('getValidator')->willReturn($service);
+        $context->method('getGroup')->willReturn('direct');
+        $service->expects(self::exactly($delegations))->method('inContext')->with($context)->willReturn($contextual);
+        $contextual->expects(self::exactly($delegations))->method('validate')
+            ->with($value, new Components(groups: ['Default']), 'direct')->willReturnSelf()
         ;
         $validator = self::validator(self::constraint($type));
         $validator->initialize($context);
