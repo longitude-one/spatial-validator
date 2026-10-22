@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as ModelLineString;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use LongitudeOne\SpatialValidator\Validator\Constraints\SpatialValidator;
@@ -39,8 +40,9 @@ final class SpatialDispatchTest extends TestCase
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testEveryTypeDelegatesInTheOriginalContext(GeometryTypeEnum $type, string $interface): void
     {
-        if (GeometryTypeEnum::POINT === $type) {
-            self::assertCount(0, Validation::createValidator()->validate(new Point(), new Spatial()));
+        if (in_array($type, [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING], true)) {
+            $value = GeometryTypeEnum::POINT === $type ? new Point() : new ModelLineString([]);
+            self::assertCount(0, Validation::createValidator()->validate($value, new Spatial()));
 
             return;
         }

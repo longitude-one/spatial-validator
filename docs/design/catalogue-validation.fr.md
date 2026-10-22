@@ -47,7 +47,8 @@ La révision approuvée par Alexandre le 22 octobre remplace l’exemption de ch
 
 - **Type inconnu du dispatch** — InvalidArgumentException PHP : `Unsupported spatial type: <type>`
 
-À l’exception de Point, les validateurs spécialisés émettent actuellement `<Type> validation is not implemented yet.`
+À l’exception de Point et LineString, les validateurs spécialisés émettent actuellement
+`<Type> validation is not implemented yet.`
 avec le payload par défaut `['severity' => 'warning']` sur sa contrainte.
 Spatial a un payload null par défaut et ne produit aucun warning global.
 Son payload personnalisé n’est pas recopié sur les contraintes enfants.
@@ -106,7 +107,8 @@ Les choix LongitudeOne sont identifiés ci-dessous ; une interprétation non ré
 Validité, simplicité, fermeture et restrictions applicatives sont distinctes.
 Une courbe valide n’est pas nécessairement simple ou fermée.
 La fermeture topologique d’un ensemble n’implique ni fermeture d’une courbe ni solide.
-Point implémente V02, V03 et V16. Les autres règles géométriques suivantes attendent leur implémentation
+Point implémente V02, V03 et V16. LineString livre V04/B01 et le contrôle explicite S01 pour Geometry.
+Les autres règles géométriques suivantes attendent leur implémentation
 spécialisée ; `Components` valide désormais récursivement les composants (C01–C04).
 
 ### Règles communes et Point
@@ -138,6 +140,14 @@ Les objets implémentant une interface doivent être contrôlés indépendamment
 modèle.
 
 ### Courbes et anneaux linéaires
+
+**Livré dans #15 :** LineString compose la validité Point via Components, la cardinalité minimale,
+l’interdiction des Points EMPTY et les doublons consécutifs. Une liste vide est EMPTY ; deux Points EMPTY sont
+invalides. La validité n’impose ni simplicité ni fermeture. `SimpleLineString` est explicite : XY sans Z, XYZ
+avec Z, M ignoré selon Q01. La simplicité Geography non EMPTY reste indisponible et produit un warning (Q03).
+Les signes exacts des prédicats binaires évitent un epsilon de déterminant ; l’égalité conserve Q02.
+Une copie de contrainte porte le warning, sans modifier l’instance originale ni son payload personnalisé.
+Le [référentiel des lignes](../validators.md#line-rules) précise chemins, codes et limites.
 
 - **V04** — LineString : aucun point ou au moins deux points valides non EMPTY ; ISO-CD 7.2.1 Description 3–5, 10–11
   ; 7.2.3 → 16.1.7 → 16.1.6.

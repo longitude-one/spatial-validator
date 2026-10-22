@@ -23,7 +23,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Report unavailable validation without claiming geometric validity. */
+/** Compose point, component and elementary line rules. */
 final class LineStringValidator extends ConstraintValidator
 {
     /**
@@ -49,9 +49,11 @@ final class LineStringValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::LINESTRING->value);
         }
 
-        $this->context->buildViolation('LineString validation is not implemented yet.')->addViolation();
-        $this->context->getValidator()->inContext($this->context)
-            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
-        ;
+        $this->context->getValidator()->inContext($this->context)->validate($value, [
+            new Components(groups: $constraint->groups, payload: $constraint->payload),
+            new MinimumPointCount(groups: $constraint->groups, payload: $constraint->payload),
+            new NonEmptyPoints(groups: $constraint->groups, payload: $constraint->payload),
+            new NoConsecutiveDuplicatePoints(groups: $constraint->groups, payload: $constraint->payload),
+        ], $this->context->getGroup());
     }
 }

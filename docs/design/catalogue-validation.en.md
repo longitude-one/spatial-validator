@@ -46,13 +46,13 @@ Alexandre's 22 October revision supersedes #10's empty-string exemption for the 
 
 - **Unknown dispatch type** — PHP InvalidArgumentException: `Unsupported spatial type: <type>`
 
-Except for Point, specialized validators currently emit `<Type> validation is not implemented yet.`
+Except for Point and LineString, specialized validators currently emit `<Type> validation is not implemented yet.`
 with default constraint payload `['severity' => 'warning']`.
 Spatial has default payload null and emits no global warning. Its custom payload is not copied to child constraints.
 Symfony retains warnings in its violation list; payload is metadata interpreted by the consumer.
 The defensive default is unreachable through the current closed enum for a conforming object.
 
-**Point coordinate checks V02, V03 and V16 are delivered; other type-specific rules remain incomplete.**
+**Point coordinate checks V02, V03 and V16 and LineString rules V04/B01 are delivered.**
 `PointValidator` composes `CoordinateLayout`, `FiniteCoordinates` and `GeographyBounds`.
 `Components` delivers recursive member checks C01–C04 and cycle detection for the supported aggregates.
 See the [validator reference](../validators.md#component-rules) for paths, codes and composition limits.
@@ -103,7 +103,8 @@ Approved LongitudeOne choices are identified below; unresolved interpretations r
 
 Validity, simplicity, closure and application restrictions are separate.
 A valid curve need not be simple or closed. Topological closure of a set does not imply curve closure or a solid.
-Point implements V02, V03 and V16. Other geometric rules below await specialized implementation;
+Point implements V02, V03 and V16. LineString delivers V04/B01 and explicit S01 for Geometry.
+Other geometric rules below await specialized implementation;
 `Components` now applies component rules C01–C04 recursively.
 
 ### Common and point rules
@@ -133,6 +134,14 @@ An axis absent from that variant is not a missing required ordinate.
 A third-party interface object must be checked independently of model constructor guarantees.
 
 ### Curves and linear rings
+
+**Delivered in #15:** LineString composes Point validity through Components, minimum count, non-EMPTY Point
+membership and consecutive-position checks. EMPTY means zero members; two EMPTY Points are invalid.
+Validity does not imply simplicity or closure. `SimpleLineString` is opt-in, uses XY/XYZ according to Z and
+ignores M, as approved in Q01. Geography simplicity is explicitly unavailable for non-empty lines (Q03).
+Exact signs on finite binary coordinates avoid determinant tolerances; coordinate equality retains Q02.
+Geography warnings use a copied constraint, preserving explicit payload and the original instance.
+The [line constraint reference](../validators.md#line-rules) records paths, codes and coverage.
 
 - **V04** — LineString: zero points or at least two non-empty valid points; ISO-CD 7.2.1 Description 3–5, 10–11;
   7.2.3 → 16.1.7 → 16.1.6.

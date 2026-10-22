@@ -11,7 +11,8 @@ Call `$validator->validate($value, new Spatial())` with Symfony Validator and
 
 ## Specialized validation
 
-Point validates coordinates. Aggregate validators also validate their components recursively.
+Point validates coordinates and LineString composes point and line rules.
+Aggregate validators also validate their components recursively.
 Other type-specific geometric rules still produce an unavailable-validation warning.
 
 | Constraint | Description |
@@ -28,7 +29,7 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [GeodesicString](../lib/Validator/Constraints/GeodesicString.php) · [Validator](../lib/Validator/Constraints/GeodesicStringValidator.php) | Reports unavailable GeodesicString validation |
 | [Geometry](../lib/Validator/Constraints/Geometry.php) · [Validator](../lib/Validator/Constraints/GeometryValidator.php) | Reports unavailable Geometry validation |
 | [GeometryCollection](../lib/Validator/Constraints/GeometryCollection.php) · [Validator](../lib/Validator/Constraints/GeometryCollectionValidator.php) | Reports unavailable GeometryCollection validation |
-| [LineString](../lib/Validator/Constraints/LineString.php) · [Validator](../lib/Validator/Constraints/LineStringValidator.php) | Reports unavailable LineString validation |
+| [LineString](../lib/Validator/Constraints/LineString.php) · [Validator](../lib/Validator/Constraints/LineStringValidator.php) | Validates line points, cardinality and consecutive positions |
 | [MultiCurve](../lib/Validator/Constraints/MultiCurve.php) · [Validator](../lib/Validator/Constraints/MultiCurveValidator.php) | Reports unavailable MultiCurve validation |
 | [MultiLineString](../lib/Validator/Constraints/MultiLineString.php) · [Validator](../lib/Validator/Constraints/MultiLineStringValidator.php) | Reports unavailable MultiLineString validation |
 | [MultiPoint](../lib/Validator/Constraints/MultiPoint.php) · [Validator](../lib/Validator/Constraints/MultiPointValidator.php) | Reports unavailable MultiPoint validation |
@@ -92,3 +93,39 @@ continue. A shared object reached along independent paths is validated at each p
 Members are visited even when the parent reports EMPTY. Valid EMPTY members in GeometryCollection, MultiPoint
 and MultiLineString are retained; this does not approve EMPTY Points inside lines or establish the remaining
 parent geometry rules. General collections may mix geometry types and topological dimensions.
+
+## Line rules
+
+These constraints accept LineStringInterface with declared type LineString. Only null is ignored; strings are
+rejected. `MinimumPointCount(limit: 2)` always admits an empty point list; its limit must be positive.
+`LineString` composes the first three with `Components`, without requiring closure or simplicity.
+
+| Constraint | Description |
+| --- | --- |
+| [MinimumPointCount](../lib/Validator/Constraints/MinimumPointCount.php) · [Validator](../lib/Validator/Constraints/MinimumPointCountValidator.php) | Checks minimum count, allowing EMPTY |
+| [NonEmptyPoints](../lib/Validator/Constraints/NonEmptyPoints.php) · [Validator](../lib/Validator/Constraints/NonEmptyPointsValidator.php) | Rejects EMPTY Point members |
+| [NoConsecutiveDuplicatePoints](../lib/Validator/Constraints/NoConsecutiveDuplicatePoints.php) · [Validator](../lib/Validator/Constraints/NoConsecutiveDuplicatePointsValidator.php) | Rejects consecutive equal spatial positions |
+| [SimpleLineString](../lib/Validator/Constraints/SimpleLineString.php) · [Validator](../lib/Validator/Constraints/SimpleLineStringValidator.php) | Explicit Geometry simplicity in XY or XYZ; Geography warning |
+
+| Constant | Code |
+| --- | --- |
+| `MinimumPointCount::INVALID_ERROR` | `minimumpointcount-invalid` |
+| `NonEmptyPoints::INVALID_ERROR` | `nonemptypoints-invalid` |
+| `NoConsecutiveDuplicatePoints::INVALID_ERROR` | `noconsecutiveduplicatepoints-invalid` |
+| `NoConsecutiveDuplicatePoints::INPUT_ERROR` | `noconsecutiveduplicatepoints-input` |
+| `SimpleLineString::INVALID_ERROR` | `simplelinestring-invalid` |
+| `SimpleLineString::UNAVAILABLE_ERROR` | `simplelinestring-unavailable` |
+
+EMPTY-member, invalid comparison-input and duplicate diagnostics use `points[index]`, with zero-based indexes;
+cardinality and simplicity diagnostics apply to the line. Non-finite or missing ordinates are rejected before
+comparison, including M, while M is excluded from equality and intersection calculations. The standalone
+consecutive-position rule also rejects members that cannot supply a finite non-empty Point position.
+
+Equality uses the approved coordinate formula and XYZ when Z exists, otherwise XY. Explicit simplicity uses
+exact binary orientation/coplanarity signs and allows only neighbouring endpoint contacts (including closure).
+This dimension-aware API follows the LongitudeOne policy: ISO-CD 5.1.8 defines XY ST_IsSimple while 5.1.9
+separately defines ST_3DIsSimple. The new API does not claim the XY-only semantics of ST_IsSimple on XYZ objects.
+
+Non-empty Geography simplicity remains unavailable; valid EMPTY Geography is simple. Warnings use a cloned
+constraint and default warning payload; explicit payload is preserved. Other errors default to payload null.
+See the [usage and coverage](../README.md#linestring-validity-and-explicit-simplicity).
