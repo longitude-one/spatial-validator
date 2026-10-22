@@ -3,6 +3,17 @@
 Standalone Symfony validation for LongitudeOne spatial types. MIT licensed; requires PHP 8.4 or later within PHP 8.
 Symfony Validator 5.4, 6, 7 and 8 are supported. `spatial-types` supplies the spatial objects and interfaces being validated.
 
+## Current status
+
+![longitude-one/spatial--validator](https://img.shields.io/badge/longitude--one-spatial--validator-blue)
+![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-validator)
+![Minimum PHP Version](https://img.shields.io/packagist/php-v/longitude-one/spatial-validator.svg?maxAge=3600)
+[![Packagist License](https://img.shields.io/packagist/l/longitude-one/spatial-validator)](https://github.com/longitude-one/spatial-validator/blob/main/LICENSE)
+
+[![PHP tests and quality](https://github.com/longitude-one/spatial-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/longitude-one/spatial-validator/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/packagist/dm/longitude-one/spatial-validator.svg)](https://packagist.org/packages/longitude-one/spatial-validator)
+[![Code coverage](https://codecov.io/gh/longitude-one/spatial-validator/branch/main/graph/badge.svg)](https://codecov.io/gh/longitude-one/spatial-validator)
+
 ## Installation
 
 ```sh
@@ -51,20 +62,48 @@ versions until the CLI updates its own requirements; keep `npm audit` clean when
 
 ## Explicit validation
 
-Use the transferred constraints with Symfony Validator:
+Use the `Spatial` constraint with Symfony Validator to dispatch by geometry type:
 
 ```php
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString;
-use LongitudeOne\SpatialValidator\Validator\Constraints\Ring;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use Symfony\Component\Validator\Validation;
 
 $line = new LineString([[0, 0], [1, 0], [0, 1], [0, 0]]);
-$violations = Validation::createValidator()->validate($line, new Ring());
+$violations = Validation::createValidator()->validate($line, new Spatial());
 ```
 
-Constraints and assertion helpers live under `LongitudeOne\SpatialValidator\Validator`.
-The transferred rules retain their existing behavior, messages and exceptions.
-The companion `spatial-types` removal task makes functional validation an explicit consumer operation.
+Constraints and their validators live under `LongitudeOne\SpatialValidator\Validator\Constraints`.
+`Spatial` delegates to one dedicated constraint per `GeometryTypeEnum` case.
+You can also apply a specialized constraint directly, for example `Point` or `Triangle`.
+Standard Symfony groups and payload are accepted; delegation preserves the validation root,
+property path and active group. `Spatial` has no warning payload by default and does not copy
+its payload to specialized constraints.
+
+### Current coverage
+
+Dispatch covers all 27 enum cases: BRepSolid, Circle, CircularString, Clothoid, CompoundCurve,
+CompoundSurface, Curve, CurvePolygon, EllipticalCurve, GeodesicString, Geometry, GeometryCollection,
+LineString, MultiCurve, MultiLineString, MultiPoint, MultiPolygon, MultiSurface, NURBSCurve,
+Point, Polygon, PolyhedralSurface, Solid, SpiralCurve, Surface, TIN and Triangle.
+Dispatch uses spatial interfaces and the declared type, independently of dimension-specific classes.
+Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route for their type.
+Specialized validators check their required interface when available and their exact enum type;
+in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
+
+**Geometric validation is not implemented yet.** Each admissible spatial object, including EMPTY,
+produces one violation with the message `<Type> validation is not implemented yet.`
+Its specialized constraint carries `['severity' => 'warning']` by default.
+Symfony still includes this warning in the violation list; payload is application metadata,
+not an instruction to filter the violation. This infrastructure provides no geometric validity,
+SQL/MM conformance or geodetic validation guarantee.
+
+The defensive dispatch default throws PHP `InvalidArgumentException` with
+`Unsupported spatial type: <type>`. Unlike the non-implementation warning, this is an exception;
+the current closed enum makes the default unreachable for a conforming spatial object.
+
+Historical implementation is temporarily archived in `old/`, outside production autoload.
+It is reference material for later rule implementations, not part of the active API.
 
 ## Continuous integration
 
@@ -87,18 +126,18 @@ Actual releases require the maintainer's authorization.
 
 ## Input compatibility
 
-Spatial constraints now ignore PHP `null` and the empty string `''`. Compose them
-with Symfony `NotNull` or `NotBlank` when a value is required. EMPTY spatial
-objects still undergo the applicable geometric checks and specialized interface
-preconditions. Historical assertion helpers retain their existing contracts.
+| Input | Behavior with the applicable spatial constraint |
+| --- | --- |
+| PHP `null` | No violation; compose with Symfony `NotNull` when a value is required |
+| Any string, including `''` and WKT | Rejected: an object implementing the required spatial interface is expected |
+| Other unsupported PHP value or incompatible spatial type | Rejected as an unexpected value |
+| Admissible spatial object, including EMPTY | Delegates to its type's non-implementation warning |
 
-A direct constraint-validator call throws Symfony `UnexpectedValueException` for
-an unsupported non-empty value; the Symfony Validator service converts it into a
-standard type violation. A wrong constraint always raises Symfony
-`UnexpectedTypeException`, even for `null` or `''`. No library input exception
-hierarchy is introduced, and dependency exceptions are not wrapped.
+A direct constraint-validator call throws Symfony `UnexpectedValueException` for an unsupported
+value; the Symfony Validator service converts it into a standard type violation.
+A wrong constraint always raises Symfony `UnexpectedTypeException`, even for `null` or `''`.
+EMPTY is a spatial state, not an absent PHP value, and is never skipped by the `null` check.
+Parse serialized geometry into a spatial object before validation; strings are not parsed here.
 
-This changes the previous rejection of `null` and `''`. Consumers relying on that
-rejection must add presence constraints. The release must explicitly account for
-this breaking input-policy change; merge and release approval remain with the
-maintainer.
+This input policy supersedes the earlier proposal to ignore both `null` and `''`:
+only `null` is ignored. No library input exception hierarchy is introduced.
