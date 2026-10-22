@@ -210,7 +210,59 @@ including between circles in distinct XYZ planes and between arcs and segment de
 
 Non-empty Geography topology is unavailable. A full circle XYZ encoded A,B,A does not determine its plane:
 a single circle is simple, but its pairs with other arcs report unavailable warnings. This explicit scope limit
-was approved by Alexandre for #17; no arbitrary plane is selected. CompoundCurve interactions remain in #18.
+was approved by Alexandre for #17; no arbitrary plane is selected.
+CompoundCurve interactions are covered by the [compound-curve rules](#compound-curve-rules).
 
 Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft 2009-01-16, 4.2.4, 4.2.6,
 5.1.8–5.1.9 and 7.3.1 Description 6–11; dimension-aware behavior follows Q01–Q03 and the #17 plane decision.
+
+## Compound-curve rules
+
+| Constraint | Contract |
+| --- | --- |
+| [CompoundCurve](../lib/Validator/Constraints/CompoundCurve.php) | Composes recursive `Components`, rejects EMPTY members and checks consecutive endpoint continuity |
+| [SimpleCompoundCurve](../lib/Validator/Constraints/SimpleCompoundCurve.php) | First validates the compound curve, then checks the whole curve's actual arcs and linear segments |
+
+Both accept `CompoundCurveInterface` with declared CompoundCurve type. PHP null is ignored; all strings,
+including `''`, are rejected. Error payload defaults to null. Ordinary validity requires neither closure nor simplicity.
+Zero components form a valid EMPTY curve, which also passes simplicity but is not a ring.
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\CompoundCurve;
+use LongitudeOne\SpatialValidator\Validator\Constraints\SimpleCompoundCurve;
+
+$validity = $validator->validate($curve, new CompoundCurve());
+$simplicity = $validator->validate($curve, new SimpleCompoundCurve());
+```
+
+All members must be valid LineString or CircularString objects with the same family, coordinate variant and
+complete spatial-reference identity. Continuity is inspected only after component validation succeeds.
+Geometry joins use Q02 scaled finite-coordinate equality in XYZ when Z exists, otherwise XY, ignoring M.
+Neither the component order nor coordinates are changed to close gaps.
+
+Explicit simplicity covers line/line, line/arc and arc/arc interactions within and across members.
+Allowed neighbouring endpoint joins and one global closure are permitted; crossings, interior tangencies,
+retracing, overlaps and repeated interior positions fail. Exact predicates inspect the original positions:
+Q02 equality does not exempt an actual interior intersection or snap approximately joined endpoints.
+Individually simple members can therefore form a non-simple compound curve.
+
+| Diagnostic | Code | Path |
+| --- | --- | --- |
+| EMPTY contributing member | `compoundcurve-empty-member` | `curves[index]` |
+| Disconnected Geometry join | `compoundcurve-disconnected` | Following `curves[index]` |
+| Unavailable Geography join | `compoundcurve-unavailable` | Following `curves[index]` |
+| Intersection or repetition | `simplecompoundcurve-invalid` | `curves[index].arcs[part]` or `.segments[part]` |
+| Unavailable topology | `simplecompoundcurve-unavailable` | Curve, or following part for an indeterminate arc pair |
+
+Member failures retain their original constraint/code/payload and nested Point paths. Root, outer property path,
+active group and explicit compound-rule payload are preserved. Warnings copy the constraint and use
+`['severity' => 'warning']` by default while retaining explicit consumer payload; they remain violations.
+
+Geography structural and Point checks continue, but joins and non-empty topology report unavailable warnings.
+The CircularString engine's documented XYZ A,B,A plane limitation also applies to compound interactions:
+an isolated full circle is simple, but interactions with another part report unavailable rather than choosing
+an arbitrary plane. Independently provable repeated endpoints still fail. No Cartesian approximation,
+densification, repair, CRS lookup or reprojection is performed.
+
+Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clauses 4.2.7,
+7.4.1 Description 3–10 and 7.4.3 → 16.1.6; dimension-aware joins follow the approved Q01–Q03 policy.

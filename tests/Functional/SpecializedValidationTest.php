@@ -72,11 +72,13 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testDirectInvocationReportsUnavailableValidation(GeometryTypeEnum $type, string $interface): void
     {
-        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING];
+        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::CIRCULARSTRING => CircularStringValidationTest::curve([]),
+                GeometryTypeEnum::COMPOUNDCURVE => CompoundCurveValidationTest::curve([]),
                 default => new ModelLineString([]),
             };
             self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));
@@ -130,11 +132,13 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testGroupsPayloadAndNestedPath(GeometryTypeEnum $type, string $interface): void
     {
-        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING];
+        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::CIRCULARSTRING => CircularStringValidationTest::curve([]),
+                GeometryTypeEnum::COMPOUNDCURVE => CompoundCurveValidationTest::curve([]),
                 default => new ModelLineString([]),
             };
             self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));
@@ -188,11 +192,13 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testServiceReportsWarningAndPreservesContext(GeometryTypeEnum $type, string $interface): void
     {
-        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING];
+        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::CIRCULARSTRING => CircularStringValidationTest::curve([]),
+                GeometryTypeEnum::COMPOUNDCURVE => CompoundCurveValidationTest::curve([]),
                 default => new ModelLineString([]),
             };
             self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));

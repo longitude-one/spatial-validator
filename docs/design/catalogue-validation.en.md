@@ -167,6 +167,13 @@ See the [circular reference](../validators.md#circular-curve-rules) for diagnost
 - **V06** — CompoundCurve: well-formed LineString/CircularString components with consecutive endpoint continuity;
   ISO-CD 7.4.1 Description 3–10.
 
+**Delivered in #18:** CompoundCurve composes Components before inspecting joins, prohibits EMPTY contributing
+curves and uses Q02 equality in XYZ when Z exists, otherwise XY, ignoring M. SimpleCompoundCurve separately
+checks all line/line, line/arc and arc/arc interactions within and across members using actual arcs and exact
+predicates. Zero members pass both checks. Geography joins/topology and inherited underdetermined XYZ full-circle
+planes produce explicit warnings; no Cartesian or arbitrary-plane substitute is used.
+See the [public reference](../validators.md#compound-curve-rules) for codes, paths and payload semantics.
+
   **Reference scenarios:** A→B then B→C joins; B≠C fails; Polygon member fails.
 
 - **S01** — Curve simplicity in the selected space; ISO-CD 4.2.4, 5.1.8–5.1.9; OGC 6.1.6–6.1.7.
