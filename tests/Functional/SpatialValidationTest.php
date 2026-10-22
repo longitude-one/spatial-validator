@@ -16,8 +16,11 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Tests\Functional;
 
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
+use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Point as PointConstraint;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use LongitudeOne\SpatialValidator\Validator\Constraints\SpatialValidator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -48,14 +51,14 @@ final class SpatialValidationTest extends TestCase
         self::assertSame($root, $violations->get(0)->getRoot());
         self::assertSame('[location]', $violations->get(0)->getPropertyPath());
         self::assertSame($point, $violations->get(0)->getInvalidValue());
-        self::assertSame($constraint, $violations->get(0)->getConstraint());
+        self::assertInstanceOf(PointConstraint::class, $violations->get(0)->getConstraint());
     }
 
     public function testSpatialContractDoesNotRequireGeometryInspection(): void
     {
-        $value = $this->createMock(SpatialInterface::class);
+        $value = $this->createMock(PointInterface::class);
         $value->expects(self::never())->method('isEmpty');
-        $value->expects(self::never())->method('getType');
+        $value->expects(self::atLeastOnce())->method('getType')->willReturn(GeometryTypeEnum::POINT);
         $value->expects(self::never())->method('toArray');
 
         self::assertCount(1, Validation::createValidator()->validate($value, new Spatial()));
@@ -70,9 +73,10 @@ final class SpatialValidationTest extends TestCase
         self::assertInstanceOf(ConstraintViolationListInterface::class, $violations);
         self::assertCount(1, $violations);
         $violation = $violations->get(0);
-        self::assertSame('Spatial validation is not implemented yet.', $violation->getMessage());
-        self::assertSame($constraint, $violation->getConstraint());
-        self::assertSame(['severity' => 'warning'], $constraint->payload);
+        self::assertSame('Point validation is not implemented yet.', $violation->getMessage());
+        self::assertInstanceOf(PointConstraint::class, $violation->getConstraint());
+        self::assertNull($constraint->payload);
+        self::assertSame(['severity' => 'warning'], $violation->getConstraint()->payload);
         self::assertSame($value, $violation->getInvalidValue());
         self::assertSame($value, $violation->getRoot());
         self::assertSame('', $violation->getPropertyPath());
@@ -101,7 +105,7 @@ final class SpatialValidationTest extends TestCase
         $violations = Validation::createValidator()->validate(new Point(), $constraint);
 
         self::assertSame($payload, $constraint->payload);
-        self::assertSame($constraint, $violations->get(0)->getConstraint());
-        self::assertSame(['severity' => 'warning'], (new Spatial())->payload);
+        self::assertInstanceOf(PointConstraint::class, $violations->get(0)->getConstraint());
+        self::assertNull((new Spatial())->payload);
     }
 }

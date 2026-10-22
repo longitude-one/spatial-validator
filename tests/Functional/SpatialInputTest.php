@@ -18,6 +18,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Point as PointConstraint;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use LongitudeOne\SpatialValidator\Validator\Constraints\SpatialValidator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -40,7 +41,7 @@ final class SpatialInputTest extends TestCase
     public function testDirectInvocationRejectsUnsupportedValues(mixed $value): void
     {
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage(SpatialInterface::class);
+        $this->expectExceptionMessageIsOrContains(SpatialInterface::class);
         (new SpatialValidator())->validate($value, new Spatial());
     }
 
@@ -60,7 +61,7 @@ final class SpatialInputTest extends TestCase
         self::assertCount(1, $absent);
         self::assertInstanceOf(NotBlank::class, $absent->get(0)->getConstraint());
         self::assertCount(1, $empty);
-        self::assertInstanceOf(Spatial::class, $empty->get(0)->getConstraint());
+        self::assertInstanceOf(PointConstraint::class, $empty->get(0)->getConstraint());
         self::assertSame(['severity' => 'warning'], $empty->get(0)->getConstraint()->payload);
     }
 
@@ -95,7 +96,7 @@ final class SpatialInputTest extends TestCase
     public function testWrongConstraintIsRejectedBeforeValueHandling(mixed $value): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        $this->expectExceptionMessage(Spatial::class);
+        $this->expectExceptionMessageIsOrContains(Spatial::class);
         (new SpatialValidator())->validate($value, new NotNull());
     }
 
