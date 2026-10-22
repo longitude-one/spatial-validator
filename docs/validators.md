@@ -171,3 +171,46 @@ Sources: ISO/IEC CD 13249-3:201x(E), 2009-01-16 Committee Draft, 4.2.4–4.2.5 a
 [OGC 07-036, GML 3.2.1 §10.5.8](https://docs.ogc.org/is/07-036/07-036.pdf) for the linear-ring minimum.
 The dimension-aware API follows the approved LongitudeOne policy, rather than redefining ISO's separate
 XY and 3D closure/ring operations.
+
+## Circular-curve rules
+
+`CircularString` composes component/Point validity with the two structural constraints below.
+`SimpleCircularString` is opt-in and first composes ordinary CircularString validity.
+
+| Constraint | Description |
+| --- | --- |
+| [CircularPointCount](../lib/Validator/Constraints/CircularPointCount.php) · [Validator](../lib/Validator/Constraints/CircularPointCountValidator.php) | Checks EMPTY or an odd point count of at least three |
+| [CircularArcPoints](../lib/Validator/Constraints/CircularArcPoints.php) · [Validator](../lib/Validator/Constraints/CircularArcPointsValidator.php) | Rejects EMPTY members and intermediate positions equal to either endpoint |
+| [SimpleCircularString](../lib/Validator/Constraints/SimpleCircularString.php) · [Validator](../lib/Validator/Constraints/SimpleCircularStringValidator.php) | Checks actual circular arcs and segment degenerations for forbidden intersections |
+
+| Constant | Code |
+| --- | --- |
+| `CircularPointCount::INVALID_ERROR` | `circularpointcount-invalid` |
+| `CircularArcPoints::INVALID_ERROR` | `circulararcpoints-invalid` |
+| `SimpleCircularString::INVALID_ERROR` | `simplecircularstring-invalid` |
+| `SimpleCircularString::UNAVAILABLE_ERROR` | `simplecircularstring-unavailable` |
+
+Cardinality errors remain on the curve; EMPTY/invalid Points use `points[index]`, defining-position errors use
+`arcs[index]`, and forbidden pair interactions identify the second arc as `arcs[index]`.
+Original root, path prefix and active group are preserved. Explicit consumer payload propagates to elementary
+curve rules; delegated Point errors retain their own payload. Error payload defaults to null. Warning
+constraints are copied, defaulting to `['severity' => 'warning']` while retaining explicit consumer payload.
+
+Geometry uses XYZ when Z exists, otherwise XY; M is ignored in spatial predicates but must remain finite.
+Q02 applies to defining-position equality; actual circles, sectors and intersections use supplied coordinates
+without an added proximity tolerance. Collinear triples represent their endpoint segment, not two chords.
+Full circles with exactly repeated endpoints have their center midway between start and intermediate points.
+
+EMPTY passes ordinary validity and simplicity, but is not a circular ring. A full circle needs three defining
+positions; no four-position linear-ring minimum applies. Ordinary curves may be open or non-simple. Repeated arc
+endpoints outside the single global closure are
+forbidden, including tangent full circles that revisit the boundary at an interior join.
+`SimpleCircularString` detects true-arc crossings, interior tangencies and interval overlaps/retracing,
+including between circles in distinct XYZ planes and between arcs and segment degenerations.
+
+Non-empty Geography topology is unavailable. A full circle XYZ encoded A,B,A does not determine its plane:
+a single circle is simple, but its pairs with other arcs report unavailable warnings. This explicit scope limit
+was approved by Alexandre for #17; no arbitrary plane is selected. CompoundCurve interactions remain in #18.
+
+Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft 2009-01-16, 4.2.4, 4.2.6,
+5.1.8–5.1.9 and 7.3.1 Description 6–11; dimension-aware behavior follows Q01–Q03 and the #17 plane decision.

@@ -19,16 +19,61 @@ namespace LongitudeOne\SpatialValidator\Internal;
 use InvalidArgumentException as InvalidCoordinate;
 
 /**
- * @internal Exact signs for finite IEEE-754 inputs, without a geometric tolerance.
+ * @internal Exact binary-integer arithmetic and geometric signs without a geometric tolerance.
  *
  * Every double is an integer multiple of 2^-1074. Signed magnitudes store that
  * integer in little-endian base 2^15 limbs. Products of limbs and carries fit
- * in PHP's integers, including 32-bit builds. Only signs are returned; coordinates
+ * in PHP's integers, including 32-bit builds. Predicates return signs; internal
+ * scalar operations share this representation with ExactRationals. Coordinates
  * are never rounded, snapped or reconstructed from this representation.
  */
 final class RobustPredicates
 {
-    private const int BASE = 32768;
+    public const int BASE = 32768;
+
+    /**
+     * @param array{int, list<int>} $first
+     * @param array{int, list<int>} $second
+     *
+     * @return array{int, list<int>}
+     */
+    public static function add(array $first, array $second): array
+    {
+        if (0 === $first[0]) {
+            return $second;
+        }
+        if (0 === $second[0]) {
+            return $first;
+        }
+        if ($first[0] === $second[0]) {
+            return self::signed($first[0], self::sum($first[1], $second[1]));
+        }
+        $comparison = self::compare($first[1], $second[1]);
+        if (0 > $comparison) {
+            return self::signed($second[0], self::difference($second[1], $first[1]));
+        }
+
+        return self::signed($first[0], self::difference($first[1], $second[1]));
+    }
+
+    /**
+     * @param list<int> $first
+     * @param list<int> $second
+     */
+    public static function compare(array $first, array $second): int
+    {
+        $comparison = count($first) <=> count($second);
+        if (0 !== $comparison) {
+            return $comparison;
+        }
+        for ($index = count($first) - 1; 0 <= $index; --$index) {
+            if ($first[$index] !== $second[$index]) {
+                return $first[$index] <=> $second[$index];
+            }
+        }
+
+        return 0;
+    }
 
     /**
      * @param list<float> $first
@@ -59,78 +104,12 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<float>     $first
-     * @param list<float>     $second
-     * @param list<float>     $third
-     * @param array{int, int} $axes
-     */
-    public static function orientation(array $first, array $second, array $third, array $axes = [0, 1]): int
-    {
-        [$horizontal, $vertical] = $axes;
-        $firstHorizontal = self::subtract(self::integer($second[$horizontal]), self::integer($first[$horizontal]));
-        $firstVertical = self::subtract(self::integer($second[$vertical]), self::integer($first[$vertical]));
-        $secondHorizontal = self::subtract(self::integer($third[$horizontal]), self::integer($first[$horizontal]));
-        $secondVertical = self::subtract(self::integer($third[$vertical]), self::integer($first[$vertical]));
-
-        $determinant = self::subtract(
-            self::multiply($firstHorizontal, $secondVertical),
-            self::multiply($firstVertical, $secondHorizontal)
-        );
-
-        return $determinant[0];
-    }
-
-    /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
-     *
-     * @return array{int, list<int>}
-     */
-    private static function add(array $first, array $second): array
-    {
-        if (0 === $first[0]) {
-            return $second;
-        }
-        if (0 === $second[0]) {
-            return $first;
-        }
-        if ($first[0] === $second[0]) {
-            return self::signed($first[0], self::sum($first[1], $second[1]));
-        }
-        $comparison = self::compare($first[1], $second[1]);
-        if (0 > $comparison) {
-            return self::signed($second[0], self::difference($second[1], $first[1]));
-        }
-
-        return self::signed($first[0], self::difference($first[1], $second[1]));
-    }
-
-    /**
-     * @param list<int> $first
-     * @param list<int> $second
-     */
-    private static function compare(array $first, array $second): int
-    {
-        $comparison = count($first) <=> count($second);
-        if (0 !== $comparison) {
-            return $comparison;
-        }
-        for ($index = count($first) - 1; 0 <= $index; --$index) {
-            if ($first[$index] !== $second[$index]) {
-                return $first[$index] <=> $second[$index];
-            }
-        }
-
-        return 0;
-    }
-
-    /**
      * @param list<int> $first  Greater or equal magnitude
      * @param list<int> $second
      *
      * @return list<int>
      */
-    private static function difference(array $first, array $second): array
+    public static function difference(array $first, array $second): array
     {
         $result = [];
         $borrow = 0;
@@ -144,7 +123,7 @@ final class RobustPredicates
     }
 
     /** @return array{int, list<int>} */
-    private static function integer(float $value): array
+    public static function integer(float $value): array
     {
         if (!is_finite($value)) {
             throw new InvalidCoordinate('Robust predicates require finite coordinates.');
@@ -176,7 +155,7 @@ final class RobustPredicates
      *
      * @return array{int, list<int>}
      */
-    private static function multiply(array $first, array $second): array
+    public static function multiply(array $first, array $second): array
     {
         $result = array_fill(0, count($first[1]) + count($second[1]), 0);
         foreach ($first[1] as $left => $digit) {
@@ -197,11 +176,33 @@ final class RobustPredicates
     }
 
     /**
+     * @param list<float>     $first
+     * @param list<float>     $second
+     * @param list<float>     $third
+     * @param array{int, int} $axes
+     */
+    public static function orientation(array $first, array $second, array $third, array $axes = [0, 1]): int
+    {
+        [$horizontal, $vertical] = $axes;
+        $firstHorizontal = self::subtract(self::integer($second[$horizontal]), self::integer($first[$horizontal]));
+        $firstVertical = self::subtract(self::integer($second[$vertical]), self::integer($first[$vertical]));
+        $secondHorizontal = self::subtract(self::integer($third[$horizontal]), self::integer($first[$horizontal]));
+        $secondVertical = self::subtract(self::integer($third[$vertical]), self::integer($first[$vertical]));
+
+        $determinant = self::subtract(
+            self::multiply($firstHorizontal, $secondVertical),
+            self::multiply($firstVertical, $secondHorizontal)
+        );
+
+        return $determinant[0];
+    }
+
+    /**
      * @param list<int> $digits
      *
      * @return list<int>
      */
-    private static function shift(array $digits, int $bits): array
+    public static function shift(array $digits, int $bits): array
     {
         $carry = 0;
         foreach ($digits as $index => $digit) {
@@ -221,7 +222,7 @@ final class RobustPredicates
      *
      * @return array{int, list<int>}
      */
-    private static function signed(int $sign, array $digits): array
+    public static function signed(int $sign, array $digits): array
     {
         while ([] !== $digits && 0 === end($digits)) {
             array_pop($digits);
