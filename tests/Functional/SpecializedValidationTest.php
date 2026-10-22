@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -66,6 +67,11 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testDirectInvocationReportsUnavailableValidation(GeometryTypeEnum $type, string $interface): void
     {
+        if (GeometryTypeEnum::POINT === $type) {
+            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+
+            return;
+        }
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $builder = $this->createMock(ConstraintViolationBuilderInterface::class);
@@ -92,6 +98,11 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testGroupsPayloadAndNestedPath(GeometryTypeEnum $type, string $interface): void
     {
+        if (GeometryTypeEnum::POINT === $type) {
+            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+
+            return;
+        }
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $class = self::constraint($type)::class;
@@ -114,6 +125,11 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testServiceReportsWarningAndPreservesContext(GeometryTypeEnum $type, string $interface): void
     {
+        if (GeometryTypeEnum::POINT === $type) {
+            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+
+            return;
+        }
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $constraint = self::constraint($type);

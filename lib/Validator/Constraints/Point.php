@@ -18,14 +18,14 @@ namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
 
-/** Configure the unavailable Point validation warning. */
+/** Validate a Point by composing coordinate rules. */
 final class Point extends Constraint
 {
     /**
      * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     * @param mixed         $payload Consumer metadata
      */
-    public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
+    public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
     }

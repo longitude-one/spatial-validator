@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use LongitudeOne\SpatialValidator\Validator\Constraints\SpatialValidator;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -38,6 +39,11 @@ final class SpatialDispatchTest extends TestCase
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testEveryTypeDelegatesInTheOriginalContext(GeometryTypeEnum $type, string $interface): void
     {
+        if (GeometryTypeEnum::POINT === $type) {
+            self::assertCount(0, Validation::createValidator()->validate(new Point(), new Spatial()));
+
+            return;
+        }
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $root = ['shape' => $value];

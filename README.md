@@ -91,11 +91,11 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Geometric validation is not implemented yet.** Each admissible spatial object, including EMPTY,
+**Point coordinate validation is implemented.** Other admissible spatial objects, including EMPTY,
 produces one violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
 Symfony still includes this warning in the violation list; payload is application metadata,
-not an instruction to filter the violation. This infrastructure provides no geometric validity,
+not an instruction to filter the violation. The remaining placeholders provide no geometric validity,
 SQL/MM conformance or geodetic validation guarantee.
 
 The defensive dispatch default throws PHP `InvalidArgumentException` with
@@ -131,7 +131,7 @@ Actual releases require the maintainer's authorization.
 | PHP `null` | No violation; compose with Symfony `NotNull` when a value is required |
 | Any string, including `''` and WKT | Rejected: an object implementing the required spatial interface is expected |
 | Other unsupported PHP value or incompatible spatial type | Rejected as an unexpected value |
-| Admissible spatial object, including EMPTY | Delegates to its type's non-implementation warning |
+| Admissible spatial object, including EMPTY | Delegates to its specialized validator |
 
 A direct constraint-validator call throws Symfony `UnexpectedValueException` for an unsupported
 value; the Symfony Validator service converts it into a standard type violation.
@@ -141,3 +141,22 @@ Parse serialized geometry into a spatial object before validation; strings are n
 
 This input policy supersedes the earlier proposal to ignore both `null` and `''`:
 only `null` is ignored. No library input exception hierarchy is introduced.
+
+## Point validation
+
+[Validator reference](docs/validators.md) lists the generic, specialized and reusable coordinate constraints.
+`Point` now composes `CoordinateLayout`, `FiniteCoordinates` and `GeographyBounds` for Geometry and Geography
+in XY, XYZ, XYM and XYZM. It accepts consistent EMPTY points, rejects partial or inconsistent EMPTY states,
+and rejects non-finite declared ordinates including M. Geography X/Y bounds are inclusive degrees:
+[-180, 180] / [-90, 90]. Geometry has no angular bounds. No CRS lookup, axis inference, repair or reprojection occurs.
+
+Point and its coordinate constraints use a null payload by default; geometric violations are errors rather than
+unavailable-validation warnings. Custom groups and payload propagate to the elementary violations.
+Violation codes are `coordinatelayout-invalid`, `finitecoordinates-invalid` and `geographybounds-invalid`.
+Only PHP null is ignored; every string, including the empty string, is rejected.
+Use Symfony `NotNull` or `NotBlank` for presence and `Sequentially` to stop after a presence failure.
+A genuine EMPTY Point passes presence checks and is still evaluated geometrically.
+
+These rules implement the approved LongitudeOne representation, finiteness and Geography decisions in #14;
+the catalogue references ISO/IEC CD 13249-3:201x(E), 2009-01-16, clauses 4.2.3 and 5.1.10, a Committee Draft.
+Other specialized types still report unavailable geometric validation.

@@ -42,11 +42,11 @@ Alexandre's 22 October revision supersedes #10's empty-string exemption for the 
 - **Any string, including '' and WKT, or another incompatible value** — Symfony UnexpectedValueException directly;
   type violation through the Symfony Validator service
 
-- **Admissible spatial object, including EMPTY** — Specialized non-implementation warning
+- **Admissible spatial object, including EMPTY** — Point coordinate rules or specialized non-implementation warning
 
 - **Unknown dispatch type** — PHP InvalidArgumentException: `Unsupported spatial type: <type>`
 
-Every specialized validator currently emits `<Type> validation is not implemented yet.`
+Except for Point, specialized validators currently emit `<Type> validation is not implemented yet.`
 with default constraint payload `['severity' => 'warning']`.
 Spatial has default payload null and emits no global warning. Its custom payload is not copied to child constraints.
 Symfony retains warnings in its violation list; payload is metadata interpreted by the consumer.
@@ -100,7 +100,8 @@ Approved LongitudeOne choices are identified below; unresolved interpretations r
 
 Validity, simplicity, closure and application restrictions are separate.
 A valid curve need not be simple or closed. Topological closure of a set does not imply curve closure or a solid.
-All geometric rules below await specialized implementation; apply component rules recursively when delivered.
+Point implements V02, V03 and V16. Other geometric rules below await specialized implementation;
+apply component rules recursively when delivered.
 
 ### Common and point rules
 

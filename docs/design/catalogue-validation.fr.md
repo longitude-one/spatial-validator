@@ -43,18 +43,21 @@ La révision approuvée par Alexandre le 22 octobre remplace l’exemption de ch
 - **Toute chaîne, y compris '' et WKT, ou autre valeur incompatible** — UnexpectedValueException de Symfony en appel
   direct ; violation de type via le service Validator
 
-- **Objet spatial admissible, même EMPTY** — Warning spécialisé de non-implémentation
+- **Objet spatial admissible, même EMPTY** — Règles de coordonnées Point ou warning spécialisé de non-implémentation
 
 - **Type inconnu du dispatch** — InvalidArgumentException PHP : `Unsupported spatial type: <type>`
 
-Chaque validateur spécialisé émet actuellement `<Type> validation is not implemented yet.`
+À l’exception de Point, les validateurs spécialisés émettent actuellement `<Type> validation is not implemented yet.`
 avec le payload par défaut `['severity' => 'warning']` sur sa contrainte.
 Spatial a un payload null par défaut et ne produit aucun warning global.
 Son payload personnalisé n’est pas recopié sur les contraintes enfants.
 Symfony conserve les warnings dans sa liste de violations ; le consommateur interprète ces métadonnées.
 Le cas défensif par défaut est inaccessible pour un objet conforme avec l’enum fermé actuel.
 
-**Cette infrastructure ne livre aucun algorithme de validation géométrique.**
+**Point implémente les contrôles de coordonnées V02, V03 et V16.**
+`PointValidator` compose `CoordinateLayout`, `FiniteCoordinates` et `GeographyBounds` ;
+ces contraintes ont un payload null par défaut et conservent les groupes et le payload personnalisés de Point.
+Le [référentiel des validateurs](../validators.md) fournit les liens vers chaque contrainte et son validateur.
 Un warning signifie qu’un contrôle n’a pas été réalisé, sans prouver validité ni invalidité.
 Aucune conformité générale SQL/MM ni validation géodétique n’est annoncée.
 Voir le [README](../../README.md) et les [conventions d’entrée Symfony][symfony-input].
@@ -103,8 +106,8 @@ Les choix LongitudeOne sont identifiés ci-dessous ; une interprétation non ré
 Validité, simplicité, fermeture et restrictions applicatives sont distinctes.
 Une courbe valide n’est pas nécessairement simple ou fermée.
 La fermeture topologique d’un ensemble n’implique ni fermeture d’une courbe ni solide.
-Les règles géométriques suivantes attendent leur implémentation spécialisée ; les composants seront validés
-récursivement.
+Point implémente V02, V03 et V16. Les autres règles géométriques suivantes attendent leur implémentation
+spécialisée ; les composants seront validés récursivement lors de leur livraison.
 
 ### Règles communes et Point
 

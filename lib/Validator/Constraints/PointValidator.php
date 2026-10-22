@@ -23,7 +23,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Report unavailable validation without claiming geometric validity. */
+/** Compose the applicable Point coordinate rules. */
 final class PointValidator extends ConstraintValidator
 {
     /**
@@ -49,6 +49,10 @@ final class PointValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::POINT->value);
         }
 
-        $this->context->buildViolation('Point validation is not implemented yet.')->addViolation();
+        $this->context->getValidator()->inContext($this->context)->validate($value, [
+            new CoordinateLayout(groups: $constraint->groups, payload: $constraint->payload),
+            new FiniteCoordinates(groups: $constraint->groups, payload: $constraint->payload),
+            new GeographyBounds(groups: $constraint->groups, payload: $constraint->payload),
+        ], $this->context->getGroup());
     }
 }
