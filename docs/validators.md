@@ -131,3 +131,43 @@ separately defines ST_3DIsSimple. The new API does not claim the XY-only semanti
 Non-empty Geography simplicity remains unavailable; valid EMPTY Geography is simple. Warnings use a cloned
 constraint and default warning payload; explicit payload is preserved. Other errors default to payload null.
 See the [usage and coverage](../README.md#linestring-validity-and-explicit-simplicity).
+
+## Linear-ring rules
+
+Use `Ring` explicitly for a linear boundary. It rejects EMPTY, then composes `MinimumPointCount(limit: 4)`,
+`FirstPointEqualsLastPoint` and `SimpleLineString`, reusing LineString/Point/component validity through the latter.
+No Polygon integration or Spatial dispatch changes are included.
+
+| Constraint | Description |
+| --- | --- |
+| [Ring](../lib/Validator/Constraints/Ring.php) · [Validator](../lib/Validator/Constraints/RingValidator.php) | Checks a non-empty, closed, simple linear ring with at least four positions |
+| [FirstPointEqualsLastPoint](../lib/Validator/Constraints/FirstPointEqualsLastPoint.php) · [Validator](../lib/Validator/Constraints/FirstPointEqualsLastPointValidator.php) | Checks finite non-empty Geometry endpoints using XY/XYZ equality; Geography warning |
+
+| Constant | Code |
+| --- | --- |
+| `Ring::EMPTY_ERROR` | `ring-empty` |
+| `FirstPointEqualsLastPoint::INVALID_ERROR` | `firstpointequalslastpoint-invalid` |
+| `FirstPointEqualsLastPoint::UNAVAILABLE_ERROR` | `firstpointequalslastpoint-unavailable` |
+
+Other diagnostics retain the delegated constraints and codes. Cardinality, EMPTY and closure violations are on
+the boundary; Point failures use `points[index]`. The original root, prefix and active group are preserved.
+Default error payload is null. Explicit Ring groups/payload apply to elementary boundary/line constraints;
+delegated Point diagnostics retain their own payloads.
+
+Geometry closure compares XYZ when Z exists, otherwise XY; it ignores M and retains the approved coordinate
+equality formula. This does not change the exact simplicity predicates or the actual-shared-endpoint exception.
+A closed simple A,B,C,A is admitted; a bow-tie, retracing or ordinary adjacent duplicate is rejected.
+
+Non-empty Geography closure and simplicity are explicitly unavailable, with separate warning diagnostics;
+structural and Point errors still apply. Warnings use copied constraints with warning payload by default,
+preserving explicit consumer payload and leaving shared instances unchanged. EMPTY is not a ring or closed.
+`MinimumPointCount` continues to allow EMPTY independently.
+
+Both constraints accept LineStringInterface with declared type LineString. They ignore only null and reject
+strings. Standalone closure does not establish complete line/ring validity. CircularString candidates are
+rejected by the input contract, without applying this four-position minimum to a circular full circle.
+
+Sources: ISO/IEC CD 13249-3:201x(E), 2009-01-16 Committee Draft, 4.2.4–4.2.5 and 7.1.6–7.1.9;
+[OGC 07-036, GML 3.2.1 §10.5.8](https://docs.ogc.org/is/07-036/07-036.pdf) for the linear-ring minimum.
+The dimension-aware API follows the approved LongitudeOne policy, rather than redefining ISO's separate
+XY and 3D closure/ring operations.

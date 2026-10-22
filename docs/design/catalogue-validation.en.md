@@ -104,6 +104,7 @@ Approved LongitudeOne choices are identified below; unresolved interpretations r
 Validity, simplicity, closure and application restrictions are separate.
 A valid curve need not be simple or closed. Topological closure of a set does not imply curve closure or a solid.
 Point implements V02, V03 and V16. LineString delivers V04/B01 and explicit S01 for Geometry.
+Ring delivers F01 by composing the existing line rules, cardinality, closure and simplicity.
 Other geometric rules below await specialized implementation;
 `Components` now applies component rules C01–C04 recursively.
 
@@ -161,6 +162,15 @@ The [line constraint reference](../validators.md#line-rules) records paths, code
 - **S01** — Curve simplicity in the selected space; ISO-CD 4.2.4, 5.1.8–5.1.9; OGC 6.1.6–6.1.7.
 
   **Reference scenarios:** Crossing/overlap: non-simple; XY crossing at separate elevations can be simple in XYZ.
+
+**Delivered in #16:** Explicit `Ring` composes minimum four positions, `FirstPointEqualsLastPoint` and
+`SimpleLineString`, including the latter's LineString/Point/component validity. Ring rejects EMPTY without
+changing EMPTY LineString validity. Geometry uses XYZ when Z exists, otherwise XY, ignoring M; closure retains
+Q02 while simplicity uses the original exact coordinates and cannot exempt an interior crossing near closure.
+Geography closure/simplicity remain unavailable warnings; structural and Point checks continue. Warning
+constraints are copied, preserving explicit payload and the original instances. CircularString is not subject
+to this LineString boundary constraint. Polygon integration remains in its specialized Stories.
+See the [ring reference](../validators.md#linear-ring-rules) for paths, codes and API limits.
 
 - **F01** — A ring is simple and closed; EMPTY is neither. ISO-CD 4.2.4–4.2.5, 7.1.6–7.1.9. Linear rings need >=4
   positions including repeated closure; GML 10.5.8.
