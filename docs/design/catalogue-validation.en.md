@@ -154,6 +154,15 @@ The [line constraint reference](../validators.md#line-rules) records paths, code
 
   **Reference scenarios:** 3/5 points admissible; 2/4 invalid; collinear triple may degenerate to a line.
 
+**Delivered in #17:** CircularString composes Components, CircularPointCount and CircularArcPoints;
+EMPTY is valid, non-empty cardinality is odd and >=3, and intermediate positions differ from endpoints under
+Q02 (XYZ when Z exists, M ignored). Full circles and source-defined collinear endpoint segments are accepted.
+Explicit SimpleCircularString checks actual arcs/segments, including crossings, tangencies and overlap;
+ordinary validity does not require simplicity or closure. Non-empty Geography topology remains unavailable.
+**Approved #17 limit:** an isolated full circle XYZ A,B,A is simple, but its plane is indeterminate;
+interactions with other arcs report explicit unavailable warnings without selecting an arbitrary XY plane.
+See the [circular reference](../validators.md#circular-curve-rules) for diagnostics, payload and coverage.
+
 - **V06** — CompoundCurve: well-formed LineString/CircularString components with consecutive endpoint continuity;
   ISO-CD 7.4.1 Description 3–10.
 

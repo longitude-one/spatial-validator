@@ -162,6 +162,15 @@ Le [référentiel des lignes](../validators.md#line-rules) précise chemins, cod
   **Scénarios de référence:** 3/5 points admissibles ; 2/4 invalides ; trois points colinéaires peuvent donner un
   segment dégénéré.
 
+**Livré dans #17 :** CircularString compose Components, CircularPointCount et CircularArcPoints ;
+EMPTY est valide, la cardinalité non vide est impaire et >=3, et l’intermédiaire diffère des extrémités selon
+Q02 (XYZ si Z existe, M ignoré). Cercles complets et dégénérescences collinéaires en segment sont admis.
+SimpleCircularString vérifie explicitement les arcs réels/segments, croisements, tangences et recouvrements ;
+la validité ordinaire n’exige ni simplicité ni fermeture. La topologie Geography non vide reste indisponible.
+**Limite approuvée #17 :** le cercle complet XYZ isolé A,B,A est simple, mais son plan est indéterminé ;
+ses interactions avec d’autres arcs produisent des warnings explicites, sans choix arbitraire du plan XY.
+Le [référentiel circulaire](../validators.md#circular-curve-rules) précise diagnostics, payload et couverture.
+
 - **V06** — CompoundCurve : composants LineString/CircularString bien formés, raccordés par leurs extrémités
   successives ; ISO-CD 7.4.1 Description 3–10.
 

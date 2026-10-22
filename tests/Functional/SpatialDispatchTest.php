@@ -40,8 +40,13 @@ final class SpatialDispatchTest extends TestCase
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testEveryTypeDelegatesInTheOriginalContext(GeometryTypeEnum $type, string $interface): void
     {
-        if (in_array($type, [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING], true)) {
-            $value = GeometryTypeEnum::POINT === $type ? new Point() : new ModelLineString([]);
+        $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING];
+        if (in_array($type, $implemented, true)) {
+            $value = match ($type) {
+                GeometryTypeEnum::POINT => new Point(),
+                GeometryTypeEnum::CIRCULARSTRING => CircularStringValidationTest::curve([]),
+                default => new ModelLineString([]),
+            };
             self::assertCount(0, Validation::createValidator()->validate($value, new Spatial()));
 
             return;

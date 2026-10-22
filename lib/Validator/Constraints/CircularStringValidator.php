@@ -49,9 +49,10 @@ final class CircularStringValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::CIRCULARSTRING->value);
         }
 
-        $this->context->buildViolation('CircularString validation is not implemented yet.')->addViolation();
-        $this->context->getValidator()->inContext($this->context)
-            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
-        ;
+        $this->context->getValidator()->inContext($this->context)->validate($value, [
+            new Components(groups: $constraint->groups, payload: $constraint->payload),
+            new CircularPointCount(groups: $constraint->groups, payload: $constraint->payload),
+            new CircularArcPoints(groups: $constraint->groups, payload: $constraint->payload),
+        ], $this->context->getGroup());
     }
 }

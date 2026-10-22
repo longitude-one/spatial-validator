@@ -297,7 +297,7 @@ final class ComponentValidationTest extends TestCase
         string $memberType,
         string $path,
     ): void {
-        if ('LineString' === $memberType) {
+        if (in_array($memberType, ['LineString', 'CircularString'], true)) {
             $member = $this->aggregate($memberType, [$this->invalidPoint(), new Point(1, 1)]);
             $parent = $this->aggregate($parentType, [$member]);
             $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());

@@ -91,7 +91,7 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point and LineString validation are implemented.** Other admissible spatial objects, including EMPTY,
+**Point, LineString and CircularString validation are implemented.** Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
 Symfony still includes this warning in the violation list; payload is application metadata,
@@ -232,3 +232,35 @@ LineString type and keep the standard null/string input contract.
 Ring is an opt-in boundary rule, not a new GeometryTypeEnum case or a change to Spatial dispatch.
 Polygon integration remains assigned to its specialized Stories. CircularString is not a LineString and does
 not receive the four-position rule through Ring. See the [ring reference](docs/validators.md#linear-ring-rules).
+
+## CircularString validity and explicit simplicity
+
+`CircularString` composes `Components`, `CircularPointCount` and `CircularArcPoints`. EMPTY is valid;
+non-empty curves need an odd number of at least three valid, non-EMPTY Points. An arc's intermediate position
+must differ from both endpoints under Q02 equality, in XYZ when Z exists and otherwise XY, ignoring M.
+A full circle A,B,A is admissible. Collinear triples degenerate to the segment connecting their endpoints.
+Ordinary validity does not require closure or simplicity.
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\CircularString;
+use LongitudeOne\SpatialValidator\Validator\Constraints\SimpleCircularString;
+
+$validity = $validator->validate($curve, new CircularString());
+$simplicity = $validator->validate($curve, new SimpleCircularString());
+```
+
+`SimpleCircularString` first validates the curve, then checks its actual arcs and degenerate segments, including
+crossings, interior tangencies and overlapping/retraced intervals. Adjacent arc joins and the actual common
+start/end of an otherwise simple closed curve are allowed. Chord intersections never substitute for arcs.
+Exact rational supports and algebraic intersection signs operate on supplied finite binary coordinates;
+there is no determinant tolerance, snapping, densification or coordinate repair. M is ignored spatially.
+
+Non-empty Geography simplicity reports an unavailable warning while structural/Point checks remain active.
+An isolated full circle XYZ is simple; A,B,A supplies no plane for interactions with another arc. Those pairs
+therefore report an explicit unavailable warning, following Alexandre's approved scope decision for #17.
+No XY plane is invented for these 3D circles. EMPTY is simple and is not a circular ring; a circular ring must
+also be non-empty and closed. Ring's four-position minimum remains specific to linear boundaries.
+
+Warnings clone their constraints, preserve explicit payload and use warning severity by default. Other errors
+have null payload by default. Delegation retains Symfony root, path and active group. See the
+[circular constraint reference](docs/validators.md#circular-curve-rules) for codes and diagnostic paths.

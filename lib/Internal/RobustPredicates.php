@@ -19,6 +19,9 @@ namespace LongitudeOne\SpatialValidator\Internal;
 use InvalidArgumentException as InvalidCoordinate;
 
 /**
+ * @phpstan-type Magnitude array{int, list<int>}
+ * @phpstan-type Rational array{Magnitude, Magnitude}
+ *
  * @internal Exact signs for finite IEEE-754 inputs, without a geometric tolerance.
  *
  * Every double is an integer multiple of 2^-1074. Signed magnitudes store that
@@ -59,6 +62,14 @@ final class RobustPredicates
     }
 
     /**
+     * @return Rational
+     */
+    public static function number(float $number): array
+    {
+        return self::reduceRational(self::integer($number), [1, self::shift([1], 1074)]);
+    }
+
+    /**
      * @param list<float>     $first
      * @param list<float>     $second
      * @param list<float>     $third
@@ -78,6 +89,65 @@ final class RobustPredicates
         );
 
         return $determinant[0];
+    }
+
+    /**
+     * @param Rational $first
+     * @param Rational $second
+     *
+     * @return Rational
+     */
+    public static function rationalAdd(array $first, array $second): array
+    {
+        if ($first[1] === $second[1]) {
+            return self::reduceRational(self::add($first[0], $second[0]), $first[1]);
+        }
+
+        return self::reduceRational(self::add(
+            self::multiply($first[0], $second[1]),
+            self::multiply($second[0], $first[1])
+        ), self::multiply($first[1], $second[1]));
+    }
+
+    /**
+     * @param Rational $first
+     * @param Rational $second
+     *
+     * @return Rational
+     */
+    public static function rationalDivide(array $first, array $second): array
+    {
+        return self::reduceRational(
+            self::multiply($first[0], $second[1]),
+            self::multiply($first[1], $second[0])
+        );
+    }
+
+    /**
+     * @param Rational $first
+     * @param Rational $second
+     *
+     * @return Rational
+     */
+    public static function rationalMultiply(array $first, array $second): array
+    {
+        return self::reduceRational(
+            self::multiply($first[0], $second[0]),
+            self::multiply($first[1], $second[1])
+        );
+    }
+
+    /**
+     * @param Rational $first
+     * @param Rational $second
+     *
+     * @return Rational
+     */
+    public static function rationalSubtract(array $first, array $second): array
+    {
+        $second[0][0] *= -1;
+
+        return self::rationalAdd($first, $second);
     }
 
     /**
@@ -143,6 +213,50 @@ final class RobustPredicates
         return $result;
     }
 
+    /**
+     * Divide positive magnitudes known to divide exactly.
+     *
+     * @param list<int> $value
+     * @param list<int> $divisor
+     *
+     * @return list<int>
+     */
+    private static function divide(array $value, array $divisor): array
+    {
+        $shift = max(0, (count($value) - count($divisor)) * 15 + 15);
+        $result = array_fill(0, intdiv($shift, 15) + 1, 0);
+        for ($bit = $shift; 0 <= $bit; --$bit) {
+            $candidate = self::shift($divisor, $bit);
+            if (0 <= self::compare($value, $candidate)) {
+                $value = self::signed(1, self::difference($value, $candidate))[1];
+                $result[intdiv($bit, 15)] |= 1 << ($bit % 15);
+            }
+        }
+
+        return self::signed(1, array_values($result))[1];
+    }
+
+    /**
+     * @param list<int> $first
+     * @param list<int> $second
+     *
+     * @return list<int>
+     */
+    private static function gcd(array $first, array $second): array
+    {
+        [$first, $left] = self::odd($first);
+        [$second, $right] = self::odd($second);
+        while ([] !== $second) {
+            $comparison = self::compare($first, $second);
+            if (0 < $comparison) {
+                [$first, $second] = [$second, $first];
+            }
+            [$second] = self::odd(self::signed(1, self::difference($second, $first))[1]);
+        }
+
+        return self::shift($first, min($left, $right));
+    }
+
     /** @return array{int, list<int>} */
     private static function integer(float $value): array
     {
@@ -194,6 +308,54 @@ final class RobustPredicates
         }
 
         return self::signed($first[0] * $second[0], array_values($result));
+    }
+
+    /**
+     * @param list<int> $digits
+     *
+     * @return array{list<int>, int}
+     */
+    private static function odd(array $digits): array
+    {
+        if ([] === $digits) {
+            return [[], 0];
+        }
+        $bits = 0;
+        while (0 === $digits[0]) {
+            array_shift($digits);
+            $bits += 15;
+        }
+        $low = $digits[0];
+        $shift = 0;
+        while (0 === $low % 2) {
+            $low = intdiv($low, 2);
+            ++$shift;
+        }
+        $carry = 0;
+        for ($index = count($digits) - 1; 0 <= $index; --$index) {
+            $total = $digits[$index] + $carry * self::BASE;
+            $digits[$index] = $total >> $shift;
+            $carry = $total % (1 << $shift);
+        }
+
+        return [self::signed(1, array_values($digits))[1], $bits + $shift];
+    }
+
+    /**
+     * @param Magnitude $numerator
+     * @param Magnitude $denominator
+     *
+     * @return Rational
+     */
+    private static function reduceRational(array $numerator, array $denominator): array
+    {
+        if (0 === $numerator[0]) {
+            return [[0, []], [1, [1]]];
+        }
+        $common = self::gcd($numerator[1], $denominator[1]);
+
+        return [[$numerator[0] * $denominator[0], self::divide($numerator[1], $common)],
+            [1, self::divide($denominator[1], $common)]];
     }
 
     /**
