@@ -92,7 +92,7 @@ Specialized validators check their required interface when available and their e
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
 **Point coordinate validation is implemented.** Other admissible spatial objects, including EMPTY,
-produces one violation with the message `<Type> validation is not implemented yet.`
+produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
 Symfony still includes this warning in the violation list; payload is application metadata,
 not an instruction to filter the violation. The remaining placeholders provide no geometric validity,
@@ -160,3 +160,13 @@ A genuine EMPTY Point passes presence checks and is still evaluated geometricall
 These rules implement the approved LongitudeOne representation, finiteness and Geography decisions in #14;
 the catalogue references ISO/IEC CD 13249-3:201x(E), 2009-01-16, clauses 4.2.3 and 5.1.10, a Committee Draft.
 Other specialized types still report unavailable geometric validation.
+
+## Component validation
+
+Aggregate validators compose `Components` to check member types, parent/member family, exact coordinate variant
+and complete spatial-reference identity, then delegate through `Spatial` in the active Symfony context.
+Nested failures retain their original constraint, code and payload, for example at
+`geometries[2].rings[1].points[3]`. Cycles yield an error at the cyclic reference; independent branches continue.
+EMPTY parent flags never hide members. Type-specific rules not yet implemented still emit their warning,
+so recursive component checks do not establish complete parent validity.
+See the [component reference](docs/validators.md#component-rules) for paths, member types and error codes.

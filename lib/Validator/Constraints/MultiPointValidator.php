@@ -50,5 +50,8 @@ final class MultiPointValidator extends ConstraintValidator
         }
 
         $this->context->buildViolation('MultiPoint validation is not implemented yet.')->addViolation();
+        $this->context->getValidator()->inContext($this->context)
+            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
+        ;
     }
 }

@@ -11,7 +11,8 @@ Call `$validator->validate($value, new Spatial())` with Symfony Validator and
 
 ## Specialized validation
 
-Point validates coordinates. Other specialized validators currently report an unavailable-validation warning.
+Point validates coordinates. Aggregate validators also validate their components recursively.
+Other type-specific geometric rules still produce an unavailable-validation warning.
 
 | Constraint | Description |
 | --- | --- |
@@ -52,3 +53,42 @@ These reusable constraints accept PointInterface values and preserve Symfony gro
 | [CoordinateLayout](../lib/Validator/Constraints/CoordinateLayout.php) · [Validator](../lib/Validator/Constraints/CoordinateLayoutValidator.php) | Checks declared ordinates and EMPTY consistency |
 | [FiniteCoordinates](../lib/Validator/Constraints/FiniteCoordinates.php) · [Validator](../lib/Validator/Constraints/FiniteCoordinatesValidator.php) | Checks finite values, including M |
 | [GeographyBounds](../lib/Validator/Constraints/GeographyBounds.php) · [Validator](../lib/Validator/Constraints/GeographyBoundsValidator.php) | Checks Geography longitude and latitude bounds |
+
+## Component rules
+
+Aggregate validators compose `Components`; it can also be applied directly to check membership and delegate
+component validation. It preserves root, outer property path and active group. Its payload defaults to null;
+delegated constraints retain their own payloads and codes. It does not validate the parent geometry itself.
+
+| Constraint | Description |
+| --- | --- |
+| [Components](../lib/Validator/Constraints/Components.php) · [Validator](../lib/Validator/Constraints/ComponentsValidator.php) | Checks component types, metadata and cycles; delegates geometry rules |
+
+| Parent | Diagnostic segment | Permitted members |
+| --- | --- | --- |
+| GeometryCollection | `geometries[index]` | Any spatial type |
+| LineString, CircularString, MultiPoint | `points[index]` | Point |
+| MultiLineString | `lineStrings[index]` | LineString |
+| MultiPolygon | `polygons[index]` | Polygon, including Triangle |
+| Polygon, Triangle | `rings[index]` | LineString ring candidates; exterior at index 0 |
+| CompoundCurve | `curves[index]` | LineString or CircularString |
+| PolyhedralSurface | `patches[index]` | Polygon, including Triangle |
+
+Indexes are zero-based positions. A nested diagnostic can be
+`geometries[2].rings[1].points[3]`; any outer Symfony prefix is retained.
+Each member must match its parent's Geometry/Geography family, exact XY/XYZ/XYM/XYZM variant and complete
+spatial reference (authority and identifier). No CRS lookup, axis verification or conversion occurs.
+
+| Components constant | Code |
+| --- | --- |
+| `TYPE_ERROR` | `components-type` |
+| `FAMILY_ERROR` | `components-family` |
+| `DIMENSION_ERROR` | `components-dimension` |
+| `REFERENCE_ERROR` | `components-reference` |
+| `CYCLE_ERROR` | `components-cycle` |
+
+Direct and indirect cycles produce an error at the cyclic reference and stop that branch; other branches
+continue. A shared object reached along independent paths is validated at each path.
+Members are visited even when the parent reports EMPTY. Valid EMPTY members in GeometryCollection, MultiPoint
+and MultiLineString are retained; this does not approve EMPTY Points inside lines or establish the remaining
+parent geometry rules. General collections may mix geometry types and topological dimensions.
