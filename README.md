@@ -91,7 +91,8 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point, LineString, CircularString and CompoundCurve validation are implemented.**
+**Point, LineString, CircularString, CompoundCurve, GeometryCollection, MultiPoint and MultiLineString validation
+are implemented within the limits below.**
 Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
@@ -295,3 +296,23 @@ These internal building blocks do not establish complete Polygon validity. Inter
 orientation diagnostics and integration into the public `Polygon` and `Spatial` constraints belong to #20.
 Until that integration, public Polygon validation retains its unavailable-validation warning; a structurally
 valid hole outside its exterior is not advertised as a valid Polygon.
+
+## Collection validity and explicit aggregate properties
+
+`GeometryCollection` (also used for GeographyCollection), `MultiPoint` and `MultiLineString` compose recursive
+member validation. General collections permit heterogeneous types and dimensions of topology; they do not impose
+cross-member disjointness. All members retain the exact coordinate variant, family and full spatial reference.
+A member validator whose geometric rules are unavailable still contributes its warning.
+
+Typed multis accept valid EMPTY Points or LineStrings and preserve every member in order. A memberless aggregate
+or one containing only EMPTY members represents the empty set. Every member is checked even if the parent reports
+EMPTY. This does not permit EMPTY Points inside a non-empty LineString.
+
+Use `SimpleMultiPoint` for distinct positions, `SimpleMultiLineString` for simple members and contacts only at both
+members' boundaries, and `ClosedMultiLineString` for a non-empty aggregate with every member closed. Ordinary
+validity imposes neither property. Geometry calculations include Z when present and ignore M. EMPTY members have
+no fabricated position; EMPTY aggregates are simple and fail explicit closure. A mixed MultiLineString with an
+EMPTY member also fails the every-member closure requirement. Non-empty Geography property checks report explicit
+unavailable warnings while available structural and Point checks remain active.
+
+See the [collection reference](docs/validators.md#collection-rules) for diagnostic codes and SQL/MM limitations.
