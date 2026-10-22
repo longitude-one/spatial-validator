@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as ModelLineString;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Components;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
@@ -70,8 +71,9 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testDirectInvocationReportsUnavailableValidation(GeometryTypeEnum $type, string $interface): void
     {
-        if (GeometryTypeEnum::POINT === $type) {
-            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+        if (in_array($type, [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING], true)) {
+            $value = GeometryTypeEnum::POINT === $type ? new Point() : new ModelLineString([]);
+            self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));
 
             return;
         }
@@ -122,8 +124,9 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testGroupsPayloadAndNestedPath(GeometryTypeEnum $type, string $interface): void
     {
-        if (GeometryTypeEnum::POINT === $type) {
-            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+        if (in_array($type, [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING], true)) {
+            $value = GeometryTypeEnum::POINT === $type ? new Point() : new ModelLineString([]);
+            self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));
 
             return;
         }
@@ -149,8 +152,9 @@ final class SpecializedValidationTest extends TestCase
     #[DataProvider('types')]
     public function testServiceReportsWarningAndPreservesContext(GeometryTypeEnum $type, string $interface): void
     {
-        if (GeometryTypeEnum::POINT === $type) {
-            self::assertCount(0, Validation::createValidator()->validate(new Point(), self::constraint($type)));
+        if (in_array($type, [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING], true)) {
+            $value = GeometryTypeEnum::POINT === $type ? new Point() : new ModelLineString([]);
+            self::assertCount(0, Validation::createValidator()->validate($value, self::constraint($type)));
 
             return;
         }

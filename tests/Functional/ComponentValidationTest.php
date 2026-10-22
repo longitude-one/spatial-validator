@@ -164,9 +164,9 @@ final class ComponentValidationTest extends TestCase
         }
         self::assertSame([
             SpatialAssert\Components::FAMILY_ERROR, SpatialAssert\Components::DIMENSION_ERROR,
-            SpatialAssert\Components::REFERENCE_ERROR, null,
+            SpatialAssert\Components::REFERENCE_ERROR,
             SpatialAssert\Components::FAMILY_ERROR, SpatialAssert\Components::DIMENSION_ERROR,
-            SpatialAssert\Components::REFERENCE_ERROR, null,
+            SpatialAssert\Components::REFERENCE_ERROR,
         ], $codes);
         self::assertSame($payload, $constraint->payload);
     }
@@ -253,7 +253,7 @@ final class ComponentValidationTest extends TestCase
     public function testNestedPathsContextGroupsAndIndependentFailures(): void
     {
         $bad = $this->invalidPoint();
-        $ring = $this->aggregate('LineString', [new Point(), new Point(), new Point(), $bad]);
+        $ring = $this->aggregate('LineString', [new Point(0, 0), new Point(1, 0), new Point(2, 0), $bad]);
         $polygon = $this->aggregate('Polygon', [$this->aggregate('LineString'), $ring]);
         $value = $this->aggregate('GeometryCollection', [new Point(), new Point(), $polygon, $bad]);
         $root = ['shape' => $value];
@@ -277,7 +277,8 @@ final class ComponentValidationTest extends TestCase
 
                 continue;
             }
-            self::assertSame(['severity' => 'warning'], $violation->getConstraint()->payload);
+            $expectedPayload = null === $violation->getCode() ? ['severity' => 'warning'] : null;
+            self::assertSame($expectedPayload, $violation->getConstraint()->payload);
         }
         self::assertSame(['[shape].geometries[2].rings[1].points[3]', '[shape].geometries[3]'], $paths);
         self::assertSame(['source' => 'consumer'], $constraint->payload);
@@ -296,6 +297,16 @@ final class ComponentValidationTest extends TestCase
         string $memberType,
         string $path,
     ): void {
+        if ('LineString' === $memberType) {
+            $member = $this->aggregate($memberType, [$this->invalidPoint(), new Point(1, 1)]);
+            $parent = $this->aggregate($parentType, [$member]);
+            $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
+            self::assertCount(2, $violations);
+            self::assertSame(SpatialAssert\FiniteCoordinates::INVALID_ERROR, $violations->get(0)->getCode());
+            self::assertSame($path . '.points[0]', $violations->get(0)->getPropertyPath());
+
+            return;
+        }
         $member = $this->aggregate($memberType);
         $parent = $this->aggregate($parentType, [$member]);
         $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());

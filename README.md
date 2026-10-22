@@ -91,7 +91,7 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point coordinate validation is implemented.** Other admissible spatial objects, including EMPTY,
+**Point and LineString validation are implemented.** Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
 Symfony still includes this warning in the violation list; payload is application metadata,
@@ -159,7 +159,7 @@ A genuine EMPTY Point passes presence checks and is still evaluated geometricall
 
 These rules implement the approved LongitudeOne representation, finiteness and Geography decisions in #14;
 the catalogue references ISO/IEC CD 13249-3:201x(E), 2009-01-16, clauses 4.2.3 and 5.1.10, a Committee Draft.
-Other specialized types still report unavailable geometric validation.
+Other specialized types still report unavailable geometric validation, with the LineString coverage described below.
 
 ## Component validation
 
@@ -170,3 +170,34 @@ Nested failures retain their original constraint, code and payload, for example 
 EMPTY parent flags never hide members. Type-specific rules not yet implemented still emit their warning,
 so recursive component checks do not establish complete parent validity.
 See the [component reference](docs/validators.md#component-rules) for paths, member types and error codes.
+
+## LineString validity and explicit simplicity
+
+`LineString` composes `Components`, `MinimumPointCount`, `NonEmptyPoints` and `NoConsecutiveDuplicatePoints`.
+Its default payload is null. An empty point list is valid; otherwise at least two valid non-EMPTY Points are
+required. Component Point rules include finite M and Geography bounds. Failures retain `points[index]` paths,
+root and active group. Explicit LineString groups and payload apply to its elementary line constraints;
+component Point diagnostics retain their own payloads.
+
+Consecutive positions compare XY, or XYZ when Z is declared, with
+`abs(a-b) <= PHP_FLOAT_EPSILON * max(1.0, abs(a), abs(b))`. M never distinguishes spatial positions.
+A crossing or backtracking line can be valid: ordinary validity requires neither closure nor simplicity.
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\LineString;
+use LongitudeOne\SpatialValidator\Validator\Constraints\SimpleLineString;
+
+$validity = $validator->validate($line, new LineString());
+$simplicity = $validator->validate($line, new SimpleLineString());
+```
+
+`SimpleLineString` first checks line validity, then tests Geometry segments in XY or XYZ according to the
+coordinate variant. It rejects crossings, self-tangencies and overlapping intervals; adjacent segments may
+share their endpoint, including the first/last endpoint of a closed line. It ignores M. Exact orientation
+and coplanarity signs operate on the supplied finite binary coordinates; no determinant epsilon, snapping,
+coordinate mutation or additional proximity tolerance is introduced.
+
+For non-empty Geography, geodetic simplicity is unavailable and yields an explicit warning. The warning uses
+a copy of the constraint with default payload `['severity' => 'warning']`; explicit consumer payload is retained.
+The original constraint is unchanged. EMPTY is simple. Cartesian topology never substitutes for geodetic checks.
+The [validator reference](docs/validators.md#line-rules) lists the constraints, codes and limitations.
