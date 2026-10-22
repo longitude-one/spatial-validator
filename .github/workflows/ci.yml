@@ -57,6 +57,13 @@ jobs:
       - run: npm audit
       - name: Validate root Composer manifest, audit dependencies and run all checks
         run: composer check
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: longitude-one/spatial-validator
+          files: build/clover.xml
+          disable_search: true
       - uses: actions/upload-artifact@v7
         if: always()
         with:
