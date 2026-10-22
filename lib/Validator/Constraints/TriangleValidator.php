@@ -50,5 +50,8 @@ final class TriangleValidator extends ConstraintValidator
         }
 
         $this->context->buildViolation('Triangle validation is not implemented yet.')->addViolation();
+        $this->context->getValidator()->inContext($this->context)
+            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
+        ;
     }
 }

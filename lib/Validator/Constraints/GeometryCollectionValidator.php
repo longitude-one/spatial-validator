@@ -50,5 +50,8 @@ final class GeometryCollectionValidator extends ConstraintValidator
         }
 
         $this->context->buildViolation('GeometryCollection validation is not implemented yet.')->addViolation();
+        $this->context->getValidator()->inContext($this->context)
+            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
+        ;
     }
 }

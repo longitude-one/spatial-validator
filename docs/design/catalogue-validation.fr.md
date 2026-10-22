@@ -107,7 +107,7 @@ Validité, simplicité, fermeture et restrictions applicatives sont distinctes.
 Une courbe valide n’est pas nécessairement simple ou fermée.
 La fermeture topologique d’un ensemble n’implique ni fermeture d’une courbe ni solide.
 Point implémente V02, V03 et V16. Les autres règles géométriques suivantes attendent leur implémentation
-spécialisée ; les composants seront validés récursivement lors de leur livraison.
+spécialisée ; `Components` valide désormais récursivement les composants (C01–C04).
 
 ### Règles communes et Point
 
@@ -259,19 +259,30 @@ Le contrôle des seules arêtes partagées ne détecte pas toutes les intersecti
 
 ### C01–C04 — Composants et compatibilité
 
+`Components` livre C01–C04 et la détection des cycles pour les agrégats disponibles.
+Le [référentiel des composants](../validators.md#component-rules) précise les chemins, types admis et codes.
+Les membres sont tous visités, même derrière un parent déclaré EMPTY. Les membres EMPTY valides de
+GeometryCollection, MultiPoint et MultiLineString sont conservés ; aucune exemption EMPTY globale ne remplace
+les règles géométriques des autres parents.
+Un cycle direct ou indirect produit `Components::CYCLE_ERROR` sur la référence cyclique et arrête cette branche.
+Les autres branches continuent ; un même objet partagé est validé à chacun de ses chemins indépendants.
+Racine, préfixe et groupe Symfony sont conservés, ainsi que les contraintes, codes et payloads délégués.
+Les erreurs Components ont un payload null par défaut. Les emplacements Polygon admettent leur sous-type
+Triangle (ISO-CD 4.2.11), sans modifier le dispatch distinct de Triangle.
+Les règles géométriques propres aux parents restent dans leurs stories spécialisées.
+
 - **C01** — Vérifier les types de membres permis et chaque composant récursivement.
 
-  **Source et limite:** ISO-CD 7.4.1, 8.3.1, 8.5.1, 4.2.14–19 ; récursion différée à D.
+  **Source et limite:** ISO-CD 7.4.1, 8.3.1, 8.5.1, 4.2.14–19 ; parcours récursif livré par D / #13.
 
 - **C02** — Compatibilité de famille Geometry/Geography.
 
-  **Source et limite:** Homogénéité stricte historique ; politique finale entre familles dans D et les stories
-  composites.
+  **Source et limite:** Décision D approuvée : chaque membre conserve exactement la famille Geometry/Geography du parent.
 
 - **C03** — Compatibilité de disposition des ordinates, XYZ distinct de XYM.
 
-  **Source et limite:** Homogénéité historique non universelle en ISO ; ISO-CD 8.5.1 Description 9 utilise la
-  dimension minimale des faces.
+  **Source et limite:** Décision D approuvée : même variante XY/XYZ/XYM/XYZM que le parent, sans conversion.
+  Ce contrat LongitudeOne est plus strict que la dimension minimale des faces dans ISO-CD 8.5.1 Description 9.
 
 - **C04** — Compatibilité de référence spatiale.
 
@@ -389,15 +400,14 @@ Revue indépendante, CI réussie et merge restent nécessaires pour Done.
 
 ## 6. Décisions restantes et répartition
 
+La compatibilité stricte famille/variante/référence et la politique des cycles de D sont approuvées et implémentées.
+
 - **Tolérance à l’échelle des calculs intermédiaires** — H–O ; conserver Q02 pour les paires de coordonnées
 
-- **Cohérence axes CRS/dimension du modèle ; consulter ISO 19111** — D/E/J/O ; métadonnées ou contrôle explicitement
-  indisponible
+- **Cohérence axes CRS/dimension du modèle ; consulter ISO 19111** — Future validation des métadonnées CRS,
+  hors périmètre D et E
 
 - **Surface EMPTY dans le validateur supplémentaire de fermeture** — O/P ; validité EMPTY par défaut déjà approuvée
-
-- **Politique précise de compatibilité des familles/variantes** — D et composites ; ne pas déduire le contrat des
-  seules restrictions historiques
 
 - **Interactions entre arcs et intersections arbitraires entre faces** — H/I/O ; annoncer explicitement les
   contrôles indisponibles

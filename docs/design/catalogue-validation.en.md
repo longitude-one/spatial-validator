@@ -52,7 +52,10 @@ Spatial has default payload null and emits no global warning. Its custom payload
 Symfony retains warnings in its violation list; payload is metadata interpreted by the consumer.
 The defensive default is unreachable through the current closed enum for a conforming object.
 
-**No geometric validation algorithm is delivered by this infrastructure.**
+**Point coordinate checks V02, V03 and V16 are delivered; other type-specific rules remain incomplete.**
+`PointValidator` composes `CoordinateLayout`, `FiniteCoordinates` and `GeographyBounds`.
+`Components` delivers recursive member checks C01–C04 and cycle detection for the supported aggregates.
+See the [validator reference](../validators.md#component-rules) for paths, codes and composition limits.
 A warning means a check was not performed, not that validity or invalidity was established.
 There is no general SQL/MM or geodetic conformance claim.
 See [README](../../README.md) for usage and [Symfony input conventions][symfony-input].
@@ -101,7 +104,7 @@ Approved LongitudeOne choices are identified below; unresolved interpretations r
 Validity, simplicity, closure and application restrictions are separate.
 A valid curve need not be simple or closed. Topological closure of a set does not imply curve closure or a solid.
 Point implements V02, V03 and V16. Other geometric rules below await specialized implementation;
-apply component rules recursively when delivered.
+`Components` now applies component rules C01–C04 recursively.
 
 ### Common and point rules
 
@@ -246,24 +249,31 @@ Checking shared edges alone does not detect arbitrary patch intersections.
 
 - **C01** — Validate permitted member types and each component recursively.
 
-  **Source / limitation:** ISO-CD 7.4.1, 8.3.1, 8.5.1, 4.2.14–19; recursion is deferred to D.
+  **Source / limitation:** ISO-CD 7.4.1, 8.3.1, 8.5.1, 4.2.14–19; recursive traversal delivered by D / #13.
 
 - **C02** — Check Geometry/Geography family compatibility.
 
-  **Source / limitation:** Historical strict homogeneity; final cross-family policy belongs to D/composite Stories.
+  **Source / limitation:** Approved D policy: each member has exactly the parent Geometry/Geography family.
 
 - **C03** — Check coordinate-layout compatibility, distinguishing XYZ from XYM.
 
-  **Source / limitation:** Historical strict homogeneity is not a universal ISO requirement; ISO-CD 8.5.1
-  Description 9 uses minimum patch dimension.
+  **Source / limitation:** Approved D policy: exact parent XY/XYZ/XYM/XYZM variant, with no conversion.
+  This LongitudeOne contract is stricter than ISO-CD 8.5.1 Description 9's minimum patch dimension.
 
 - **C04** — Check spatial reference compatibility.
 
   **Source / limitation:** ISO-CD 4.2.1, 4.2.14; authority+identifier identity does not prove CRS equivalence or
-  axis/dimension agreement.
+  axis/dimension agreement. D compares authority and identifier exactly, without CRS lookup.
 
 General collections may mix geometry types/topological dimensions; member intersections alone do not imply
 invalidity.
+`Components` checks every member even behind an EMPTY parent flag. Valid EMPTY GeometryCollection, MultiPoint
+and MultiLineString members are retained; no blanket EMPTY exemption is applied to other parent rules.
+Direct and indirect cycles produce `Components::CYCLE_ERROR` at the cyclic reference and stop that branch;
+independent branches, including repeated shared objects, continue. Diagnostics retain root, prefix and active
+group; delegated constraints retain their codes and payloads. Components errors have payload null by default.
+Polygon member slots admit Triangle subtypes (ISO-CD 4.2.11); Triangle dispatch remains distinct.
+Type-specific parent geometry rules remain deferred to their specialized Stories.
 An equal integer SRID under different authorities does not establish reference identity.
 Do not infer axis validity or transform coordinates from SRID alone.
 
@@ -372,11 +382,11 @@ Independent review, successful CI and merge remain necessary for Done.
 | Open detail | Affected scope |
 | --- | --- |
 | Scaled tolerance for intermediate calculations | H–O; retain Q02 for coordinate pairs |
-| CRS axes and model dimension agreement; inspect ISO 19111 | D/E/J/O; metadata or explicit unavailable check required |
+| CRS axes and model dimension agreement; inspect ISO 19111 | Future CRS metadata validation; outside D and E |
 | EMPTY surface behavior under the additional closure validator | O/P; default EMPTY validity is already approved |
-| Exact family/layout compatibility policy | D and composites; do not infer from old restrictions alone |
 | Arc interactions and arbitrary patch intersections | H/I/O; declare unavailable checks explicitly |
 
+D's exact family/layout/reference compatibility and cycle policy are approved and implemented.
 GeometryCollection and #22's EMPTY MultiPoint/MultiLineString acceptance are approved, not open questions.
 No further type's EMPTY policy is inferred from silence.
 
