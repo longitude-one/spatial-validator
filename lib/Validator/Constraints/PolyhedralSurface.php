@@ -18,9 +18,15 @@ namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
 
-/** Require connected, consistently oriented polygon patches with a Z ordinate. */
+/** Configure the unavailable PolyhedralSurface validation warning. */
 final class PolyhedralSurface extends Constraint
 {
-    public string $message = 'A polyhedral surface must have connected, consistently oriented 3D patches '
-        . 'with at most two faces along each edge.';
+    /**
+     * @param null|string[] $groups  Validation groups
+     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     */
+    public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
+    {
+        parent::__construct(null, $groups, $payload);
+    }
 }

@@ -16,21 +16,18 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolyhedralSurfaceInterface;
-use LongitudeOne\SpatialValidator\Validator\Internal\PlanarPatch;
-use LongitudeOne\SpatialValidator\Validator\Internal\PolyhedralSurfaceTopology;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Validate surface boundaries without requiring them to enclose a solid. */
+/** Report unavailable validation without claiming geometric validity. */
 final class PolyhedralSurfaceValidator extends ConstraintValidator
 {
     /**
-     * Validate patches and their oriented edge connections.
-     *
-     * @param mixed      $value      Surface to validate
+     * @param mixed      $value      Spatial object to validate
      * @param Constraint $constraint Applied constraint
      */
     public function validate(mixed $value, Constraint $constraint): void
@@ -38,49 +35,20 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         if (!$constraint instanceof PolyhedralSurface) {
             throw new UnexpectedTypeException($constraint, PolyhedralSurface::class);
         }
-        if (null === $value || '' === $value) {
+
+        // Allow optional spatial values; use NotNull separately when a value is required.
+        if (null === $value) {
             return;
         }
 
         if (!$value instanceof PolyhedralSurfaceInterface) {
             throw new UnexpectedValueException($value, PolyhedralSurfaceInterface::class);
         }
-        if (!$value->hasZ()) {
-            $this->context->buildViolation($constraint->message)->addViolation();
 
-            return;
-        }
-        if (!$this->validatePatches($value, $constraint)) {
-            return;
-        }
-        if (!PolyhedralSurfaceTopology::isValid($value->getPatches())) {
-            $this->context->buildViolation($constraint->message)->addViolation();
-        }
-    }
-
-    /**
-     * Validate each patch and its rings before checking the surface topology.
-     *
-     * @param PolyhedralSurfaceInterface $value      Surface to validate
-     * @param PolyhedralSurface          $constraint Applied constraint
-     */
-    private function validatePatches(PolyhedralSurfaceInterface $value, PolyhedralSurface $constraint): bool
-    {
-        foreach ($value->getPatches() as $patch) {
-            if ($patch->isEmpty() || !$patch->hasZ() || !PlanarPatch::isValid($patch)) {
-                $this->context->buildViolation($constraint->message)->addViolation();
-
-                return false;
-            }
-            foreach ($patch->getRings() as $ring) {
-                $this->context->getValidator()->inContext($this->context)->validate(
-                    $ring,
-                    [new Ring(), new SimpleThreeDimensionalLineString()],
-                    $this->context->getGroup()
-                );
-            }
+        if (GeometryTypeEnum::POLYHEDRALSURFACE !== $value->getType()) {
+            throw new UnexpectedValueException($value, GeometryTypeEnum::POLYHEDRALSURFACE->value);
         }
 
-        return true;
+        $this->context->buildViolation('PolyhedralSurface validation is not implemented yet.')->addViolation();
     }
 }

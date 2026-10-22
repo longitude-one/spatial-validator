@@ -16,19 +16,18 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
-use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
+use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Validate SQL/MM triangle structure independently of the concrete polygon type. */
+/** Report unavailable validation without claiming geometric validity. */
 final class TriangleValidator extends ConstraintValidator
 {
     /**
-     * Validate the boundary, composing the existing ring constraint.
-     *
-     * @param mixed      $value      Polygon to validate
+     * @param mixed      $value      Spatial object to validate
      * @param Constraint $constraint Applied constraint
      */
     public function validate(mixed $value, Constraint $constraint): void
@@ -37,31 +36,19 @@ final class TriangleValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, Triangle::class);
         }
 
-        if (null === $value || '' === $value) {
+        // Allow optional spatial values; use NotNull separately when a value is required.
+        if (null === $value) {
             return;
         }
 
-        if (!$value instanceof PolygonInterface) {
-            throw new UnexpectedValueException($value, PolygonInterface::class);
+        if (!$value instanceof TriangleInterface) {
+            throw new UnexpectedValueException($value, TriangleInterface::class);
         }
 
-        $rings = $value->getRings();
-        if ([] === $rings) {
-            return;
+        if (GeometryTypeEnum::TRIANGLE !== $value->getType()) {
+            throw new UnexpectedValueException($value, GeometryTypeEnum::TRIANGLE->value);
         }
 
-        if (1 < count($rings)) {
-            $this->context->buildViolation($constraint->interiorRingsMessage)->addViolation();
-        }
-
-        $exterior = $value->getRing(0);
-        if (4 !== count($exterior->getPoints())) {
-            $this->context->buildViolation($constraint->pointCountMessage)->addViolation();
-        }
-
-        $this->context->getValidator()
-            ->inContext($this->context)
-            ->validate($exterior, new Ring(), $this->context->getGroup())
-        ;
+        $this->context->buildViolation('Triangle validation is not implemented yet.')->addViolation();
     }
 }

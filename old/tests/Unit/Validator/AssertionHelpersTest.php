@@ -43,7 +43,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testDimensionException(): void
     {
         $this->expectException(InvalidDimensionException::class);
-        $this->expectExceptionMessage('dimension');
+        $this->expectExceptionMessageIsOrContains('dimension');
         DimensionValidation::assertSame(CoordinateDimensionEnum::XYZ, new Point(1, 2), 'dimension');
     }
 
@@ -56,7 +56,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testFamilyException(): void
     {
         $this->expectException(InvalidFamilyException::class);
-        $this->expectExceptionMessage('family');
+        $this->expectExceptionMessageIsOrContains('family');
         FamilyValidation::assertSame(SpatialModelEnum::GEOGRAPHY, new Point(1, 2), 'family');
     }
 
@@ -69,7 +69,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testLineException(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A line string must not contain consecutive duplicate points.');
+        $this->expectExceptionMessageIsOrContains('A line string must not contain consecutive duplicate points.');
         LineStringValidation::assertNoConsecutiveDuplicatePoints($this->lineCandidate([[0, 0, 0], [0, 0, 0]]));
     }
 
@@ -82,7 +82,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testReferenceException(): void
     {
         $this->expectException(InvalidSridException::class);
-        $this->expectExceptionMessage('The point spatial reference is not compatible with the spatial reference '
+        $this->expectExceptionMessageIsOrContains('The point spatial reference is not compatible with the spatial reference '
             . 'of this spatial value.');
         SpatialReferenceValidation::assertSame(SpatialReference::fromSrid(4326), new Point(1, 2), 'point');
     }
@@ -96,7 +96,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testRingException(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A linear ring must contain at least 4 points.');
+        $this->expectExceptionMessageIsOrContains('A linear ring must contain at least 4 points.');
         RingValidation::assertValid($this->lineCandidate([]));
     }
 
@@ -109,7 +109,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testSurfaceException(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A polyhedral surface must have connected, consistently oriented 3D patches '
+        $this->expectExceptionMessageIsOrContains('A polyhedral surface must have connected, consistently oriented 3D patches '
             . 'with at most two faces along each edge.');
         PolyhedralSurfaceValidation::assertValid($this->surfaceCandidate([[]]));
     }
@@ -123,7 +123,7 @@ final class AssertionHelpersTest extends SpatialCandidates
     public function testTriangleException(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('A triangle exterior ring must contain exactly four points.');
+        $this->expectExceptionMessageIsOrContains('A triangle exterior ring must contain exactly four points.');
         TriangleValidation::assertValid($this->polygonCandidate([[[0, 0, 0], [1, 0, 0], [0, 0, 0]]]));
     }
 
