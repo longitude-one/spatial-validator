@@ -91,7 +91,8 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point, LineString and CircularString validation are implemented.** Other admissible spatial objects, including EMPTY,
+**Point, LineString, CircularString and CompoundCurve validation are implemented.**
+Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
 Symfony still includes this warning in the violation list; payload is application metadata,
@@ -267,3 +268,16 @@ also be non-empty and closed. Ring's four-position minimum remains specific to l
 Warnings clone their constraints, preserve explicit payload and use warning severity by default. Other errors
 have null payload by default. Delegation retains Symfony root, path and active group. See the
 [circular constraint reference](docs/validators.md#circular-curve-rules) for codes and diagnostic paths.
+
+## CompoundCurve validity and explicit simplicity
+
+`CompoundCurve` validates its LineString/CircularString members, rejects EMPTY contributing curves and checks
+consecutive endpoint continuity. A zero-member compound curve is valid EMPTY. Geometry joins compare XYZ when
+Z exists, otherwise XY, using the scaled finite-coordinate equality and ignoring M.
+Ordinary validity requires neither closure nor simplicity.
+
+Opt in to `SimpleCompoundCurve` to check the whole curve for line/line, line/arc and arc/arc crossings,
+interior tangencies, overlaps and retracing, including interactions across independently simple members.
+Allowed adjacent joins and one global closure remain valid. The check uses actual arcs and original coordinates.
+Geography joins/topology and interactions with full XYZ circles whose plane is undetermined yield explicit warnings.
+See the [compound-curve reference](docs/validators.md#compound-curve-rules) for the API, codes, paths and limitations.
