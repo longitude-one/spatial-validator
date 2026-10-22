@@ -202,7 +202,9 @@ without an added proximity tolerance. Collinear triples represent their endpoint
 Full circles with exactly repeated endpoints have their center midway between start and intermediate points.
 
 EMPTY passes ordinary validity and simplicity, but is not a circular ring. A full circle needs three defining
-positions; no four-position linear-ring minimum applies. Ordinary curves may be open or non-simple.
+positions; no four-position linear-ring minimum applies. Ordinary curves may be open or non-simple. Repeated arc
+endpoints outside the single global closure are
+forbidden, including tangent full circles that revisit the boundary at an interior join.
 `SimpleCircularString` detects true-arc crossings, interior tangencies and interval overlaps/retracing,
 including between circles in distinct XYZ planes and between arcs and segment degenerations.
 

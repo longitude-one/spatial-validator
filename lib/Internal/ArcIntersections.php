@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Internal;
 
-use LongitudeOne\SpatialValidator\Internal\RobustPredicates as Exact;
+use LongitudeOne\SpatialValidator\Internal\ExactRationals as Exact;
 
 /**
  * @internal exact support intersections followed by actual-arc membership tests

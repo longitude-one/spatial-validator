@@ -251,14 +251,17 @@ $simplicity = $validator->validate($curve, new SimpleCircularString());
 
 `SimpleCircularString` first validates the curve, then checks its actual arcs and degenerate segments, including
 crossings, interior tangencies and overlapping/retraced intervals. Adjacent arc joins and the actual common
-start/end of an otherwise simple closed curve are allowed. Chord intersections never substitute for arcs.
+start/end of an otherwise simple closed curve are allowed. A position repeated at an interior join and the
+curve boundary is forbidden: two tangent full circles forming a figure eight are not simple. Chord intersections
+never substitute for arcs.
 Exact rational supports and algebraic intersection signs operate on supplied finite binary coordinates;
 there is no determinant tolerance, snapping, densification or coordinate repair. M is ignored spatially.
 
 Non-empty Geography simplicity reports an unavailable warning while structural/Point checks remain active.
 An isolated full circle XYZ is simple; A,B,A supplies no plane for interactions with another arc. Those pairs
 therefore report an explicit unavailable warning, following Alexandre's approved scope decision for #17.
-No XY plane is invented for these 3D circles. EMPTY is simple and is not a circular ring; a circular ring must
+No XY plane is invented for these 3D circles. Independently provable endpoint repetitions remain errors. EMPTY is
+simple and is not a circular ring; a circular ring must
 also be non-empty and closed. Ring's four-position minimum remains specific to linear boundaries.
 
 Warnings clone their constraints, preserve explicit payload and use warning severity by default. Other errors

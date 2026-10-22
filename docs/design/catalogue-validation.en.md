@@ -159,6 +159,7 @@ EMPTY is valid, non-empty cardinality is odd and >=3, and intermediate positions
 Q02 (XYZ when Z exists, M ignored). Full circles and source-defined collinear endpoint segments are accepted.
 Explicit SimpleCircularString checks actual arcs/segments, including crossings, tangencies and overlap;
 ordinary validity does not require simplicity or closure. Non-empty Geography topology remains unavailable.
+Repeated arc endpoints outside global closure, including tangent-circle figure eights, are not simple.
 **Approved #17 limit:** an isolated full circle XYZ A,B,A is simple, but its plane is indeterminate;
 interactions with other arcs report explicit unavailable warnings without selecting an arbitrary XY plane.
 See the [circular reference](../validators.md#circular-curve-rules) for diagnostics, payload and coverage.

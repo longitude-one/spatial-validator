@@ -63,7 +63,7 @@ final class CircularStringSimplicityTest extends TestCase
 
         yield 'collinear backtrack' => [[[0, 0], [1, 0], [2, 0], [1, 0], [0, 0]], false];
 
-        yield 'full circles tangent at allowed join' => [[[1, 0], [-1, 0], [1, 0], [3, 0], [1, 0]], true];
+        yield 'tangent full circles repeat an interior position' => [[[1, 0], [-1, 0], [1, 0], [3, 0], [1, 0]], false];
 
         yield 'full circles overlap' => [[[1, 0], [-1, 0], [1, 0], [0, 1], [1, 0]], false];
 
@@ -164,8 +164,9 @@ final class CircularStringSimplicityTest extends TestCase
             CoordinateDimensionEnum::XYZ
         );
         $violations = $service->validate($mixed, $constraint);
-        self::assertCount(1, $violations);
-        self::assertSame(SpatialAssert\SimpleCircularString::UNAVAILABLE_ERROR, $violations->get(0)->getCode());
+        self::assertCount(2, $violations);
+        self::assertSame(SpatialAssert\SimpleCircularString::INVALID_ERROR, $violations->get(0)->getCode());
+        self::assertSame(SpatialAssert\SimpleCircularString::UNAVAILABLE_ERROR, $violations->get(1)->getCode());
     }
 
     public function testLiteralSemicircleClosureAndValidityAreSeparate(): void
@@ -210,20 +211,41 @@ final class CircularStringSimplicityTest extends TestCase
     public function testScaleAndAxisPermutations(): void
     {
         foreach ([1.0e308, 1.0e-10, 1.0] as $scale) {
-            $xy = [[-$scale, 0], [0, $scale], [$scale, 0], [0, -$scale], [-$scale, 0]];
+            $planar = [[-$scale, 0], [0, $scale], [$scale, 0], [0, -$scale], [-$scale, 0]];
             foreach ([[0, 1], [0, 2], [1, 2]] as [$horizontal, $vertical]) {
-                $xyz = [];
-                foreach ($xy as $point) {
+                $spatial = [];
+                foreach ($planar as $point) {
                     $position = [0, 0, 0];
                     $position[$horizontal] = $point[0];
                     $position[$vertical] = $point[1];
-                    $xyz[] = $position;
+                    $spatial[] = $position;
                 }
-                $curve = CircularStringValidationTest::curve($xyz, CoordinateDimensionEnum::XYZ);
+                $curve = CircularStringValidationTest::curve($spatial, CoordinateDimensionEnum::XYZ);
                 self::assertCount(0, Validation::createValidator()->validate(
                     $curve,
                     new SpatialAssert\SimpleCircularString()
                 ));
+            }
+        }
+    }
+
+    public function testTwoTangentCirclesRepeatBoundaryAtAnInteriorJoin(): void
+    {
+        $service = Validation::createValidator();
+        $planar = new CircularString(
+            [[1, 0], [-1, 0], [1, 0], [3, 0], [1, 0]]
+        );
+        $spatial = CircularStringValidationTest::curve([
+            [1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0], [1, 0, 0],
+            [2, 0, 1], [3, 0, 0], [2, 0, -1], [1, 0, 0],
+        ], CoordinateDimensionEnum::XYZ);
+        foreach ([$planar, $spatial] as $curve) {
+            self::assertCount(0, $service->validate($curve, new SpatialAssert\CircularString()));
+            $violations = $service->validate($curve, new SpatialAssert\SimpleCircularString());
+            self::assertNotEmpty($violations);
+            foreach ($violations as $violation) {
+                self::assertSame(SpatialAssert\SimpleCircularString::INVALID_ERROR, $violation->getCode());
+                self::assertStringStartsWith('arcs[', $violation->getPropertyPath());
             }
         }
     }

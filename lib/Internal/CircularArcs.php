@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Internal;
 
-use LongitudeOne\SpatialValidator\Internal\RobustPredicates as Exact;
+use LongitudeOne\SpatialValidator\Internal\ExactRationals as Exact;
 
 /**
  * @internal exact rational supports; algebraic points have form base + coefficient * sqrt(radicand)

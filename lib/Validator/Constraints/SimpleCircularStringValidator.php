@@ -67,6 +67,7 @@ final class SimpleCircularStringValidator extends ConstraintValidator
     /** @param list<Arc> $arcs */
     private function arcs(array $arcs, SimpleCircularString $constraint): void
     {
+        $this->repeatedEndpoints($arcs);
         $count = count($arcs);
         for ($first = 0; $first < $count; ++$first) {
             for ($second = $first + 1; $second < $count; ++$second) {
@@ -103,6 +104,27 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         }
 
         return $permitted;
+    }
+
+    /** @param list<Arc> $arcs */
+    private function repeatedEndpoints(array $arcs): void
+    {
+        $vertices = [$arcs[0]['start']];
+        foreach ($arcs as $arc) {
+            $vertices[] = $arc['end'];
+        }
+        $last = count($vertices) - 1;
+        foreach ($vertices as $second => $vertex) {
+            for ($first = 0; $first < $second; ++$first) {
+                if ($vertices[$first] !== $vertex || (0 === $first && $second === $last)) {
+                    continue;
+                }
+                $this->context->buildViolation('A curve position is repeated outside its permitted global closure.')
+                    ->atPath('arcs[' . ($second - 1) . ']')
+                    ->setCode(SimpleCircularString::INVALID_ERROR)->addViolation()
+                ;
+            }
+        }
     }
 
     private function unavailable(SimpleCircularString $constraint): void
