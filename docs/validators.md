@@ -266,3 +266,41 @@ densification, repair, CRS lookup or reprojection is performed.
 
 Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clauses 4.2.7,
 7.4.1 Description 3–10 and 7.4.3 → 16.1.6; dimension-aware joins follow the approved Q01–Q03 policy.
+
+## Internal Polygon structure and supporting plane
+
+The internal `PolygonStructure` constraint composes complete `Ring` validation at `rings[index]` and
+shared parent/member metadata checks. Ring delegates Point rules once, preserving root, property path,
+active group and elementary constraint identity. Explicit payload propagates to boundary rules;
+Point diagnostics retain their own payload. Genuine EMPTY means no rings and an EMPTY flag; inconsistent
+flags never hide stored boundaries. A non-empty value without a shell, an EMPTY shell with holes, and
+EMPTY holes fail. All strings, including the empty string, follow the current unsupported-input contract.
+
+A non-empty Geometry exterior must supply three non-collinear spatial positions. The supporting plane
+uses existing exact binary orientation and coplanarity predicates, without determinant epsilon or
+coordinate changes. Every exterior and interior position must lie in that same plane. XY/XYM use XY;
+XYZ/XYZM use XYZ, including inclined and vertical planes. M remains subject to Point finiteness checks
+but never defines a plane. Incompatible metadata or unusable positions suppress dependent plane checks,
+while independent ring diagnostics continue.
+
+| Internal diagnostic | Code | Path |
+| --- | --- | --- |
+| Missing shell or inconsistent EMPTY state | `polygonstructure-empty` | Polygon |
+| Collinear exterior | `polygonstructure-degenerate` | `rings[0]` |
+| Position outside the common supporting plane | `polygonstructure-plane` | `rings[i].points[j]` |
+| Geography planarity/topology unavailable | `polygonstructure-unavailable` | Polygon |
+
+Geography never uses Cartesian planarity or topology as a substitute. Non-empty values receive the
+internal unavailable warning alongside Ring's available checks and geodetic limitations. Warning constraints
+are copied, default to `['severity' => 'warning']` and retain explicit payload. Other structural diagnostics
+default to null payload. Genuine EMPTY Geography requires no plane and produces no structural warning.
+
+This is an internal foundation for #20, with no public structural-only Polygon API. Inter-ring topology,
+orientation and final public Polygon integration remain outside #19; structural success cannot establish
+complete Polygon validity. The public `Polygon`/`Spatial` coverage warning remains until complete integration.
+A coplanar hole outside its exterior deliberately passes this internal stage and must fail final validation.
+
+References: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clauses 4.2.9–4.2.10 and
+8.3.1 Description 2–4 (linear exterior/interior boundaries and planar surface); OGC SFA 1.2.1, 6.1.11.1;
+Alexandre's approved #19 composition and numerical decisions. Ring semantics and approved Geography
+limitations remain those documented above. No vendor behavior defines these rules.

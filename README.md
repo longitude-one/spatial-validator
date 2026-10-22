@@ -281,3 +281,17 @@ interior tangencies, overlaps and retracing, including interactions across indep
 Allowed adjacent joins and one global closure remain valid. The check uses actual arcs and original coordinates.
 Geography joins/topology and interactions with full XYZ circles whose plane is undetermined yield explicit warnings.
 See the [compound-curve reference](docs/validators.md#compound-curve-rules) for the API, codes, paths and limitations.
+
+## Polygon structural foundation
+
+Story #19 supplies internal Symfony composition for Polygon boundaries and their common supporting plane.
+It accepts genuine EMPTY Polygons, checks every linear ring and parent/member metadata, and rejects
+EMPTY boundaries, collinear exteriors and positions outside the exterior's supporting plane.
+Geometry uses exact orientation and coplanarity signs on supplied finite binary coordinates, including Z
+when declared and ignoring M. Inclined and vertical planes are supported without an XY-area assumption.
+Geography retains available structural checks and explicit warnings for unavailable geodetic checks.
+
+These internal building blocks do not establish complete Polygon validity. Inter-ring relationships,
+orientation diagnostics and integration into the public `Polygon` and `Spatial` constraints belong to #20.
+Until that integration, public Polygon validation retains its unavailable-validation warning; a structurally
+valid hole outside its exterior is not advertised as a valid Polygon.

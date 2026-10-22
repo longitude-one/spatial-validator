@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialValidator\Internal\ComponentMetadata;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -52,29 +53,8 @@ final class ComponentsValidator extends ConstraintValidator
 
     private function compatibility(SpatialInterface $parent, SpatialInterface $member, string $path): void
     {
-        if ($parent->getFamily() !== $member->getFamily()) {
-            $this->violation(
-                'The component must have the same spatial family as its parent.',
-                Components::FAMILY_ERROR,
-                $path,
-                $member,
-            );
-        }
-        if ($parent->getDimension() !== $member->getDimension()) {
-            $this->violation(
-                'The component must have the same coordinate variant as its parent.',
-                Components::DIMENSION_ERROR,
-                $path,
-                $member,
-            );
-        }
-        if (!$parent->getSpatialReference()->equals($member->getSpatialReference())) {
-            $this->violation(
-                'The component must have the same spatial reference as its parent.',
-                Components::REFERENCE_ERROR,
-                $path,
-                $member,
-            );
+        foreach (ComponentMetadata::errors($parent, $member) as $code => $message) {
+            $this->violation($message, $code, $path, $member);
         }
     }
 
