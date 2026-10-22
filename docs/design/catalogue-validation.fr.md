@@ -108,6 +108,7 @@ Validité, simplicité, fermeture et restrictions applicatives sont distinctes.
 Une courbe valide n’est pas nécessairement simple ou fermée.
 La fermeture topologique d’un ensemble n’implique ni fermeture d’une courbe ni solide.
 Point implémente V02, V03 et V16. LineString livre V04/B01 et le contrôle explicite S01 pour Geometry.
+Ring livre F01 en composant les règles de ligne, cardinalité, fermeture et simplicité.
 Les autres règles géométriques suivantes attendent leur implémentation
 spécialisée ; `Components` valide désormais récursivement les composants (C01–C04).
 
@@ -170,6 +171,16 @@ Le [référentiel des lignes](../validators.md#line-rules) précise chemins, cod
 
   **Scénarios de référence:** Croisement/recouvrement : non simple ; un croisement XY à altitudes distinctes peut
   être simple en XYZ.
+
+**Livré dans #16 :** `Ring` compose le minimum de quatre positions, `FirstPointEqualsLastPoint` et
+`SimpleLineString`, qui réutilise la validité LineString/Point/composants. Ring rejette EMPTY sans modifier
+la validité d’une LineString EMPTY. Geometry utilise XYZ si Z existe, sinon XY, en ignorant M ; la fermeture
+conserve Q02 et la simplicité évalue les coordonnées exactes, sans exempter un croisement proche de la fermeture.
+Fermeture et simplicité Geography restent indisponibles et produisent des warnings distincts ; les règles
+structurelles et Point restent appliquées. Les contraintes de warning sont copiées, sans modifier les instances
+partagées ni les payloads explicites. CircularString n’est pas soumis à cette contrainte de frontière linéaire.
+L’intégration Polygon reste dans ses stories spécialisées.
+Le [référentiel des anneaux](../validators.md#linear-ring-rules) précise chemins, codes et limites de l’API.
 
 - **F01** — Un anneau est simple et fermé ; EMPTY n’est ni fermé ni un anneau. ISO-CD 4.2.4–4.2.5, 7.1.6–7.1.9.
   Anneau linéaire : >=4 positions, fermeture répétée comprise ; GML 10.5.8.

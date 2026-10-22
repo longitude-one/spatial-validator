@@ -21,6 +21,7 @@ use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as ModelLineString;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Components;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -146,6 +147,31 @@ final class SpecializedValidationTest extends TestCase
         self::assertSame('[shape]', $violations->get(0)->getPropertyPath());
         self::assertSame($constraint, $violations->get(0)->getConstraint());
         self::assertSame($payload, $constraint->payload);
+    }
+
+    public function testRingDirectCompositionUsesOriginalContext(): void
+    {
+        $value = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]]);
+        $constraint = new SpatialAssert\Ring(groups: ['direct'], payload: ['source' => 'consumer']);
+        $context = $this->createMock(ExecutionContextInterface::class);
+        $service = $this->createMock(ValidatorInterface::class);
+        $contextual = $this->createMock(ContextualValidatorInterface::class);
+        $context->method('getGroup')->willReturn('direct');
+        $context->expects(self::once())->method('getValidator')->willReturn($service);
+        $service->expects(self::once())->method('inContext')
+            ->with(self::identicalTo($context))->willReturn($contextual)
+        ;
+        $rules = [
+            new SpatialAssert\MinimumPointCount(limit: 4, groups: ['direct'], payload: $constraint->payload),
+            new SpatialAssert\FirstPointEqualsLastPoint(groups: ['direct'], payload: $constraint->payload),
+            new SpatialAssert\SimpleLineString(groups: ['direct'], payload: $constraint->payload),
+        ];
+        $contextual->expects(self::once())->method('validate')
+            ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
+        ;
+        $validator = new SpatialAssert\RingValidator();
+        $validator->initialize($context);
+        $validator->validate($value, $constraint);
     }
 
     /** @param class-string<SpatialInterface> $interface */

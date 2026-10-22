@@ -201,3 +201,34 @@ For non-empty Geography, geodetic simplicity is unavailable and yields an explic
 a copy of the constraint with default payload `['severity' => 'warning']`; explicit consumer payload is retained.
 The original constraint is unchanged. EMPTY is simple. Cartesian topology never substitutes for geodetic checks.
 The [validator reference](docs/validators.md#line-rules) lists the constraints, codes and limitations.
+
+## Linear rings
+
+Apply `Ring` explicitly to a LineString boundary:
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\Ring;
+
+$violations = $validator->validate($boundary, new Ring());
+```
+
+`Ring` rejects an EMPTY LineString, then composes `MinimumPointCount(limit: 4)`,
+`FirstPointEqualsLastPoint` and `SimpleLineString`. The simplicity constraint also composes LineString's Point,
+metadata and consecutive-position checks. A valid closing repetition is allowed; adjacent duplicate positions,
+open boundaries, bow-ties and collinear retracing are rejected. Point diagnostics retain `points[index]`,
+the outer property prefix, root and active group. Boundary errors remain on the boundary value.
+
+Geometry closure uses the approved finite-coordinate equality in XYZ when Z exists, otherwise XY, ignoring M.
+The exact simplicity predicates still evaluate the supplied coordinates: approximate endpoint equality cannot
+exempt an interior crossing or move the contact. A LineString can be valid and EMPTY while failing `Ring`.
+`MinimumPointCount` retains its independent EMPTY allowance; Ring supplies the explicit EMPTY rejection.
+
+Non-empty Geography closure and simplicity are unavailable and produce separate warning diagnostics alongside
+available structural/Point checks. Warning constraints are copied; explicit payload is preserved. No Cartesian
+calculation establishes geodetic validity. The standalone `FirstPointEqualsLastPoint` constraint only checks
+closure, not full line or ring validity. Both new constraints require LineStringInterface with declared
+LineString type and keep the standard null/string input contract.
+
+Ring is an opt-in boundary rule, not a new GeometryTypeEnum case or a change to Spatial dispatch.
+Polygon integration remains assigned to its specialized Stories. CircularString is not a LineString and does
+not receive the four-position rule through Ring. See the [ring reference](docs/validators.md#linear-ring-rules).
