@@ -283,19 +283,19 @@ Allowed adjacent joins and one global closure remain valid. The check uses actua
 Geography joins/topology and interactions with full XYZ circles whose plane is undetermined yield explicit warnings.
 See the [compound-curve reference](docs/validators.md#compound-curve-rules) for the API, codes, paths and limitations.
 
-## Polygon structural foundation
+## Polygon validity
 
-Story #19 supplies internal Symfony composition for Polygon boundaries and their common supporting plane.
-It accepts genuine EMPTY Polygons, checks every linear ring and parent/member metadata, and rejects
-EMPTY boundaries, collinear exteriors and positions outside the exterior's supporting plane.
-Geometry uses exact orientation and coplanarity signs on supplied finite binary coordinates, including Z
-when declared and ignoring M. Inclined and vertical planes are supported without an XY-area assumption.
-Geography retains available structural checks and explicit warnings for unavailable geodetic checks.
+`Polygon` composes complete linear-ring structure, metadata and supporting-plane checks with hole placement,
+inter-ring topology and relative orientation. Generic `Spatial` uses the same contract. Genuine EMPTY is valid;
+a smaller, individually valid hole outside its exterior fails. Holes may touch at isolated tangent points only
+when the interior stays connected. Crossings, shared intervals, overlapping/nested holes and disconnecting
+contact chains fail. Geometry predicates use the actual plane, including vertical XYZ planes, and ignore M.
 
-These internal building blocks do not establish complete Polygon validity. Inter-ring relationships,
-orientation diagnostics and integration into the public `Polygon` and `Spatial` constraints belong to #20.
-Until that integration, public Polygon validation retains its unavailable-validation warning; a structurally
-valid hole outside its exterior is not advertised as a valid Polygon.
+Same-direction holes produce distinct warning violations; reversing all rings preserves the relative result.
+No absolute clockwise exterior direction is required. Warnings default to `['severity' => 'warning']`, while
+invalid-topology errors default to null payload. Explicit Polygon payload is preserved. Geography retains
+available structure and Point checks with explicit warnings for unavailable geodetic calculations.
+No ring is moved, snapped or reoriented. See the [Polygon reference](docs/validators.md#polygon-rules).
 
 ## Collection validity and explicit aggregate properties
 

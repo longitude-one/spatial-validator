@@ -37,7 +37,7 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [MultiSurface](../lib/Validator/Constraints/MultiSurface.php) · [Validator](../lib/Validator/Constraints/MultiSurfaceValidator.php) | Reports unavailable MultiSurface validation |
 | [NURBSCurve](../lib/Validator/Constraints/NURBSCurve.php) · [Validator](../lib/Validator/Constraints/NURBSCurveValidator.php) | Reports unavailable NURBSCurve validation |
 | [Point](../lib/Validator/Constraints/Point.php) · [Validator](../lib/Validator/Constraints/PointValidator.php) | Validates a point |
-| [Polygon](../lib/Validator/Constraints/Polygon.php) · [Validator](../lib/Validator/Constraints/PolygonValidator.php) | Reports unavailable Polygon validation |
+| [Polygon](../lib/Validator/Constraints/Polygon.php) · [Validator](../lib/Validator/Constraints/PolygonValidator.php) | Validates complete Polygon structure, topology and relative orientation |
 | [PolyhedralSurface](../lib/Validator/Constraints/PolyhedralSurface.php) · [Validator](../lib/Validator/Constraints/PolyhedralSurfaceValidator.php) | Reports unavailable PolyhedralSurface validation |
 | [Solid](../lib/Validator/Constraints/Solid.php) · [Validator](../lib/Validator/Constraints/SolidValidator.php) | Reports unavailable Solid validation |
 | [SpiralCurve](../lib/Validator/Constraints/SpiralCurve.php) · [Validator](../lib/Validator/Constraints/SpiralCurveValidator.php) | Reports unavailable SpiralCurve validation |
@@ -295,10 +295,8 @@ internal unavailable warning alongside Ring's available checks and geodetic limi
 are copied, default to `['severity' => 'warning']` and retain explicit payload. Other structural diagnostics
 default to null payload. Genuine EMPTY Geography requires no plane and produces no structural warning.
 
-This is an internal foundation for #20, with no public structural-only Polygon API. Inter-ring topology,
-orientation and final public Polygon integration remain outside #19; structural success cannot establish
-complete Polygon validity. The public `Polygon`/`Spatial` coverage warning remains until complete integration.
-A coplanar hole outside its exterior deliberately passes this internal stage and must fail final validation.
+This internal foundation is consumed by public `Polygon`; it is not a public structural-only alternative.
+A coplanar outside hole passes this internal stage but fails complete `Polygon` and `Spatial` validation.
 
 References: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clauses 4.2.9–4.2.10 and
 8.3.1 Description 2–4 (linear exterior/interior boundaries and planar surface); OGC SFA 1.2.1, 6.1.11.1;
@@ -362,5 +360,67 @@ are not applied as a blanket geometric membership prohibition. OGC SFA 1.2.1 6.1
 typed EMPTY-member prohibition. The current validation API validates spatial objects, not those SQL routines.
 
 General collection members can intersect and have different topological dimensions. Available member validity
-is still enforced: a Polygon currently yields its public unavailable-validation warning, rather than a claim
-of complete Polygon validity. This Story adds no polygon topology rule or mandatory general-collection simplicity.
+is still enforced: Polygon members receive the complete Polygon contract, including hole topology.
+General collection validity adds no mandatory cross-member simplicity.
+
+## Polygon rules
+
+Apply `Polygon` to `PolygonInterface` with declared Polygon type, or use generic `Spatial`:
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\Polygon;
+
+$violations = $validator->validate($polygon, new Polygon());
+```
+
+The constructor accepts only Symfony `groups` and `payload`. Null is ignored; all strings and unsupported
+values are rejected. Genuine EMPTY is valid. Triangle remains a distinct declared type and interface.
+Structure, metadata, every Ring and the common supporting plane are checked first. Invalid structure
+prevents dependent Cartesian topology calculations; its original codes and nested paths remain available.
+
+| Relationship | Result |
+| --- | --- |
+| Hole strictly inside exterior, holes mutually outside | Valid |
+| Isolated tangent contacts preserving connected interior | Valid |
+| Hole outside exterior, including a smaller or surrounding hole | Error |
+| Crossing or shared boundary interval | Error |
+| Overlapping or nested holes | Error |
+| Hole/contact chain separating interior, including a cycle around an island | Error |
+| Hole with exterior's orientation, viewed from the same side | Warning |
+
+Several boundaries may meet at the same isolated point without automatically disconnecting the interior.
+Cut lines, spikes and punctures already fail Ring composition. Orientation is relative to the exterior:
+there is no universal clockwise shell requirement. Reversing every ring preserves the outcome, and an
+orientation warning does not suppress an independent topology error.
+
+| Polygon constant | Code | Path | Default payload |
+| --- | --- | --- | --- |
+| `INTERSECTION_ERROR` | `polygon-intersection` | `rings[index]` | null |
+| `OUTSIDE_ERROR` | `polygon-outside` | `rings[index]` | null |
+| `NESTED_ERROR` | `polygon-nested` | `rings[index]` | null |
+| `DISCONNECTED_ERROR` | `polygon-disconnected` | `rings[index]` | null |
+| `ORIENTATION_ERROR` | `polygon-orientation` | `rings[index]` | `['severity' => 'warning']` |
+| `UNAVAILABLE_ERROR` | `polygon-unavailable` | Polygon | `['severity' => 'warning']` |
+
+Warning constraints are copied; explicit Polygon payload is preserved and the original is unchanged.
+Generic Spatial dispatch retains specialized payload defaults. Root, outer path and active group survive
+all delegation. Non-empty Geography receives explicit topology/orientation warnings alongside structural,
+Point and Ring diagnostics; Cartesian calculations never establish geodetic validity.
+
+Geometry uses an injective coordinate projection of the actual supporting plane. XYZ/XYZM therefore
+include Z even on inclined/vertical planes; XY/XYM use XY and M never participates spatially. Segment
+intersections, signed areas and winding tests use exact signs over supplied finite binary coordinates.
+Boundary intervals are split at contacts and sampled at exact arithmetic midpoints, without converting
+those midpoints back to floats. Near contacts stay distinct; no area-only containment test, determinant
+epsilon, proximity policy, coordinate movement or repair is introduced.
+
+Ring closure still uses Q02 equality. When supplied first/last spatial positions differ within that rule,
+Polygon topology keeps both and traverses the boundary cyclically, including their exact closing interval.
+That interval is checked for self-intersection and all inter-ring relationships. No endpoint is replaced,
+and a real crossing is never exempted by approximate closure. Standalone Ring checks only its supplied
+LineString segments; Polygon additionally checks this cyclic surface-boundary interpretation.
+
+Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, 4.2.9–4.2.10 (planar closed
+surface, non-crossing boundaries, no cut lines/spikes/punctures, connected interior); OGC SFA 1.2.1,
+6.1.11.1 (isolated tangent contacts and relative orientation). Orientation warning severity and dimension-aware
+Geometry calculations follow Alexandre's approved #20 and Q01–Q03/Q09 decisions.

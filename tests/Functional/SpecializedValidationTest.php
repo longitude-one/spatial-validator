@@ -73,11 +73,12 @@ final class SpecializedValidationTest extends TestCase
     public function testDirectInvocationReportsUnavailableValidation(GeometryTypeEnum $type, string $interface): void
     {
         $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
-            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
+                GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::GEOMETRYCOLLECTION,
                 GeometryTypeEnum::MULTIPOINT,
                 GeometryTypeEnum::MULTILINESTRING => CollectionValidationTest::aggregate($type->value, []),
@@ -137,11 +138,12 @@ final class SpecializedValidationTest extends TestCase
     public function testGroupsPayloadAndNestedPath(GeometryTypeEnum $type, string $interface): void
     {
         $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
-            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
+                GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::GEOMETRYCOLLECTION,
                 GeometryTypeEnum::MULTIPOINT,
                 GeometryTypeEnum::MULTILINESTRING => CollectionValidationTest::aggregate($type->value, []),
@@ -201,11 +203,12 @@ final class SpecializedValidationTest extends TestCase
     public function testServiceReportsWarningAndPreservesContext(GeometryTypeEnum $type, string $interface): void
     {
         $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
-            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE,
+            GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
+                GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::GEOMETRYCOLLECTION,
                 GeometryTypeEnum::MULTIPOINT,
                 GeometryTypeEnum::MULTILINESTRING => CollectionValidationTest::aggregate($type->value, []),

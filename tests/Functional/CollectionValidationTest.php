@@ -156,7 +156,7 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
-    public function testHeterogeneousNestingPreservesContextAndUnavailableMemberWarning(): void
+    public function testHeterogeneousNestingPreservesContextAndPolygonStructureFailure(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
         $polygon->method('getType')->willReturn(GeometryTypeEnum::POLYGON);
@@ -182,7 +182,8 @@ final class CollectionValidationTest extends TestCase
         self::assertSame($root, $violations->get(0)->getRoot());
         self::assertNotNull($violations->get(0)->getConstraint());
         self::assertSame(['custom'], $violations->get(0)->getConstraint()->groups);
-        self::assertSame(['severity' => 'warning'], $violations->get(0)->getConstraint()->payload);
+        self::assertNull($violations->get(0)->getConstraint()->payload);
+        self::assertSame('A non-empty Polygon requires an exterior ring.', $violations->get(0)->getMessage());
     }
 
     #[DataProvider('optionalRules')]
