@@ -24,6 +24,7 @@ use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
@@ -311,6 +312,13 @@ final class ComponentValidationTest extends TestCase
         $parent = $this->aggregate($parentType, [$member]);
         $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
         self::assertCount(1, $violations);
+        if ('Polygon' === $memberType) {
+            self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
+            self::assertNull($violations->get(0)->getConstraint()?->payload);
+            self::assertSame($path, $violations->get(0)->getPropertyPath());
+
+            return;
+        }
         self::assertSame($memberType . ' validation is not implemented yet.', $violations->get(0)->getMessage());
         self::assertSame($path, $violations->get(0)->getPropertyPath());
         self::assertSame(['severity' => 'warning'], $violations->get(0)->getConstraint()?->payload);

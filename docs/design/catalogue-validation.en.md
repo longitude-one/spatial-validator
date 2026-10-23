@@ -256,8 +256,8 @@ Do not substitute ST_Equals for a SQL equality symbol without verifying the appl
 
 Approved Polygon composition: one public Polygon constraint delivers the complete J+K contract.
 J supplies reusable structural/ring/planarity blocks; K completes topology and public integration.
-A coplanar outside hole must fail both Polygon and Spatial once implemented; structural success is not full
-validity.
+A coplanar outside hole fails both Polygon and Spatial through the complete #20 integration; structural
+success alone is not full validity.
 Triangle remains restricted to TriangleInterface, not inferred from Polygon coordinates.
 
 ### PolyhedralSurface

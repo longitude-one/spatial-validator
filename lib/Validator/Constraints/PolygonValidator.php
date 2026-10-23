@@ -17,13 +17,16 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
+use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
+use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
+use LongitudeOne\SpatialValidator\Internal\PolygonTopology;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/** Report unavailable validation without claiming geometric validity. */
+/** Compose Polygon boundaries, planarity, inter-ring topology and orientation diagnostics. */
 final class PolygonValidator extends ConstraintValidator
 {
     /**
@@ -45,13 +48,57 @@ final class PolygonValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, PolygonInterface::class);
         }
 
+        $this->polygon($value, $constraint);
+    }
+
+    private function diagnostic(string $code, Polygon $constraint, string $path = ''): void
+    {
+        $messages = [
+            Polygon::INTERSECTION_ERROR => 'Polygon boundaries must not cross or share an interval.',
+            Polygon::OUTSIDE_ERROR => 'Every hole must lie inside the exterior boundary.',
+            Polygon::NESTED_ERROR => 'Polygon holes must not overlap or contain another hole.',
+            Polygon::DISCONNECTED_ERROR => 'Boundary contacts must not disconnect the Polygon interior.',
+            Polygon::ORIENTATION_ERROR => 'A hole has the same orientation as the exterior boundary.',
+            Polygon::UNAVAILABLE_ERROR => 'Geography Polygon topology and orientation are not implemented yet.',
+        ];
+        $associated = $constraint;
+        if (in_array($code, [Polygon::ORIENTATION_ERROR, Polygon::UNAVAILABLE_ERROR], true)) {
+            $associated = clone $constraint;
+            $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
+        }
+        $this->context->setConstraint($associated);
+
+        try {
+            $this->context->buildViolation($messages[$code])->atPath($path)->setCode($code)->addViolation();
+        } finally {
+            $this->context->setConstraint($constraint);
+        }
+    }
+
+    private function polygon(PolygonInterface $value, Polygon $constraint): void
+    {
         if (GeometryTypeEnum::POLYGON !== $value->getType()) {
             throw new UnexpectedValueException($value, GeometryTypeEnum::POLYGON->value);
         }
+        $before = count($this->context->getViolations());
+        $this->context->getValidator()->inContext($this->context)->validate(
+            $value,
+            new PolygonStructure(groups: $constraint->groups, payload: $constraint->payload),
+            $this->context->getGroup()
+        );
+        if ([] === $value->getRings()) {
+            return;
+        }
+        if (SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
+            $this->diagnostic(Polygon::UNAVAILABLE_ERROR, $constraint);
 
-        $this->context->buildViolation('Polygon validation is not implemented yet.')->addViolation();
-        $this->context->getValidator()->inContext($this->context)
-            ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
-        ;
+            return;
+        }
+        if ($before !== count($this->context->getViolations())) {
+            return;
+        }
+        foreach (PolygonTopology::errors(PolygonTopology::project($value)) as [$index, $code]) {
+            $this->diagnostic($code, $constraint, 'rings[' . $index . ']');
+        }
     }
 }

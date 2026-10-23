@@ -122,7 +122,7 @@ final class PolygonStructureTest extends TestCase
             self::assertCount(1, $service->validate($value, new PolygonStructure()));
         }
         foreach ([new SpatialAssert\Polygon(), new SpatialAssert\Spatial()] as $constraint) {
-            self::assertCount(1, $service->validate(self::polygon([]), $constraint));
+            self::assertCount(0, $service->validate(self::polygon([]), $constraint));
         }
         self::assertNull(PolygonPlane::basis([]));
     }
