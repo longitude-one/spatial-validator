@@ -280,7 +280,7 @@ Triangle remains restricted to TriangleInterface, not inferred from Polygon coor
 - **V14** — LongitudeOne permits open surfaces by default and requires solid closure through a separate validator.
 
   **Reference scenarios:** Valid open book passes default and fails closure; valid cube/tetrahedron passes both;
-  EMPTY closure remains unresolved.
+  EMPTY XYZ/XYZM passes general validity and fails explicit closure (#24 approved refinement).
 
 ISO-CD 8.5.1 Description 6 suggests a closed polyhedron; Description 7, 4.2.12 and OGC 6.1.12.1
 distinguish the closed case. Q08 records the approved product decision without hiding that tension.
@@ -345,8 +345,8 @@ L-DIM-01 refers to Q01's calculation space; L-GEO-01 to Q03's structural-first G
 - **Q07** — Unpublished historical APIs, helpers, messages and restrictions may be changed/removed; they are
   inventory, not compatibility obligations.
 
-- **Q08** — Default PolyhedralSurface permits open surfaces; a separate validator requires closure. EMPTY closure
-  still needs a decision.
+- **Q08** — Default PolyhedralSurface permits open surfaces. The explicit closed-surface contract requires a
+  non-empty envelope enclosing volume; EMPTY fails closure (Alexandre, approved #24 refinement).
 
 - **Q09** — Same-direction Polygon hole/exterior yields a warning, viewed from the same plane side; no automatic
   repair.
