@@ -33,7 +33,7 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [MultiCurve](../lib/Validator/Constraints/MultiCurve.php) · [Validator](../lib/Validator/Constraints/MultiCurveValidator.php) | Reports unavailable MultiCurve validation |
 | [MultiLineString](../lib/Validator/Constraints/MultiLineString.php) · [Validator](../lib/Validator/Constraints/MultiLineStringValidator.php) | Composes LineString member validity |
 | [MultiPoint](../lib/Validator/Constraints/MultiPoint.php) · [Validator](../lib/Validator/Constraints/MultiPointValidator.php) | Composes Point member validity |
-| [MultiPolygon](../lib/Validator/Constraints/MultiPolygon.php) · [Validator](../lib/Validator/Constraints/MultiPolygonValidator.php) | Reports unavailable MultiPolygon validation |
+| [MultiPolygon](../lib/Validator/Constraints/MultiPolygon.php) · [Validator](../lib/Validator/Constraints/MultiPolygonValidator.php) | Complete member validity and filled-surface relationships, including XYZ planes and holes |
 | [MultiSurface](../lib/Validator/Constraints/MultiSurface.php) · [Validator](../lib/Validator/Constraints/MultiSurfaceValidator.php) | Reports unavailable MultiSurface validation |
 | [NURBSCurve](../lib/Validator/Constraints/NURBSCurve.php) · [Validator](../lib/Validator/Constraints/NURBSCurveValidator.php) | Reports unavailable NURBSCurve validation |
 | [Point](../lib/Validator/Constraints/Point.php) · [Validator](../lib/Validator/Constraints/PointValidator.php) | Validates a point |
@@ -475,3 +475,55 @@ Spatial preserves specialized payload defaults.
 Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, 8.4.1 Description 2–4 (linear
 boundary with four positions and no interior rings); OGC SFA 1.2.1, 6.1.11.1 (three distinct non-collinear
 vertices and no interior boundary). EMPTY and dimensional behavior follow the approved #21 contract.
+
+## MultiPolygon rules
+
+`MultiPolygon` requires `MultiPolygonInterface` with declared MultiPolygon type and uses standard Symfony
+`groups` and `payload`. Generic `Spatial` selects the same validation. Only PHP null is ignored; strings,
+including the empty string and WKT, follow the standard unexpected-value contract.
+
+Every member is recursively validated through `Components` and the complete public Polygon or Triangle
+rules. Member family, exact coordinate variant and full spatial-reference identity must match the aggregate,
+including EMPTY members. Members remain in their original order. An empty list or a list of valid EMPTY
+members is valid; a parent's EMPTY declaration never hides malformed members.
+
+| Member relationship | Geometry result |
+| --- | --- |
+| Disjoint filled surfaces | Valid |
+| Isolated contact belonging to both boundaries | Valid |
+| Polygon inside another member's hole, without contact | Valid |
+| Interior overlap or containment in the filled surface | Error |
+| Shared boundary interval, including in different planes | Error |
+| Parallel separated planes with overlapping XY shadows | Valid |
+| Intersecting interiors in different planes | Error |
+
+Each member must be planar; the aggregate has no common-plane requirement. XY/XYM evaluate XY;
+XYZ/XYZM evaluate XYZ and always ignore M spatially. Coplanar checks split boundaries at their actual
+contacts and locate intervals in the filled surfaces, subtracting holes. Different planes intersect along
+a line: exact rational boundary/plane intersections partition that line, and point/interval location in
+both filled surfaces identifies forbidden contacts. No floating-point intersection rounding, determinant
+epsilon, densification, snapping or coordinate repair is used. Ring composition rejects cut lines,
+spikes and punctures before aggregate checks.
+
+| MultiPolygon constant | Code | Path |
+| --- | --- | --- |
+| `INTERSECTION_ERROR` | `multipolygon-intersection` | `polygons[second]` |
+| `UNAVAILABLE_ERROR` | `multipolygon-unavailable` | `polygons[second]` |
+
+Each interacting pair produces one aggregate diagnostic. Its message parameters `{{ first }}` and
+`{{ second }}` identify the zero-based member indices. Invalid members retain their original nested
+ring/Point diagnostics and are excluded from dependent Geometry pair checks; other valid pairs are still
+checked. Relative-orientation warnings do not suppress aggregate topology checks. Root, property prefix
+and active Symfony group are preserved.
+
+Geometry topology errors default to null payload. Geography pair interactions produce an explicit
+unavailable warning with default payload `['severity' => 'warning']`, preserving explicit payload on a
+cloned constraint. Available member checks and their separate limitations remain active. EMPTY members
+contribute no interaction. These warnings do not assert cartesian or geodetic validity.
+
+Sources: OGC SFA 1.2.1 (06-103r4), 6.1.11.1, 6.1.13.1 and 6.1.14, with Alexandre's approved #23
+full-coordinate-space and boundary-contact contract. ISO/IEC CD 13249-3:201x(E), Committee Draft dated
+2009-01-16, 4.2.18–4.2.19 provides the cited SQL/MM type context; this implementation does not claim
+separate verification against a final published ISO edition or SQL/MM constructor/mutator acceptance.
+The approved aggregate profile preserves valid EMPTY members instead of applying method-specific SQL
+construction restrictions as blanket geometry rules.

@@ -43,7 +43,8 @@ final class SpatialDispatchTest extends TestCase
         $implemented = [GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING,
             GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE,
-            GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING];
+            GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
+            GeometryTypeEnum::MULTIPOLYGON];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POINT => new Point(),
@@ -51,7 +52,8 @@ final class SpatialDispatchTest extends TestCase
                 GeometryTypeEnum::TRIANGLE => PolygonStructureTest::triangle([]),
                 GeometryTypeEnum::GEOMETRYCOLLECTION,
                 GeometryTypeEnum::MULTIPOINT,
-                GeometryTypeEnum::MULTILINESTRING => CollectionValidationTest::aggregate($type->value, []),
+                GeometryTypeEnum::MULTILINESTRING,
+                GeometryTypeEnum::MULTIPOLYGON => CollectionValidationTest::aggregate($type->value, []),
                 GeometryTypeEnum::CIRCULARSTRING => CircularStringValidationTest::curve([]),
                 GeometryTypeEnum::COMPOUNDCURVE => CompoundCurveValidationTest::curve([]),
                 default => new ModelLineString([]),
