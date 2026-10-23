@@ -16,6 +16,9 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Internal;
 
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
+use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
+use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
 use Symfony\Component\Validator\Constraint;
 
 /** @internal Structural building block for complete Polygon validation; never a public validity claim. */
@@ -30,5 +33,12 @@ final class PolygonStructure extends Constraint
     public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
+    }
+
+    public static function acceptsType(PolygonInterface $value): bool
+    {
+        return $value instanceof TriangleInterface
+            ? GeometryTypeEnum::TRIANGLE === $value->getType()
+            : GeometryTypeEnum::POLYGON === $value->getType();
     }
 }

@@ -312,7 +312,7 @@ final class ComponentValidationTest extends TestCase
         $parent = $this->aggregate($parentType, [$member]);
         $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
         self::assertCount(1, $violations);
-        if ('Polygon' === $memberType) {
+        if (in_array($memberType, ['Polygon', 'Triangle'], true)) {
             self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
             self::assertNull($violations->get(0)->getConstraint()?->payload);
             self::assertSame($path, $violations->get(0)->getPropertyPath());

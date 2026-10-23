@@ -18,14 +18,19 @@ namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
 
-/** Configure the unavailable Triangle validation warning. */
+/** Validate a Triangle using shared Polygon boundaries and triangle restrictions. */
 final class Triangle extends Constraint
 {
+    public const string DISTINCT_ERROR = 'triangle-distinct';
+    public const string INTERIOR_ERROR = 'triangle-interior';
+    public const string POSITION_COUNT_ERROR = 'triangle-position-count';
+    public const string TOPOLOGY_ERROR = 'triangle-topology';
+
     /**
      * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     * @param mixed         $payload Consumer metadata
      */
-    public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
+    public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
     }

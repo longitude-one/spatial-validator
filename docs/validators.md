@@ -43,7 +43,7 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [SpiralCurve](../lib/Validator/Constraints/SpiralCurve.php) · [Validator](../lib/Validator/Constraints/SpiralCurveValidator.php) | Reports unavailable SpiralCurve validation |
 | [Surface](../lib/Validator/Constraints/Surface.php) · [Validator](../lib/Validator/Constraints/SurfaceValidator.php) | Reports unavailable Surface validation |
 | [TIN](../lib/Validator/Constraints/TIN.php) · [Validator](../lib/Validator/Constraints/TINValidator.php) | Reports unavailable TIN validation |
-| [Triangle](../lib/Validator/Constraints/Triangle.php) · [Validator](../lib/Validator/Constraints/TriangleValidator.php) | Reports unavailable Triangle validation |
+| [Triangle](../lib/Validator/Constraints/Triangle.php) · [Validator](../lib/Validator/Constraints/TriangleValidator.php) | Shared Polygon rules, four exterior positions, three distinct non-collinear vertices, no holes |
 
 ## Coordinate rules
 
@@ -424,3 +424,52 @@ Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, 4.2.9–4
 surface, non-crossing boundaries, no cut lines/spikes/punctures, connected interior); OGC SFA 1.2.1,
 6.1.11.1 (isolated tangent contacts and relative orientation). Orientation warning severity and dimension-aware
 Geometry calculations follow Alexandre's approved #20 and Q01–Q03/Q09 decisions.
+
+## Triangle rules
+
+```php
+use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
+
+$violations = $validator->validate($triangle, new Triangle());
+```
+
+`Triangle(groups: null, payload: null)` accepts only `TriangleInterface` with declared Triangle type.
+A plain `PolygonInterface` candidate raises `UnexpectedValueException` directly and a type violation through
+Symfony, even if its coordinates form a triangle. Only PHP null is ignored; every string, including `''`,
+is rejected. This current input contract supersedes the empty-string exemption in the original #21 text.
+
+| State | Result |
+| --- | --- |
+| Genuine EMPTY, no rings | Valid |
+| Four exterior positions A,B,C,A; three distinct non-collinear spatial vertices; no holes | Valid Geometry |
+| Collinear or repeated spatial vertices | Error |
+| Fourth distinct vertex, open boundary, EMPTY/invalid Point or interior ring | Error |
+| Non-empty Geography | Available structural checks plus unavailable-geodetic warnings |
+
+Triangle composes the internal Polygon structure, Ring, Point, metadata and supporting-plane rules.
+It also reuses Polygon's exact cyclic-boundary topology check, including any interval between Q02-equal
+but numerically different first/last positions. No public Polygon constraint is invoked, no Polygon is
+converted and no geometry algorithms are duplicated. Since holes are forbidden, inter-ring orientation,
+containment and connectedness checks add no further valid Triangle case.
+
+XYZ/XYZM use the actual spatial plane, including vertical triangles; XY/XYM use XY. M never changes spatial
+closure, distinctness or non-collinearity, but Point still rejects non-finite M. Vertex equality uses Q02;
+orientation and coplanarity signs remain exact over supplied finite binary coordinates. No determinant epsilon,
+proximity policy, snapping or coordinate change is introduced.
+
+| Triangle constant | Code | Path |
+| --- | --- | --- |
+| `POSITION_COUNT_ERROR` | `triangle-position-count` | `rings[0]` |
+| `INTERIOR_ERROR` | `triangle-interior` | `rings[1]` |
+| `DISTINCT_ERROR` | `triangle-distinct` | `rings[0].points[index]` |
+| `TOPOLOGY_ERROR` | `triangle-topology` | `rings[0]` |
+
+Errors have null payload by default. Shared diagnostics retain their original codes and localized paths;
+non-collinearity uses `polygonstructure-degenerate`. Non-empty Geography retains Ring closure/simplicity and
+supporting-plane unavailable warnings, with warning payload by default. It does not establish geographic
+validity. Explicit groups/payload and the original Symfony root/path/group survive composition; generic
+Spatial preserves specialized payload defaults.
+
+Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, 8.4.1 Description 2–4 (linear
+boundary with four positions and no interior rings); OGC SFA 1.2.1, 6.1.11.1 (three distinct non-collinear
+vertices and no interior boundary). EMPTY and dimensional behavior follow the approved #21 contract.

@@ -91,8 +91,8 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point, LineString, CircularString, CompoundCurve, GeometryCollection, MultiPoint and MultiLineString validation
-are implemented within the limits below.**
+**Point, LineString, CircularString, CompoundCurve, Polygon, Triangle, GeometryCollection, MultiPoint and MultiLineString
+validation are implemented within the limits below.**
 Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
@@ -316,3 +316,15 @@ EMPTY member also fails the every-member closure requirement. Non-empty Geograph
 unavailable warnings while available structural and Point checks remain active.
 
 See the [collection reference](docs/validators.md#collection-rules) for diagnostic codes and SQL/MM limitations.
+
+## Triangle validation
+
+`Triangle` requires `TriangleInterface` with declared Triangle type. It reuses Polygon's internal Ring,
+Point, metadata, supporting-plane and cyclic-boundary checks, then requires exactly four exterior positions,
+three distinct non-collinear spatial vertices and no holes. Genuine EMPTY is valid. A plain Polygon is
+never reclassified from its coordinates. Generic `Spatial` selects the same Triangle rules.
+
+Geometry calculations use XYZ when Z exists, otherwise XY, ignoring M; vertical XYZ triangles are valid.
+Coordinate comparison uses the approved scaled equality, while planarity/topology retain exact binary-coordinate
+predicates without proximity tolerance or repair. Geography retains structural checks and explicit warnings
+for unavailable geodetic checks. See the [Triangle reference](docs/validators.md#triangle-rules) for codes and limits.

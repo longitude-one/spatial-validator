@@ -21,6 +21,7 @@ use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum as Family;
 use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
+use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
 use LongitudeOne\SpatialValidator\Internal\PolygonPlane;
 use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
@@ -61,6 +62,27 @@ final class PolygonStructureTest extends TestCase
         $polygon->method('getRings')->willReturn($rings);
 
         return $polygon;
+    }
+
+    /** @param list<list<list<null|float|int>>> $coordinates */
+    public static function triangle(
+        array $coordinates,
+        Dimension $dimension = Dimension::XY,
+        Family $family = Family::GEOMETRY,
+        ?bool $empty = null,
+    ): TriangleInterface {
+        $triangle = self::createStub(TriangleInterface::class);
+        $triangle->method('getType')->willReturn(GeometryTypeEnum::TRIANGLE);
+        $triangle->method('getFamily')->willReturn($family);
+        $triangle->method('getDimension')->willReturn($dimension);
+        $triangle->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
+        $triangle->method('isEmpty')->willReturn($empty ?? [] === $coordinates);
+        $triangle->method('getRings')->willReturn(array_map(
+            static fn (array $ring) => LineStringValidationTest::line($ring, $dimension, $family),
+            $coordinates
+        ));
+
+        return $triangle;
     }
 
     public function testBoundaryDeclaredTypeIsCheckedBeforeRingDelegation(): void
