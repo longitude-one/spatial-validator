@@ -37,7 +37,7 @@ final class PolygonStructureValidator extends ConstraintValidator
         if (null === $value) {
             return;
         }
-        if (!$value instanceof PolygonInterface || GeometryTypeEnum::POLYGON !== $value->getType()) {
+        if (!$value instanceof PolygonInterface || !PolygonStructure::acceptsType($value)) {
             throw new UnexpectedValueException($value, PolygonInterface::class);
         }
         $rings = array_values($value->getRings());

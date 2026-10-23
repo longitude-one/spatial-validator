@@ -232,6 +232,11 @@ Do not substitute ST_Equals for a SQL equality symbol without verifying the appl
 - **V10** — Triangle: four ring positions, three distinct non-collinear vertices, no holes. ISO-CD 8.4.1 Description
   2–4; OGC 6.1.11.1.
 
+  **Delivered in #21:** TriangleInterface with declared Triangle type composes shared Polygon structure,
+  Ring/Point/metadata/plane and cyclic-boundary checks. Four exterior positions, three distinct non-collinear
+  spatial vertices and no holes are required. EMPTY is valid. XYZ uses its actual plane; M is ignored spatially.
+  Geography retains structural checks and explicit unavailable warnings. See [Triangle rules](../validators.md#triangle-rules).
+
   **Reference scenarios:** A,B,C,A non-collinear passes; collinear vertices, fourth distinct vertex or hole fails.
 
 - **S02** — MultiPoint simplicity: no equal point pair; ISO-CD 4.2.15.
