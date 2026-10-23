@@ -38,7 +38,7 @@ Other type-specific geometric rules still produce an unavailable-validation warn
 | [NURBSCurve](../lib/Validator/Constraints/NURBSCurve.php) · [Validator](../lib/Validator/Constraints/NURBSCurveValidator.php) | Reports unavailable NURBSCurve validation |
 | [Point](../lib/Validator/Constraints/Point.php) · [Validator](../lib/Validator/Constraints/PointValidator.php) | Validates a point |
 | [Polygon](../lib/Validator/Constraints/Polygon.php) · [Validator](../lib/Validator/Constraints/PolygonValidator.php) | Validates complete Polygon structure, topology and relative orientation |
-| [PolyhedralSurface](../lib/Validator/Constraints/PolyhedralSurface.php) · [Validator](../lib/Validator/Constraints/PolyhedralSurfaceValidator.php) | Reports unavailable PolyhedralSurface validation |
+| [PolyhedralSurface](../lib/Validator/Constraints/PolyhedralSurface.php) · [Validator](../lib/Validator/Constraints/PolyhedralSurfaceValidator.php) | Complete patch validity and open-allowed manifold surface topology |
 | [Solid](../lib/Validator/Constraints/Solid.php) · [Validator](../lib/Validator/Constraints/SolidValidator.php) | Reports unavailable Solid validation |
 | [SpiralCurve](../lib/Validator/Constraints/SpiralCurve.php) · [Validator](../lib/Validator/Constraints/SpiralCurveValidator.php) | Reports unavailable SpiralCurve validation |
 | [Surface](../lib/Validator/Constraints/Surface.php) · [Validator](../lib/Validator/Constraints/SurfaceValidator.php) | Reports unavailable Surface validation |
@@ -536,3 +536,53 @@ interiors, isolated boundary/interior contact points are permitted; contact segm
 Interior/interior intersections and shared boundary intervals remain invalid. This is the selected
 LongitudeOne profile; the additional boundary/interior segment restriction is an approved scope decision,
 not a separately established requirement of the cited OGC clauses.
+
+## Polyhedral surface rules
+
+| Constraint | Contract |
+| --- | --- |
+| [PolyhedralSurface](../lib/Validator/Constraints/PolyhedralSurface.php) | Complete patch validity and open-allowed surface validity; selected by Spatial |
+| [ClosedPolyhedralSurface](../lib/Validator/Constraints/ClosedPolyhedralSurface.php) | The same validity plus a non-empty closed envelope enclosing volume |
+
+Both require `PolyhedralSurfaceInterface` with declared PolyhedralSurface type, XYZ or XYZM, and standard Symfony
+groups/payload. Only PHP null is ignored; strings, including `''`, are rejected. Errors default to null payload.
+Available structural validation applies to Geography; unavailable geodetic topology produces an explicit warning
+whose cloned constraint uses `['severity' => 'warning']` unless the consumer supplied a payload.
+
+Every patch receives complete Polygon or Triangle validation, preserving `patches[index].rings[index].points[index]`
+paths, root and active group. EMPTY patches in a non-empty surface fail. A memberless XYZ/XYZM surface is valid
+under the general contract and fails explicit closure, regardless of its reported EMPTY flag.
+
+Geometry validity checks every pair of filled patch surfaces, with holes, in actual XYZ space. Interiors cannot
+intersect other faces. Coplanar adjacent patches and common boundary intervals are permitted. Boundary segments
+are subdivided at all collinear supplied endpoints before checking incidence, opposite orientation and global
+edge connectivity. A vertex contact alone cannot connect separate components. Local face fans must be connected
+with zero or two open boundary ends; this rejects pinched vertices and branching edges. Explicit closure additionally
+requires every subdivided edge to have two uses and an exact nonzero enclosed-volume sum. Globally reversing the
+surface orientation remains valid.
+
+Spatial comparisons inherited from Point/Ring retain scaled finite-coordinate equality. Plane, intersection,
+incidence and volume calculations operate exactly on original finite binary coordinates, without determinant
+epsilon or an additional proximity policy. Nearby disjoint edges are not snapped together. M is excluded spatially.
+Polygon orientation warnings remain on the original patch constraint. The incidence/volume algebra accounts for
+hole direction relative to the exterior without mutating source rings or promoting a hole warning to a face error.
+No closure, reorientation, union, reprojection or repair is performed on consumer objects.
+
+| Constraint constant | Code | Location |
+| --- | --- | --- |
+| PolyhedralSurface::DIMENSION_ERROR | `polyhedralsurface-dimension` | Surface |
+| PolyhedralSurface::EMPTY_PATCH_ERROR | `polyhedralsurface-empty-patch` | `patches[index]` |
+| PolyhedralSurface::INCIDENCE_ERROR | `polyhedralsurface-incidence` | Surface |
+| PolyhedralSurface::ORIENTATION_ERROR | `polyhedralsurface-orientation` | Surface |
+| PolyhedralSurface::CONNECTED_ERROR | `polyhedralsurface-connected` | Surface |
+| PolyhedralSurface::INTERSECTION_ERROR | `polyhedralsurface-intersection` | Surface |
+| PolyhedralSurface::MANIFOLD_ERROR | `polyhedralsurface-manifold` | Surface |
+| PolyhedralSurface::UNAVAILABLE_ERROR | `polyhedralsurface-unavailable` | Surface warning |
+| ClosedPolyhedralSurface::INVALID_ERROR | `closedpolyhedralsurface-invalid` | Surface |
+
+The surface contracts implement Alexandre's approved #24 refinement. References are ISO/IEC CD 13249-3:201x(E),
+2009-01-16 Committee Draft, 4.2.12 and 8.5.1 Description 2, 4, 6–7 and 16–19, plus OGC SFA 1.2.1, 6.1.12.1.
+The two-contract choice and EMPTY closure error are explicit LongitudeOne decisions: the ISO draft's closed
+polyhedron language and conditional closed-surface language are not asserted to be identical. EMPTY patch
+rejection follows the inspected SQL/MM ST_Patches/ST_CheckNulls path, not every possible SQL/MM operation.
+Geodetic topology and a general SQL/MM conformance claim remain outside delivered coverage.

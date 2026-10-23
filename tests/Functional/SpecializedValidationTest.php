@@ -22,7 +22,6 @@ use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as ModelLineString;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
-use LongitudeOne\SpatialValidator\Validator\Constraints\Components;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -76,9 +75,10 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
-            GeometryTypeEnum::MULTIPOLYGON];
+            GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
+                GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::TRIANGLE => PolygonStructureTest::triangle([]),
@@ -102,27 +102,7 @@ final class SpecializedValidationTest extends TestCase
         $context->expects(self::once())->method('buildViolation')
             ->with($type->value . ' validation is not implemented yet.')->willReturn($builder)
         ;
-        // Symfony 5.4's untyped methods do not get automatic PHPUnit return stubs.
-        $service = $this->createMock(ValidatorInterface::class);
-        $contextual = $this->createMock(ContextualValidatorInterface::class);
-        $delegations = in_array($type, [
-            GeometryTypeEnum::CIRCULARSTRING,
-            GeometryTypeEnum::COMPOUNDCURVE,
-            GeometryTypeEnum::GEOMETRYCOLLECTION,
-            GeometryTypeEnum::LINESTRING,
-            GeometryTypeEnum::MULTILINESTRING,
-            GeometryTypeEnum::MULTIPOINT,
-            GeometryTypeEnum::MULTIPOLYGON,
-            GeometryTypeEnum::POLYGON,
-            GeometryTypeEnum::POLYHEDRALSURFACE,
-            GeometryTypeEnum::TRIANGLE,
-        ], true) ? 1 : 0;
-        $context->expects(self::exactly($delegations))->method('getValidator')->willReturn($service);
-        $context->method('getGroup')->willReturn('direct');
-        $service->expects(self::exactly($delegations))->method('inContext')->with($context)->willReturn($contextual);
-        $contextual->expects(self::exactly($delegations))->method('validate')
-            ->with($value, new Components(groups: ['Default']), 'direct')->willReturnSelf()
-        ;
+        $context->expects(self::never())->method('getValidator');
         $validator = self::validator(self::constraint($type));
         $validator->initialize($context);
         $validator->validate($value, self::constraint($type));
@@ -145,9 +125,10 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
-            GeometryTypeEnum::MULTIPOLYGON];
+            GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
+                GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::TRIANGLE => PolygonStructureTest::triangle([]),
@@ -214,9 +195,10 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
-            GeometryTypeEnum::MULTIPOLYGON];
+            GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
         if (in_array($type, $implemented, true)) {
             $value = match ($type) {
+                GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
                 GeometryTypeEnum::POLYGON => PolygonStructureTest::polygon([]),
                 GeometryTypeEnum::TRIANGLE => PolygonStructureTest::triangle([]),

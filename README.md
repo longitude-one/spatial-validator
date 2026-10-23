@@ -92,7 +92,7 @@ Specialized validators check their required interface when available and their e
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
 **Point, LineString, CircularString, CompoundCurve, Polygon, Triangle, GeometryCollection, MultiPoint,
-MultiLineString and MultiPolygon validation are implemented within the limits below.**
+MultiLineString, MultiPolygon and PolyhedralSurface validation are implemented within the limits below.**
 Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
@@ -345,3 +345,20 @@ there is no proximity tolerance, union, repair or coordinate movement.
 Non-empty Geography member pairs produce explicit unavailable-interaction warnings in addition to
 available member diagnostics. They do not establish geodetic validity. See the
 [MultiPolygon reference](docs/validators.md#multipolygon-rules) for diagnostics and normative limits.
+
+## PolyhedralSurface validity and explicit closure
+
+`PolyhedralSurface` composes complete Polygon/Triangle patch validation and validates Geometry patch interactions
+in XYZ or XYZM, including holes and non-adjacent faces. Open surfaces are allowed; `Spatial` uses this contract.
+Apply `ClosedPolyhedralSurface` to additionally require a non-empty closed envelope enclosing nonzero volume.
+EMPTY XYZ/XYZM surfaces pass ordinary validity and fail explicit closure. EMPTY patches and missing Z fail.
+
+Patches must connect through boundary segments. Common edges may be subdivided or partially shared;
+each segment has at most two incident faces, with opposite directions. Every vertex must have one local face fan.
+Crossing faces, overlapping interiors, branching edges and pinched vertices fail. These checks use exact predicates
+on supplied coordinates; M and signed zero do not distinguish spatial positions. No tolerance, snapping or repair
+is added. Polygon hole-orientation warnings remain distinct from shared-face orientation errors.
+
+Geography retains available patch, metadata and coordinate checks and reports an explicit warning for unavailable
+surface topology. This warning also prevents a claim of closed geodetic validity. See the
+[PolyhedralSurface reference](docs/validators.md#polyhedral-surface-rules) for diagnostics and normative limits.
