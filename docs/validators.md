@@ -490,7 +490,9 @@ members is valid; a parent's EMPTY declaration never hides malformed members.
 | Member relationship | Geometry result |
 | --- | --- |
 | Disjoint filled surfaces | Valid |
-| Isolated contact belonging to both boundaries | Valid |
+| Isolated boundary/boundary contact | Valid |
+| Isolated boundary/interior contact in different XYZ planes, interiors disjoint | Valid |
+| Boundary/interior contact segment in different XYZ planes | Error |
 | Polygon inside another member's hole, without contact | Valid |
 | Interior overlap or containment in the filled surface | Error |
 | Shared boundary interval, including in different planes | Error |
@@ -500,8 +502,9 @@ members is valid; a parent's EMPTY declaration never hides malformed members.
 Each member must be planar; the aggregate has no common-plane requirement. XY/XYM evaluate XY;
 XYZ/XYZM evaluate XYZ and always ignore M spatially. Coplanar checks split boundaries at their actual
 contacts and locate intervals in the filled surfaces, subtracting holes. Different planes intersect along
-a line: exact rational boundary/plane intersections partition that line, and point/interval location in
-both filled surfaces identifies forbidden contacts. No floating-point intersection rounding, determinant
+a line: exact rational boundary/plane intersections partition that line, and open-interval location in
+both filled surfaces identifies forbidden contact segments and interior intersections.
+No floating-point intersection rounding, determinant
 epsilon, densification, snapping or coordinate repair is used. Ring composition rejects cut lines,
 spikes and punctures before aggregate checks.
 
@@ -527,3 +530,9 @@ full-coordinate-space and boundary-contact contract. ISO/IEC CD 13249-3:201x(E),
 separate verification against a final published ISO edition or SQL/MM constructor/mutator acceptance.
 The approved aggregate profile preserves valid EMPTY members instead of applying method-specific SQL
 construction restrictions as blanket geometry rules.
+
+**Approved clarification — Alexandre, 2026-10-23 (#23):** for XYZ members in different planes with disjoint
+interiors, isolated boundary/interior contact points are permitted; contact segments are forbidden.
+Interior/interior intersections and shared boundary intervals remain invalid. This is the selected
+LongitudeOne profile; the additional boundary/interior segment restriction is an approved scope decision,
+not a separately established requirement of the cited OGC clauses.

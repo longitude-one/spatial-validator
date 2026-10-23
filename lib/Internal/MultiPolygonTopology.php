@@ -115,14 +115,13 @@ final class MultiPolygonTopology
             $left[$axis],
             $right[$axis]
         ));
+        // Interior/interior intersections contain an open interval on the planes' intersection line.
+        // Isolated cut points touch at least one boundary and are permitted by the approved profile.
         $previous = null;
         foreach ($cuts as $point) {
-            if (self::forbidden($first->location($point), $second->location($point), false)) {
-                return true;
-            }
             if (null !== $previous && 0 !== SurfaceCoordinates::compare($previous[$axis], $point[$axis])) {
                 $midpoint = SurfaceCoordinates::interpolate($previous, $point, ExactRationals::number(0.5));
-                if (self::forbidden($first->location($midpoint), $second->location($midpoint), true)) {
+                if (self::forbidden($first->location($midpoint), $second->location($midpoint))) {
                     return true;
                 }
             }
@@ -132,9 +131,10 @@ final class MultiPolygonTopology
         return false;
     }
 
-    private static function forbidden(int $first, int $second, bool $interval): bool
+    private static function forbidden(int $first, int $second): bool
     {
-        return 0 <= $first && 0 <= $second && ($interval || 0 < $first || 0 < $second);
+        // Alexandre, 2026-10-23: isolated boundary/interior contacts are permitted; contact segments are not.
+        return 0 <= $first && 0 <= $second;
     }
 
     /** @param list<list<float>> $ring

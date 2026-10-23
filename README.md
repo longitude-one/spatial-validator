@@ -333,7 +333,8 @@ for unavailable geodetic checks. See the [Triangle reference](docs/validators.md
 
 `MultiPolygon` recursively validates complete Polygon/Triangle members and checks their filled surfaces,
 including holes. EMPTY members are retained and validated. Disjoint surfaces and isolated boundary-point
-contacts pass; interior overlap, containment, crossing surfaces and shared boundary intervals fail.
+contacts pass, including isolated boundary/interior contacts in different XYZ planes with disjoint interiors.
+Interior overlap, containment, crossing surfaces and every contact segment fail.
 A Polygon wholly inside another member's hole can pass.
 
 Geometry interactions use the actual XY or XYZ space, ignoring M. Members need not share a plane:

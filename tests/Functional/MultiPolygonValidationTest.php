@@ -138,7 +138,7 @@ final class MultiPolygonValidationTest extends TestCase
         yield 'single boundary point in another interior' => [
             [$flat],
             [[[4, 4, 0], [4, 2, 1], [4, 6, 1], [4, 4, 0]]],
-            true,
+            false,
             Dimension::XYZ,
         ];
 
@@ -201,7 +201,8 @@ final class MultiPolygonValidationTest extends TestCase
     {
         $datasets = iterator_to_array(self::pairs());
         $names = ['parallel planes', 'filled intersection without boundary crossing', 'other plane inside hole',
-            'different plane point contact', 'different plane shared boundary interval', 'coplanar XYZ'];
+            'different plane point contact', 'different plane shared boundary interval', 'coplanar XYZ',
+            'single boundary point in another interior', 'boundary through another interior'];
         foreach ($names as $name) {
             [$first, $second, $invalid] = $datasets[$name];
             foreach ([1.0e-10, 1.0, 1.0e150, 1.0e307] as $scale) {
