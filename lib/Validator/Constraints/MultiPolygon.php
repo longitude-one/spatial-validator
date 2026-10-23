@@ -18,14 +18,17 @@ namespace LongitudeOne\SpatialValidator\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
 
-/** Configure the unavailable MultiPolygon validation warning. */
+/** Validate Polygon members and their filled-surface relationships. */
 final class MultiPolygon extends Constraint
 {
+    public const string INTERSECTION_ERROR = 'multipolygon-intersection';
+    public const string UNAVAILABLE_ERROR = 'multipolygon-unavailable';
+
     /**
      * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     * @param mixed         $payload Consumer metadata; unavailable interactions default to warning
      */
-    public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
+    public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
     }

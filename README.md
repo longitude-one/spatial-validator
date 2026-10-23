@@ -91,8 +91,8 @@ Available Geometry/Geography and XY/XYZ/XYM/XYZM variants follow the same route 
 Specialized validators check their required interface when available and their exact enum type;
 in particular, Triangle requires `TriangleInterface` and does not accept a plain Polygon.
 
-**Point, LineString, CircularString, CompoundCurve, Polygon, Triangle, GeometryCollection, MultiPoint and MultiLineString
-validation are implemented within the limits below.**
+**Point, LineString, CircularString, CompoundCurve, Polygon, Triangle, GeometryCollection, MultiPoint,
+MultiLineString and MultiPolygon validation are implemented within the limits below.**
 Other admissible spatial objects, including EMPTY,
 produce an unavailable-validation violation with the message `<Type> validation is not implemented yet.`
 Its specialized constraint carries `['severity' => 'warning']` by default.
@@ -328,3 +328,20 @@ Geometry calculations use XYZ when Z exists, otherwise XY, ignoring M; vertical 
 Coordinate comparison uses the approved scaled equality, while planarity/topology retain exact binary-coordinate
 predicates without proximity tolerance or repair. Geography retains structural checks and explicit warnings
 for unavailable geodetic checks. See the [Triangle reference](docs/validators.md#triangle-rules) for codes and limits.
+
+## MultiPolygon validity
+
+`MultiPolygon` recursively validates complete Polygon/Triangle members and checks their filled surfaces,
+including holes. EMPTY members are retained and validated. Disjoint surfaces and isolated boundary-point
+contacts pass, including isolated boundary/interior contacts in different XYZ planes with disjoint interiors.
+Interior overlap, containment, crossing surfaces and every contact segment fail.
+A Polygon wholly inside another member's hole can pass.
+
+Geometry interactions use the actual XY or XYZ space, ignoring M. Members need not share a plane:
+parallel separated surfaces with identical XY footprints are disjoint, while intersections of interiors
+in different planes fail. Exact rational intersections retain the original finite binary coordinates;
+there is no proximity tolerance, union, repair or coordinate movement.
+
+Non-empty Geography member pairs produce explicit unavailable-interaction warnings in addition to
+available member diagnostics. They do not establish geodetic validity. See the
+[MultiPolygon reference](docs/validators.md#multipolygon-rules) for diagnostics and normative limits.
