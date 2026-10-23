@@ -67,6 +67,33 @@ final class TriangleValidationTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($triangle, new Rules\Triangle()));
     }
 
+    public function testApproximateClosureCannotMakeCollinearVerticesNonDegenerate(): void
+    {
+        foreach (Dimension::cases() as $dimension) {
+            foreach ([[0, 1, 2], [2, 0, 1], [1, 2, 0]] as $axes) {
+                $points = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [0, PHP_FLOAT_EPSILON / 2, 0]];
+                $points = array_map(static fn (array $point): array => $dimension->hasZ()
+                    ? array_map(static fn (int $axis) => $point[$axis], $axes)
+                    : array_slice($point, 0, 2), $points);
+                if ($dimension->hasM()) {
+                    $points = array_map(
+                        static fn (array $point, int $index): array => [...$point, $index * 17],
+                        $points,
+                        array_keys($points)
+                    );
+                }
+                $triangle = PolygonStructureTest::triangle([$points], $dimension);
+                foreach ([new Rules\Triangle(), new Rules\Spatial()] as $constraint) {
+                    $violations = Validation::createValidator()->validate($triangle, $constraint);
+                    self::assertCount(1, $violations, (string) $violations);
+                    self::assertSame(PolygonStructure::DEGENERATE_ERROR, $violations->get(0)->getCode());
+                    self::assertSame('rings[0]', $violations->get(0)->getPropertyPath());
+                    self::assertNull($violations->get(0)->getConstraint()?->payload);
+                }
+            }
+        }
+    }
+
     public function testApproximateClosureNeverHidesAnExactCrossing(): void
     {
         $origin = 1.0e18;

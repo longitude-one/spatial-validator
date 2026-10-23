@@ -20,6 +20,7 @@ use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
 use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
+use LongitudeOne\SpatialValidator\Internal\PolygonPlane;
 use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
 use LongitudeOne\SpatialValidator\Internal\PolygonTopology;
 use Symfony\Component\Validator\Constraint;
@@ -109,6 +110,17 @@ final class TriangleValidator extends ConstraintValidator
         }
         $this->distinct($value);
         if ($before !== count($this->context->getViolations()) || SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
+            return;
+        }
+        $vertices = array_slice(array_values($rings[0]->getPoints()), 0, 3);
+        $positions = array_values(array_filter(array_map(PointCoordinates::position(...), $vertices)));
+        if (null === PolygonPlane::basis($positions)) {
+            $this->error(
+                'The three Triangle vertices must not be collinear.',
+                PolygonStructure::DEGENERATE_ERROR,
+                'rings[0]'
+            );
+
             return;
         }
         // Even Q02-equal closure positions retain their exact supplied coordinates.

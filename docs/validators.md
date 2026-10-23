@@ -447,7 +447,9 @@ is rejected. This current input contract supersedes the empty-string exemption i
 | Non-empty Geography | Available structural checks plus unavailable-geodetic warnings |
 
 Triangle composes the internal Polygon structure, Ring, Point, metadata and supporting-plane rules.
-It also reuses Polygon's exact cyclic-boundary topology check, including any interval between Q02-equal
+Non-collinearity is checked on the first three vertices exclusively; an offset closing position cannot supply
+a missing supporting plane. It also reuses Polygon's exact cyclic-boundary topology check, including any interval
+between Q02-equal
 but numerically different first/last positions. No public Polygon constraint is invoked, no Polygon is
 converted and no geometry algorithms are duplicated. Since holes are forbidden, inter-ring orientation,
 containment and connectedness checks add no further valid Triangle case.
