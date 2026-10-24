@@ -62,7 +62,7 @@ final class SpecializedInputTest extends TestCase
         $constraint = SpecializedValidationTest::constraint($type);
         $validator = SpecializedValidationTest::validator($constraint);
         $service = Validation::createValidator();
-        foreach (['', 'POINT EMPTY', 42, false, [], (object) []] as $value) {
+        foreach (['', " \t\n", '0', 'POINT EMPTY', 42, false, [], (object) []] as $value) {
             try {
                 $validator->validate($value, $constraint);
                 self::fail('Only null or an appropriate spatial value is accepted.');

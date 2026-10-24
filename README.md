@@ -131,7 +131,7 @@ Actual releases require the maintainer's authorization.
 | Input | Behavior with the applicable spatial constraint |
 | --- | --- |
 | PHP `null` | No violation; compose with Symfony `NotNull` when a value is required |
-| Any string, including `''` and WKT | Rejected: an object implementing the required spatial interface is expected |
+| Any string (`''`, whitespace, numeric or WKT) | Rejected: the required spatial object is expected |
 | Other unsupported PHP value or incompatible spatial type | Rejected as an unexpected value |
 | Admissible spatial object, including EMPTY | Delegates to its specialized validator |
 
@@ -143,6 +143,11 @@ Parse serialized geometry into a spatial object before validation; strings are n
 
 This input policy supersedes the earlier proposal to ignore both `null` and `''`:
 only `null` is ignored. No library input exception hierarchy is introduced.
+
+For required spatial values, use `Sequentially([new NotNull(), new Spatial()])`:
+`null` fails `NotNull`, `''` passes `NotNull` but fails `Spatial`, and an EMPTY Point
+still receives geometric validation. `NotBlank` can reject `''` earlier when that
+matches the application's presence policy; it does not make strings valid spatial inputs.
 
 ## Point validation
 

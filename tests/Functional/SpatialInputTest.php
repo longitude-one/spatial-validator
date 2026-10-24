@@ -44,6 +44,22 @@ final class SpatialInputTest extends TestCase
         (new SpatialValidator())->validate($value, new Spatial());
     }
 
+    public function testNotNullDoesNotAllowEmptyStrings(): void
+    {
+        $constraint = new Sequentially([new NotNull(), new Spatial()]);
+        $validator = Validation::createValidator();
+        $absent = $validator->validate(null, $constraint);
+        $string = $validator->validate('', $constraint);
+        $empty = $validator->validate(new Point(), $constraint);
+
+        self::assertCount(1, $absent);
+        self::assertInstanceOf(NotNull::class, $absent->get(0)->getConstraint());
+        self::assertCount(1, $string);
+        self::assertInstanceOf(Spatial::class, $string->get(0)->getConstraint());
+        self::assertSame('This value should be of type {{ type }}.', $string->get(0)->getMessageTemplate());
+        self::assertCount(0, $empty);
+    }
+
     public function testNullIsIgnored(): void
     {
         (new SpatialValidator())->validate(null, new Spatial());
@@ -83,6 +99,10 @@ final class SpatialInputTest extends TestCase
         yield 'string' => ['POINT EMPTY'];
 
         yield 'empty string' => [''];
+
+        yield 'whitespace string' => [" \t\n"];
+
+        yield 'numeric string' => ['0'];
 
         yield 'array' => [[]];
 
