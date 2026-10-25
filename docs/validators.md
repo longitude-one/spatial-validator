@@ -9,6 +9,18 @@ Call `$validator->validate($value, new Spatial())` with Symfony Validator and
 | --- | --- |
 | [Spatial](../lib/Validator/Constraints/Spatial.php) · [Validator](../lib/Validator/Constraints/SpatialValidator.php) | Validates any spatial interface |
 
+## Input and presence
+
+The [input compatibility contract](../README.md#input-compatibility) applies to generic,
+specialized and elementary spatial constraints: only PHP `null` is ignored.
+Every string is rejected, including `''`, whitespace-only strings, numeric strings and WKT.
+Direct calls raise Symfony `UnexpectedValueException`; the Symfony Validator service returns a type violation.
+A wrong constraint raises `UnexpectedTypeException` before inspecting the value.
+
+Compose `Sequentially([new NotNull(), new Spatial()])` to require a value: `null` fails presence,
+while `''` fails spatial typing. `NotBlank` may reject blank input first. An EMPTY spatial object
+is present and still undergoes the applicable geometric rules.
+
 ## Specialized validation
 
 Point validates coordinates and LineString composes point and line rules.
