@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -35,8 +35,12 @@ final class RationalSurface
     /** @var array{int, int} */
     private readonly array $axes;
 
-    /** @param list<list<list<float>>> $rings
-     * @param array{list<float>, list<float>, list<float>} $basis
+    /**
+     * @param array $rings rings
+     * @param array $basis basis
+     *
+     * @phpstan-param list<list<list<float>>> $rings
+     * @phpstan-param array{list<float>, list<float>, list<float>} $basis
      */
     public function __construct(array $rings, array $basis)
     {
@@ -53,13 +57,17 @@ final class RationalSurface
             : (0 !== $this->normal[1][0][0] ? [0, 2] : [1, 2]);
     }
 
-    /** @param list<list<Rational>> $ring
+    /**
+     * @param array $ring ring
+     *
+     * @phpstan-param list<list<Rational>> $ring
+     *
      * @return list<array{list<Rational>, list<Rational>}>
      */
     private static function edges(array $ring): array
     {
         $edges = [];
-        $previous = $ring[count($ring) - 1];
+        $previous = $ring[\count($ring) - 1];
         foreach ($ring as $point) {
             $edges[] = [$previous, $point];
             $previous = $point;
@@ -68,7 +76,11 @@ final class RationalSurface
         return $edges;
     }
 
-    /** Boundary intersections with another plane, including endpoints of intervals lying in it.
+    /**
+     * Boundary intersections with another plane, including endpoints of intervals lying in it.
+     *
+     * @param self $other other
+     *
      * @return list<list<Rational>>
      */
     public function cuts(self $other): array
@@ -91,8 +103,12 @@ final class RationalSurface
         return $cuts;
     }
 
-    /** Inside=1, boundary=0, outside=-1. Point is known to lie in this plane.
-     * @param list<Rational> $point
+    /**
+     * Inside=1, boundary=0, outside=-1. Point is known to lie in this plane.
+     *
+     * @param array $point point
+     *
+     * @phpstan-param list<Rational> $point
      */
     public function location(array $point): int
     {
@@ -108,7 +124,11 @@ final class RationalSurface
         return $outside ? -1 : 1;
     }
 
-    /** @param list<Rational> $point
+    /**
+     * @param array $point point
+     *
+     * @phpstan-param list<Rational> $point
+     *
      * @return Rational
      */
     public function side(array $point): array
@@ -116,8 +136,13 @@ final class RationalSurface
         return SurfaceCoordinates::dot($this->normal, SurfaceCoordinates::subtract($point, $this->origin));
     }
 
-    /** @param list<Rational> $start
-     * @param list<Rational> $end
+    /**
+     * @param int   $turn  turn
+     * @param array $start start
+     * @param array $end   end
+     *
+     * @phpstan-param list<Rational> $start
+     * @phpstan-param list<Rational> $end
      */
     private function onSegment(int $turn, array $start, array $end): bool
     {
@@ -127,8 +152,12 @@ final class RationalSurface
             && 0 >= $start[$vertical][0][0] * $end[$vertical][0][0];
     }
 
-    /** @param list<Rational> $point
-     * @param list<list<Rational>> $ring
+    /**
+     * @param array $point point
+     * @param array $ring  ring
+     *
+     * @phpstan-param list<Rational> $point
+     * @phpstan-param list<list<Rational>> $ring
      */
     private function ringLocation(array $point, array $ring): int
     {

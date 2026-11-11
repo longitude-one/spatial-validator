@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -31,6 +31,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Compose member validity before inspecting contributing endpoints. */
 final class CompoundCurveValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof CompoundCurve) {
@@ -45,21 +51,27 @@ final class CompoundCurveValidator extends ConstraintValidator
         if (GeometryTypeEnum::COMPOUNDCURVE !== $value->getType()) {
             throw new UnexpectedValueException($value, GeometryTypeEnum::COMPOUNDCURVE->value);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new Components(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations())) {
+        if ($before !== \count($this->context->getViolations())) {
             return;
         }
         $this->joins($value, $constraint);
     }
 
     /**
-     * @param list<float> $previous
-     * @param list<float> $start
+     * @param array                  $previous   previous
+     * @param array                  $start      start
+     * @param CompoundCurveInterface $value      spatial value to validate
+     * @param CompoundCurve          $constraint applied validation constraint
+     * @param string                 $path       property path for the diagnostic
+     *
+     * @phpstan-param list<float> $previous
+     * @phpstan-param list<float> $start
      */
     private function join(
         array $previous,
@@ -90,12 +102,18 @@ final class CompoundCurveValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Joins.
+     *
+     * @param CompoundCurveInterface $value      spatial value to validate
+     * @param CompoundCurve          $constraint applied validation constraint
+     */
     private function joins(CompoundCurveInterface $value, CompoundCurve $constraint): void
     {
         $previous = null;
         foreach (array_values($value->getCurves()) as $index => $curve) {
             $points = $this->positions($curve);
-            $path = 'curves[' . $index . ']';
+            $path = 'curves['.$index.']';
             if ([] === $points || $curve->isEmpty()) {
                 $this->context->buildViolation('A contributing curve must not be EMPTY.')
                     ->atPath($path)->setCode(CompoundCurve::EMPTY_ERROR)->addViolation()
@@ -107,11 +125,15 @@ final class CompoundCurveValidator extends ConstraintValidator
             if (null !== $previous) {
                 $this->join($previous, $points[0], $value, $constraint, $path);
             }
-            $previous = $points[count($points) - 1];
+            $previous = $points[\count($points) - 1];
         }
     }
 
-    /** @return list<list<float>> */
+    /**
+     * @param CurveInterface $curve curve
+     *
+     * @return list<list<float>>
+     */
     private function positions(CurveInterface $curve): array
     {
         $points = $curve instanceof LineStringInterface || $curve instanceof CircularStringInterface

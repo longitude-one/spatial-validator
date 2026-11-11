@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -28,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Check source-defined arc point restrictions without requiring three distinct positions. */
 final class CircularArcPointsValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof CircularArcPoints) {
@@ -44,10 +50,14 @@ final class CircularArcPointsValidator extends ConstraintValidator
         $this->intermediates($points);
     }
 
-    /** @param list<PointInterface> $points */
+    /**
+     * @param array $points coordinate positions to inspect
+     *
+     * @phpstan-param list<PointInterface> $points
+     */
     private function intermediates(array $points): void
     {
-        $count = count($points);
+        $count = \count($points);
         for ($index = 0; $index + 2 < $count; $index += 2) {
             $start = PointCoordinates::position($points[$index]);
             $middle = PointCoordinates::position($points[$index + 1]);
@@ -57,20 +67,24 @@ final class CircularArcPointsValidator extends ConstraintValidator
             }
             if (PointCoordinates::same($start, $middle) || PointCoordinates::same($middle, $end)) {
                 $this->context->buildViolation('The intermediate arc position must differ from both endpoints.')
-                    ->atPath('arcs[' . intdiv($index, 2) . ']')->setInvalidValue($points[$index + 1])
+                    ->atPath('arcs['.intdiv($index, 2).']')->setInvalidValue($points[$index + 1])
                     ->setCode(CircularArcPoints::INVALID_ERROR)->addViolation()
                 ;
             }
         }
     }
 
-    /** @param list<PointInterface> $points */
+    /**
+     * @param array $points coordinate positions to inspect
+     *
+     * @phpstan-param list<PointInterface> $points
+     */
     private function nonEmpty(array $points): void
     {
         foreach ($points as $index => $point) {
             if (PointCoordinates::isEmptyPoint($point)) {
                 $this->context->buildViolation('A circular arc must not contain an EMPTY Point.')
-                    ->atPath('points[' . $index . ']')->setInvalidValue($point)
+                    ->atPath('points['.$index.']')->setInvalidValue($point)
                     ->setCode(CircularArcPoints::INVALID_ERROR)->addViolation()
                 ;
             }

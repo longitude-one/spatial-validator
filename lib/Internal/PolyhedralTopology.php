@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,14 +19,18 @@ namespace LongitudeOne\SpatialValidator\Internal;
 /** @internal complete validated-face topology, without changing coordinates */
 final class PolyhedralTopology
 {
-    /** @param list<list<list<list<float>>>> $patches */
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     */
     public static function closed(array $patches): bool
     {
         if ([] === $patches) {
             return false;
         }
-        foreach ((new PolyhedralEdges($patches))->segments as $uses) {
-            if (2 !== count($uses)) {
+        foreach (new PolyhedralEdges($patches)->segments as $uses) {
+            if (2 !== \count($uses)) {
                 return false;
             }
         }
@@ -34,19 +38,23 @@ final class PolyhedralTopology
         return self::volume($patches);
     }
 
-    /** @param list<list<list<list<float>>>> $patches
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     *
      * @return list<string>
      */
     public static function errors(array $patches): array
     {
         $edges = new PolyhedralEdges($patches);
         $errors = [];
-        $adjacency = array_fill(0, count($patches), []);
+        $adjacency = array_fill(0, \count($patches), []);
         foreach ($edges->segments as $uses) {
-            if (2 < count($uses)) {
+            if (2 < \count($uses)) {
                 $errors[] = 'incidence';
             }
-            if (2 === count($uses)) {
+            if (2 === \count($uses)) {
                 [$left, $right] = $uses;
                 $first = $left[0];
                 $second = $right[0];
@@ -70,10 +78,14 @@ final class PolyhedralTopology
         return array_values(array_unique($errors));
     }
 
-    /** @param array<int, list<int>> $graph */
+    /**
+     * @param array $graph graph
+     *
+     * @phpstan-param array<int, list<int>> $graph
+     */
     private static function connected(array $graph): bool
     {
-        $pending = array_slice(array_keys($graph), 0, 1);
+        $pending = \array_slice(array_keys($graph), 0, 1);
         $seen = [];
         while ([] !== $pending) {
             $face = array_pop($pending);
@@ -84,10 +96,14 @@ final class PolyhedralTopology
             $pending = [...$pending, ...$graph[$face]];
         }
 
-        return count($seen) === count($graph);
+        return \count($seen) === \count($graph);
     }
 
-    /** @param list<list<list<list<float>>>> $patches */
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     */
     private static function intersections(array $patches): bool
     {
         foreach ($patches as $second => $patch) {
@@ -104,6 +120,11 @@ final class PolyhedralTopology
         return false;
     }
 
+    /**
+     * Manifold.
+     *
+     * @param PolyhedralEdges $edges edges
+     */
     private static function manifold(PolyhedralEdges $edges): bool
     {
         foreach (array_keys($edges->vertices) as $vertex) {
@@ -116,15 +137,15 @@ final class PolyhedralTopology
                 foreach ($uses as [$face]) {
                     $fan[$face] ??= [];
                 }
-                if (1 === count($uses)) {
+                if (1 === \count($uses)) {
                     ++$boundary;
                 }
-                if (2 === count($uses)) {
+                if (2 === \count($uses)) {
                     $fan[$uses[0][0]][] = $uses[1][0];
                     $fan[$uses[1][0]][] = $uses[0][0];
                 }
             }
-            if (!in_array($boundary, [0, 2], true) || !self::connected($fan)) {
+            if (!\in_array($boundary, [0, 2], true) || !self::connected($fan)) {
                 return false;
             }
         }
@@ -132,8 +153,12 @@ final class PolyhedralTopology
         return true;
     }
 
-    /** Exact oriented tetrahedron sum; nonzero volume is independent of origin and scale.
-     * @param list<list<list<list<float>>>> $patches
+    /**
+     * Exact oriented tetrahedron sum; nonzero volume is independent of origin and scale.
+     *
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
      */
     private static function volume(array $patches): bool
     {

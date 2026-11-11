@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -42,7 +42,15 @@ use Symfony\Component\Validator\Validation;
  */
 final class CollectionValidationTest extends TestCase
 {
-    /** @param array<mixed> $members */
+    /**
+     * @param string                  $type      type
+     * @param array                   $members   spatial members to inspect
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     * @param SpatialReference|null   $reference reference
+     *
+     * @phpstan-param array<mixed> $members
+     */
     public static function aggregate(
         string $type,
         array $members,
@@ -53,7 +61,7 @@ final class CollectionValidationTest extends TestCase
         $name = 'GeometryCollection' === $type ? 'Collection' : $type;
 
         /** @var class-string<CollectionInterface> $interface */
-        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\' . $name . 'Interface';
+        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\'.$name.'Interface';
         $value = self::createStub($interface);
         $value->method('getType')->willReturn(GeometryTypeEnum::from($type));
         $value->method('getDimension')->willReturn($dimension);
@@ -68,6 +76,75 @@ final class CollectionValidationTest extends TestCase
         return $value;
     }
 
+    /**
+     * @return iterable<string, array{list<list<list<float|int>>>, bool}>
+     */
+    public static function interactions(): iterable
+    {
+        yield 'boundary' => [[[[0, 0], [1, 1]], [[1, 1], [2, 0]]], true];
+
+        yield 'crossing' => [[[[0, 0], [2, 2]], [[0, 2], [2, 0]]], false];
+
+        yield 'overlap' => [[[[0, 0], [2, 0]], [[1, 0], [3, 0]]], false];
+
+        yield 'endpoint interior' => [[[[0, 0], [2, 0]], [[1, 0], [1, 1]]], false];
+
+        yield 'closed member contact' => [[[[0, 0], [1, 0], [0, 1], [0, 0]], [[0, 0], [-1, -1]]], false];
+
+        yield 'disjoint' => [[[[0, 0], [1, 1]], [[2, 0], [3, 1]]], true];
+
+        yield 'empty member' => [[[], [[0, 0], [1, 1]]], true];
+
+        yield 'all empty' => [[[], []], true];
+
+        yield 'self crossing' => [[[[0, 0], [2, 2], [0, 2], [2, 0]]], false];
+
+        yield 'small crossing' => [[[[0, 0], [1e-12, 1e-12]], [[0, 1e-12], [1e-12, 0]]], false];
+
+        yield 'large crossing' => [[[[0, 0], [1e150, 1e150]], [[0, 1e150], [1e150, 0]]], false];
+
+        yield 'close disjoint' => [[[[0, 0], [1, 0]], [[0, 1e-20], [1, 1e-20]]], true];
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function optionalRules(): iterable
+    {
+        yield 'point simplicity' => ['SimpleMultiPoint', 'MultiPoint'];
+
+        yield 'line simplicity' => ['SimpleMultiLineString', 'MultiLineString'];
+
+        yield 'line closure' => ['ClosedMultiLineString', 'MultiLineString'];
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function types(): iterable
+    {
+        yield 'general' => ['GeometryCollection', 'geometries'];
+
+        yield 'points' => ['MultiPoint', 'points'];
+
+        yield 'lines' => ['MultiLineString', 'lineStrings'];
+    }
+
+    /**
+     * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
+     */
+    public static function variants(): iterable
+    {
+        foreach (CoordinateDimensionEnum::cases() as $dimension) {
+            foreach (SpatialModelEnum::cases() as $family) {
+                yield $dimension->name.$family->name => [$dimension, $family];
+            }
+        }
+    }
+
+    /**
+     * Verify closure requires every member and aggregate non emptiness.
+     */
     public function testClosureRequiresEveryMemberAndAggregateNonEmptiness(): void
     {
         $service = Validation::createValidator();
@@ -96,6 +173,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('types')]
+    /**
+     * Verify empty and mixed members are retained.
+     *
+     * @param string $type type
+     * @param string $path property path for the diagnostic
+     */
     public function testEmptyAndMixedMembersAreRetained(string $type, string $path): void
     {
         $empty = 'MultiLineString' === $type ? LineStringValidationTest::line([]) : new Point();
@@ -109,9 +192,12 @@ final class CollectionValidationTest extends TestCase
         $violations = Validation::createValidator()->validate($value, new Rules\Spatial());
         self::assertCount(1, $violations);
         self::assertSame(Rules\Components::TYPE_ERROR, $violations->get(0)->getCode());
-        self::assertSame($path . '[1]', $violations->get(0)->getPropertyPath());
+        self::assertSame($path.'[1]', $violations->get(0)->getPropertyPath());
     }
 
+    /**
+     * Verify geography optional checks warn and preserve explicit payload.
+     */
     public function testGeographyOptionalChecksWarnAndPreserveExplicitPayload(): void
     {
         $point = new GeographyPoint(1, 2);
@@ -156,6 +242,9 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify heterogeneous nesting preserves context and polygon structure failure.
+     */
     public function testHeterogeneousNestingPreservesContextAndPolygonStructureFailure(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
@@ -187,16 +276,25 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify invalid member prevents additional property claims.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testInvalidMemberPreventsAdditionalPropertyClaims(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
-        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\' . $name;
+        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$name;
         $violations = Validation::createValidator()->validate(self::aggregate($type, ['invalid']), new $class());
         self::assertCount(1, $violations);
         self::assertSame(Rules\Components::TYPE_ERROR, $violations->get(0)->getCode());
     }
 
-    public function testMeasuredPointEqualityIgnoresMAndIncludesZ(): void
+    /**
+     * Verify measured point equality ignores m and includes z.
+     */
+    public function testMeasuredPointEqualityIgnoresMeasureAndIncludesAltitude(): void
     {
         $dimensions = [CoordinateDimensionEnum::XYZ, CoordinateDimensionEnum::XYM, CoordinateDimensionEnum::XYZM];
         foreach ($dimensions as $dimension) {
@@ -210,6 +308,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('types')]
+    /**
+     * Verify metadata and invalid member remain visible under empty parent.
+     *
+     * @param string $type type
+     * @param string $path property path for the diagnostic
+     */
     public function testMetadataAndInvalidMemberRemainVisibleUnderEmptyParent(string $type, string $path): void
     {
         $point = self::createStub(PointInterface::class);
@@ -217,14 +321,14 @@ final class CollectionValidationTest extends TestCase
         $point->method('getFamily')->willReturn(SpatialModelEnum::GEOMETRY);
         $point->method('getDimension')->willReturn(CoordinateDimensionEnum::XY);
         $point->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-        $point->method('getX')->willReturn(INF);
+        $point->method('getX')->willReturn(\INF);
         $point->method('getY')->willReturn(0.0);
-        $member = 'MultiLineString' === $type ? LineStringValidationTest::line([[INF, 0], [1, 1]]) : $point;
+        $member = 'MultiLineString' === $type ? LineStringValidationTest::line([[\INF, 0], [1, 1]]) : $point;
         $value = self::aggregate($type, [$member]);
         $violations = Validation::createValidator()->validate($value, new Rules\Spatial());
-        self::assertGreaterThan(0, count($violations));
+        self::assertGreaterThan(0, \count($violations));
         self::assertSame(
-            $path . '[0]' . ('MultiLineString' === $type ? '.points[0]' : ''),
+            $path.'[0]'.('MultiLineString' === $type ? '.points[0]' : ''),
             $violations->get(0)->getPropertyPath()
         );
         $empty = 'MultiLineString' === $type ? LineStringValidationTest::line([]) : new Point();
@@ -245,17 +349,12 @@ final class CollectionValidationTest extends TestCase
         );
     }
 
-    /** @return iterable<string, array{string, string}> */
-    public static function types(): iterable
-    {
-        yield 'general' => ['GeometryCollection', 'geometries'];
-
-        yield 'points' => ['MultiPoint', 'points'];
-
-        yield 'lines' => ['MultiLineString', 'lineStrings'];
-    }
-
-    /** @param list<list<list<float|int>>> $lines */
+    /**
+     * @param array $lines  lines
+     * @param bool  $simple simple
+     *
+     * @phpstan-param list<list<list<float|int>>> $lines
+     */
     #[DataProvider('interactions')]
     public function testMultiLineSimplicity(array $lines, bool $simple): void
     {
@@ -264,40 +363,15 @@ final class CollectionValidationTest extends TestCase
         $service = Validation::createValidator();
         self::assertCount(0, $service->validate($value, new Rules\MultiLineString()));
         $violations = $service->validate($value, new Rules\SimpleMultiLineString());
-        self::assertSame($simple, 0 === count($violations));
+        self::assertSame($simple, 0 === \count($violations));
         if (!$simple) {
             self::assertStringStartsWith('lineStrings[', $violations->get(0)->getPropertyPath());
         }
     }
 
-    /** @return iterable<string, array{list<list<list<float|int>>>, bool}> */
-    public static function interactions(): iterable
-    {
-        yield 'boundary' => [[[[0, 0], [1, 1]], [[1, 1], [2, 0]]], true];
-
-        yield 'crossing' => [[[[0, 0], [2, 2]], [[0, 2], [2, 0]]], false];
-
-        yield 'overlap' => [[[[0, 0], [2, 0]], [[1, 0], [3, 0]]], false];
-
-        yield 'endpoint interior' => [[[[0, 0], [2, 0]], [[1, 0], [1, 1]]], false];
-
-        yield 'closed member contact' => [[[[0, 0], [1, 0], [0, 1], [0, 0]], [[0, 0], [-1, -1]]], false];
-
-        yield 'disjoint' => [[[[0, 0], [1, 1]], [[2, 0], [3, 1]]], true];
-
-        yield 'empty member' => [[[], [[0, 0], [1, 1]]], true];
-
-        yield 'all empty' => [[[], []], true];
-
-        yield 'self crossing' => [[[[0, 0], [2, 2], [0, 2], [2, 0]]], false];
-
-        yield 'small crossing' => [[[[0, 0], [1e-12, 1e-12]], [[0, 1e-12], [1e-12, 0]]], false];
-
-        yield 'large crossing' => [[[[0, 0], [1e150, 1e150]], [[0, 1e150], [1e150, 0]]], false];
-
-        yield 'close disjoint' => [[[[0, 0], [1, 0]], [[0, 1e-20], [1, 1e-20]]], true];
-    }
-
+    /**
+     * Verify multi point simplicity is separate and skips empty positions.
+     */
     public function testMultiPointSimplicityIsSeparateAndSkipsEmptyPositions(): void
     {
         $value = self::aggregate(
@@ -318,10 +392,16 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify optional diagnostics preserve nested context.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testOptionalDiagnosticsPreserveNestedContext(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
-        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\' . $name;
+        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$name;
         $members = 'MultiPoint' === $type
             ? [new Point(1, 2), new Point(1, 2)]
             : [LineStringValidationTest::line([[0, 0], [2, 2]]), LineStringValidationTest::line([[0, 2], [2, 0]])];
@@ -335,7 +415,7 @@ final class CollectionValidationTest extends TestCase
             new Assert\Collection(fields: ['shape' => $constraint], groups: ['custom']),
             ['custom']
         );
-        self::assertGreaterThan(0, count($violations));
+        self::assertGreaterThan(0, \count($violations));
         foreach ($violations as $violation) {
             self::assertSame($root, $violation->getRoot());
             self::assertStringStartsWith('[shape].', $violation->getPropertyPath());
@@ -345,13 +425,19 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify optional input contracts.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testOptionalInputContracts(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
-        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\' . $name;
+        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$name;
 
         /** @var class-string<ConstraintValidator> $validatorClass */
-        $validatorClass = $class . 'Validator';
+        $validatorClass = $class.'Validator';
         $constraint = new $class();
         $service = Validation::createValidator();
         self::assertCount(0, $service->validate(null, $constraint));
@@ -360,31 +446,24 @@ final class CollectionValidationTest extends TestCase
         }
 
         try {
-            (new $validatorClass())->validate(null, new Assert\NotNull());
+            new $validatorClass()->validate(null, new Assert\NotNull());
             self::fail('Wrong constraint must throw.');
         } catch (UnexpectedTypeException $exception) {
             self::assertStringContainsString($name, $exception->getMessage());
         }
 
         try {
-            (new $validatorClass())->validate('', $constraint);
+            new $validatorClass()->validate('', $constraint);
             self::fail('Strings must throw directly.');
         } catch (UnexpectedValueException $exception) {
             self::assertStringContainsString($type, $exception->getMessage());
         }
     }
 
-    /** @return iterable<string, array{string, string}> */
-    public static function optionalRules(): iterable
-    {
-        yield 'point simplicity' => ['SimpleMultiPoint', 'MultiPoint'];
-
-        yield 'line simplicity' => ['SimpleMultiLineString', 'MultiLineString'];
-
-        yield 'line closure' => ['ClosedMultiLineString', 'MultiLineString'];
-    }
-
-    public function testSpatialLineInteractionsUseZAndActualContact(): void
+    /**
+     * Verify spatial line interactions use z and actual contact.
+     */
+    public function testSpatialLineInteractionsUseAltitudeAndActualContact(): void
     {
         $cases = [
             [[[0, 0, 0], [2, 2, 0]], [[0, 2, 1], [2, 0, 1]], true],
@@ -401,12 +480,18 @@ final class CollectionValidationTest extends TestCase
             $value = self::aggregate('MultiLineString', $members, CoordinateDimensionEnum::XYZ);
             self::assertSame(
                 $simple,
-                0 === count(Validation::createValidator()->validate($value, new Rules\SimpleMultiLineString()))
+                0 === \count(Validation::createValidator()->validate($value, new Rules\SimpleMultiLineString()))
             );
         }
     }
 
     #[DataProvider('variants')]
+    /**
+     * Verify variants and empty geography properties.
+     *
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     */
     public function testVariantsAndEmptyGeographyProperties(
         CoordinateDimensionEnum $dimension,
         SpatialModelEnum $family,
@@ -443,15 +528,5 @@ final class CollectionValidationTest extends TestCase
                 new Rules\SimpleMultiLineString()
             )
         );
-    }
-
-    /** @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}> */
-    public static function variants(): iterable
-    {
-        foreach (CoordinateDimensionEnum::cases() as $dimension) {
-            foreach (SpatialModelEnum::cases() as $family) {
-                yield $dimension->name . $family->name => [$dimension, $family];
-            }
-        }
     }
 }

@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -37,6 +37,21 @@ use Symfony\Component\Validator\Validation;
  */
 final class PointValidationTest extends TestCase
 {
+    /**
+     * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
+     */
+    public static function variants(): iterable
+    {
+        foreach (CoordinateDimensionEnum::cases() as $dimension) {
+            foreach (SpatialModelEnum::cases() as $family) {
+                yield $dimension->value.$family->value => [$dimension, $family];
+            }
+        }
+    }
+
+    /**
+     * Verify bounds and absent axes.
+     */
     public function testBoundsAndAbsentAxes(): void
     {
         $service = Validation::createValidator();
@@ -44,7 +59,7 @@ final class PointValidationTest extends TestCase
             $point = $this->candidate(
                 CoordinateDimensionEnum::XY,
                 SpatialModelEnum::GEOGRAPHY,
-                [$longitude, $latitude, NAN, INF],
+                [$longitude, $latitude, \NAN, \INF],
                 false
             );
             self::assertCount(0, $service->validate($point, new SpatialAssert\Point()));
@@ -68,6 +83,9 @@ final class PointValidationTest extends TestCase
         self::assertCount(0, $service->validate($point, new SpatialAssert\Point()));
     }
 
+    /**
+     * Verify context groups payload and generic routing.
+     */
     public function testContextGroupsPayloadAndGenericRouting(): void
     {
         $value = $this->candidate(CoordinateDimensionEnum::XY, SpatialModelEnum::GEOMETRY, [1, null, null, null], true);
@@ -99,6 +117,12 @@ final class PointValidationTest extends TestCase
     }
 
     #[DataProvider('variants')]
+    /**
+     * Verify declared variants.
+     *
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     */
     public function testDeclaredVariants(CoordinateDimensionEnum $dimension, SpatialModelEnum $family): void
     {
         $service = Validation::createValidator();
@@ -123,7 +147,7 @@ final class PointValidationTest extends TestCase
         $inconsistent = $this->candidate($dimension, $family, [null, null, null, null], false);
         self::assertCount(1, $service->validate($inconsistent, new SpatialAssert\Point()));
         foreach ($dimension->ordinates() as $axis) {
-            foreach ([INF, -INF, NAN] as $invalid) {
+            foreach ([\INF, -\INF, \NAN] as $invalid) {
                 $values = ['X' => 0, 'Y' => 0, 'Z' => 0, 'M' => 0];
                 $values[$axis] = $invalid;
                 $candidate = $this->candidate($dimension, $family, array_values($values), false);
@@ -134,16 +158,9 @@ final class PointValidationTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}> */
-    public static function variants(): iterable
-    {
-        foreach (CoordinateDimensionEnum::cases() as $dimension) {
-            foreach (SpatialModelEnum::cases() as $family) {
-                yield $dimension->value . $family->value => [$dimension, $family];
-            }
-        }
-    }
-
+    /**
+     * Verify elementary input contracts.
+     */
     public function testElementaryInputContracts(): void
     {
         $constraints = [
@@ -174,6 +191,9 @@ final class PointValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify presence and finite comparison.
+     */
     public function testPresenceAndFiniteComparison(): void
     {
         $service = Validation::createValidator();
@@ -187,14 +207,21 @@ final class PointValidationTest extends TestCase
             self::assertInstanceOf(Assert\NotBlank::class, $violations->get(0)->getConstraint());
         }
         self::assertTrue(PointCoordinates::equal(0.0, -0.0));
-        self::assertTrue(PointCoordinates::equal(1.0, 1.0 + PHP_FLOAT_EPSILON));
+        self::assertTrue(PointCoordinates::equal(1.0, 1.0 + \PHP_FLOAT_EPSILON));
         self::assertTrue(PointCoordinates::equal(1.0e15, 1.0e15 + 0.125));
-        self::assertFalse(PointCoordinates::equal(1.0, 1.0 + 4 * PHP_FLOAT_EPSILON));
-        self::assertFalse(PointCoordinates::equal(INF, INF));
-        self::assertFalse(PointCoordinates::equal(0.0, NAN));
+        self::assertFalse(PointCoordinates::equal(1.0, 1.0 + 4 * \PHP_FLOAT_EPSILON));
+        self::assertFalse(PointCoordinates::equal(\INF, \INF));
+        self::assertFalse(PointCoordinates::equal(0.0, \NAN));
     }
 
-    /** @param list<null|float|int> $values */
+    /**
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     * @param array                   $values    values
+     * @param bool                    $empty     empty
+     *
+     * @phpstan-param list<float|int|null> $values
+     */
     private function candidate(
         CoordinateDimensionEnum $dimension,
         SpatialModelEnum $family,
@@ -207,7 +234,7 @@ final class PointValidationTest extends TestCase
         $point->method('getFamily')->willReturn($family);
         $point->method('isEmpty')->willReturn($empty);
         foreach (['X', 'Y', 'Z', 'M'] as $index => $axis) {
-            $point->method('get' . $axis)->willReturn($values[$index]);
+            $point->method('get'.$axis)->willReturn($values[$index]);
         }
 
         return $point;

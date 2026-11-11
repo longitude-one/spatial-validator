@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,7 +23,9 @@ use LongitudeOne\SpatialValidator\Validator\Constraints\Polygon;
 final class PolygonTopology
 {
     /**
-     * @param list<list<list<float>>> $rings
+     * @param array $rings rings
+     *
+     * @phpstan-param list<list<list<float>>> $rings
      *
      * @return list<array{int, string}>
      */
@@ -34,7 +36,7 @@ final class PolygonTopology
             return $errors;
         }
         $contacts = new PolygonContacts();
-        $count = count($rings);
+        $count = \count($rings);
         for ($second = 1; $second < $count; ++$second) {
             if (PlanarRing::direction($rings[0]) === PlanarRing::direction($rings[$second])) {
                 $errors[] = [$second, Polygon::ORIENTATION_ERROR];
@@ -59,7 +61,11 @@ final class PolygonTopology
         return $errors;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     public static function project(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -92,7 +98,9 @@ final class PolygonTopology
     /**
      * Q02 closure retains both supplied positions: inspect the resulting closing interval too.
      *
-     * @param list<list<list<float>>> $rings
+     * @param array $rings rings
+     *
+     * @phpstan-param list<list<list<float>>> $rings
      *
      * @return list<array{int, string}>
      */
@@ -100,7 +108,7 @@ final class PolygonTopology
     {
         $errors = [];
         foreach ($rings as $index => $ring) {
-            if ($ring[0] === $ring[count($ring) - 1]) {
+            if ($ring[0] === $ring[\count($ring) - 1]) {
                 continue;
             }
             $ring[] = $ring[0];
@@ -113,9 +121,14 @@ final class PolygonTopology
     }
 
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
-     * @param list<list<float>> $contacts
+     * @param array $first    first operand
+     * @param array $second   second operand
+     * @param array $contacts contacts
+     * @param bool  $exterior exterior
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
+     * @phpstan-param list<list<float>> $contacts
      */
     private static function relationship(array $first, array $second, array $contacts, bool $exterior): ?string
     {

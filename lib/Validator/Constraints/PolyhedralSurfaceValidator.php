@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -56,19 +56,17 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         $this->surface($value, $constraint);
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param PolyhedralSurface $constraint applied validation constraint
+     * @param string            $code       violation code
+     * @param string            $path       property path for the diagnostic
+     */
     private function diagnostic(PolyhedralSurface $constraint, string $code, string $path = ''): void
     {
         $associated = $constraint;
-        $message = match ($code) {
-            PolyhedralSurface::DIMENSION_ERROR => 'A PolyhedralSurface requires Z coordinates.',
-            PolyhedralSurface::EMPTY_PATCH_ERROR => 'A non-empty PolyhedralSurface cannot contain an EMPTY patch.',
-            PolyhedralSurface::INCIDENCE_ERROR => 'A boundary segment must have at most two incident patches.',
-            PolyhedralSurface::ORIENTATION_ERROR => 'Shared patch boundaries must have opposite directions.',
-            PolyhedralSurface::CONNECTED_ERROR => 'Patches must form an edge-connected surface.',
-            PolyhedralSurface::INTERSECTION_ERROR => 'Patch interiors must not intersect other patches.',
-            PolyhedralSurface::MANIFOLD_ERROR => 'Each surface vertex must have one connected local face fan.',
-            default => 'Geography PolyhedralSurface topology is not implemented yet.',
-        };
+        $message = $this->message($code);
         if (PolyhedralSurface::UNAVAILABLE_ERROR === $code) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
@@ -82,7 +80,13 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         }
     }
 
-    /** @param array<mixed> $members
+    /**
+     * @param array             $members    spatial members to inspect
+     * @param PolyhedralSurface $constraint applied validation constraint
+     * @param int               $before     number of violations before member validation
+     *
+     * @phpstan-param array<mixed> $members
+     *
      * @return list<list<list<list<float>>>>
      */
     private function eligible(array $members, PolyhedralSurface $constraint, int $before): array
@@ -90,7 +94,7 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         $eligible = [];
         foreach ($members as $index => $member) {
             if ($this->isPolygon($member) && [] === $member->getRings()) {
-                $this->diagnostic($constraint, PolyhedralSurface::EMPTY_PATCH_ERROR, 'patches[' . $index . ']');
+                $this->diagnostic($constraint, PolyhedralSurface::EMPTY_PATCH_ERROR, 'patches['.$index.']');
             }
             if ($this->isPolygon($member) && [] !== $member->getRings() && $this->usable($index, $before)) {
                 $eligible[] = $this->positions($member);
@@ -100,13 +104,40 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         return $eligible;
     }
 
-    /** @phpstan-assert-if-true PolygonInterface $member */
+    /**
+     * @param mixed $member member
+     *
+     * @phpstan-assert-if-true PolygonInterface $member
+     */
     private function isPolygon(mixed $member): bool
     {
         return $member instanceof PolygonInterface;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * Select the message for a surface diagnostic.
+     *
+     * @param string $code violation code
+     */
+    private function message(string $code): string
+    {
+        return match ($code) {
+            PolyhedralSurface::DIMENSION_ERROR => 'A PolyhedralSurface requires Z coordinates.',
+            PolyhedralSurface::EMPTY_PATCH_ERROR => 'A non-empty PolyhedralSurface cannot contain an EMPTY patch.',
+            PolyhedralSurface::INCIDENCE_ERROR => 'A boundary segment must have at most two incident patches.',
+            PolyhedralSurface::ORIENTATION_ERROR => 'Shared patch boundaries must have opposite directions.',
+            PolyhedralSurface::CONNECTED_ERROR => 'Patches must form an edge-connected surface.',
+            PolyhedralSurface::INTERSECTION_ERROR => 'Patch interiors must not intersect other patches.',
+            PolyhedralSurface::MANIFOLD_ERROR => 'Each surface vertex must have one connected local face fan.',
+            default => 'Geography PolyhedralSurface topology is not implemented yet.',
+        };
+    }
+
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     private function positions(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -118,9 +149,15 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         return $rings;
     }
 
+    /**
+     * Surface.
+     *
+     * @param PolyhedralSurfaceInterface $value      spatial value to validate
+     * @param PolyhedralSurface          $constraint applied validation constraint
+     */
     private function surface(PolyhedralSurfaceInterface $value, PolyhedralSurface $constraint): void
     {
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)
             ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
         ;
@@ -142,23 +179,29 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
 
             return;
         }
-        if (count($eligible) !== count($members)) {
+        if (\count($eligible) !== \count($members)) {
             return;
         }
         foreach (PolyhedralTopology::errors($eligible) as $error) {
-            $this->diagnostic($constraint, 'polyhedralsurface-' . $error);
+            $this->diagnostic($constraint, 'polyhedralsurface-'.$error);
         }
     }
 
+    /**
+     * Usable.
+     *
+     * @param int $index  component index
+     * @param int $before number of violations before member validation
+     */
     private function usable(int $index, int $before): bool
     {
         foreach ($this->context->getViolations() as $offset => $violation) {
             if ($offset < $before || Polygon::ORIENTATION_ERROR === $violation->getCode()) {
                 continue;
             }
-            $path = $this->context->getPropertyPath('patches[' . $index . ']');
+            $path = $this->context->getPropertyPath('patches['.$index.']');
             $memberPath = $violation->getPropertyPath();
-            if ($path === $memberPath || str_starts_with($memberPath, $path . '.')) {
+            if ($path === $memberPath || str_starts_with($memberPath, $path.'.')) {
                 return false;
             }
         }

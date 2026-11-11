@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,16 +23,24 @@ namespace LongitudeOne\SpatialValidator\Internal;
  */
 final class SurfaceCoordinates
 {
-    /** @param Rational $first
-     * @param Rational $second
+    /**
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      */
     public static function compare(array $first, array $second): int
     {
         return ExactRationals::rationalSubtract($first, $second)[0][0];
     }
 
-    /** @param list<Rational> $first
-     * @param list<Rational> $second
+    /**
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<Rational> $first
+     * @phpstan-param list<Rational> $second
      *
      * @return list<Rational>
      */
@@ -49,8 +57,12 @@ final class SurfaceCoordinates
         return $result;
     }
 
-    /** @param list<Rational> $first
-     * @param list<Rational> $second
+    /**
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<Rational> $first
+     * @phpstan-param list<Rational> $second
      *
      * @return Rational
      */
@@ -63,9 +75,14 @@ final class SurfaceCoordinates
         );
     }
 
-    /** @param list<Rational> $first
-     * @param list<Rational> $second
-     * @param Rational       $parameter
+    /**
+     * @param array $first     first operand
+     * @param array $second    second operand
+     * @param array $parameter parameter
+     *
+     * @phpstan-param list<Rational> $first
+     * @phpstan-param list<Rational> $second
+     * @phpstan-param Rational $parameter
      *
      * @return list<Rational>
      */
@@ -82,7 +99,11 @@ final class SurfaceCoordinates
         return $result;
     }
 
-    /** @param list<float> $point
+    /**
+     * @param array $point point
+     *
+     * @phpstan-param list<float> $point
+     *
      * @return list<Rational>
      */
     public static function point(array $point): array
@@ -90,8 +111,12 @@ final class SurfaceCoordinates
         return array_map(ExactRationals::number(...), $point);
     }
 
-    /** @param list<Rational> $first
-     * @param list<Rational> $second
+    /**
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<Rational> $first
+     * @phpstan-param list<Rational> $second
      *
      * @return list<Rational>
      */

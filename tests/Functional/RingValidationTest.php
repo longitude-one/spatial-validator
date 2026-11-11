@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -38,7 +38,98 @@ use Symfony\Component\Validator\Validation;
  */
 final class RingValidationTest extends TestCase
 {
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, bool}>
+     */
+    public static function closures(): iterable
+    {
+        yield 'EMPTY not closed' => [[], false];
+
+        yield 'equal endpoints' => [[[1, 2], [1, 2]], true];
+
+        yield 'within scaled equality' => [[[1, 2], [1 + \PHP_FLOAT_EPSILON, 2]], true];
+
+        yield 'outside scaled equality' => [[[1, 2], [1 + 2 * \PHP_FLOAT_EPSILON, 2]], false];
+
+        yield 'EMPTY endpoint' => [[[null, null], [1, 2]], false];
+
+        yield 'infinite endpoint' => [[[\INF, 2], [1, 2]], false];
+    }
+
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
+    public static function constraints(): iterable
+    {
+        yield 'ring' => [new SpatialAssert\Ring()];
+
+        yield 'closure' => [new SpatialAssert\FirstPointEqualsLastPoint()];
+    }
+
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}>
+     */
+    public static function rings(): iterable
+    {
+        $layout = CoordinateDimensionEnum::XY;
+        $xyz = CoordinateDimensionEnum::XYZ;
+        $epsilon = \PHP_FLOAT_EPSILON / 4;
+
+        yield 'EMPTY' => [[], $layout, false];
+
+        yield 'single point' => [[[0, 0]], $layout, false];
+
+        yield 'three positions' => [[[0, 0], [1, 0], [0, 0]], $layout, false];
+
+        yield 'triangle with closing repetition' => [[[0, 0], [2, 0], [1, 1], [0, 0]], $layout, true];
+
+        yield 'open four positions' => [[[0, 0], [2, 0], [1, 1], [0, 1]], $layout, false];
+
+        yield 'bow-tie' => [[[0, 0], [2, 2], [0, 2], [2, 0], [0, 0]], $layout, false];
+
+        yield 'collinear retracing' => [[[0, 0], [1, 0], [2, 0], [0, 0]], $layout, false];
+
+        yield 'adjacent duplicate' => [[[0, 0], [1, 0], [1, 0], [0, 1], [0, 0]], $layout, false];
+
+        yield 'EMPTY member' => [[[0, 0], [null, null], [1, 1], [0, 0]], $layout, false];
+
+        yield 'partial null' => [[[0, 0], [1, null], [1, 1], [0, 0]], $layout, false];
+
+        yield 'nonfinite interior point' => [[[0, 0], [\INF, 0], [1, 1], [0, 0]], $layout, false];
+
+        yield 'nonfinite endpoint' => [[[\NAN, 0], [1, 0], [1, 1], [0, 0]], $layout, false];
+
+        yield 'large coordinates' => [[[0, 0], [1.0e308, 0], [0, 1.0e308], [0, 0]], $layout, true];
+
+        yield 'small coordinates' => [[[0, 0], [1.0e-10, 0], [0, 1.0e-10], [0, 0]], $layout, true];
+
+        yield 'near collinear' => [[[0, 0], [1, 1], [2, 2 + \PHP_FLOAT_EPSILON * 2], [0, 0]], $layout, true];
+
+        yield 'near closure interior crossing' => [[[0, 0], [1, 0], [0, 1], [$epsilon, -$epsilon]], $layout, false];
+
+        yield 'Q02 closure without contact movement' => [
+            [[0, 0], [1, 0], [0, 1], [-$epsilon, -$epsilon]], $layout, true,
+        ];
+
+        yield 'closed vertical XYZ' => [[[0, 0, 0], [0, 2, 0], [0, 1, 1], [0, 0, 0]], $xyz, true];
+
+        yield 'XYZ unequal endpoint Z' => [[[0, 0, 0], [2, 0, 0], [1, 1, 0], [0, 0, 1]], $xyz, false];
+
+        yield 'XYM endpoint M ignored' => [
+            [[0, 0, 1], [2, 0, 2], [1, 1, 3], [0, 0, 9]], CoordinateDimensionEnum::XYM, true,
+        ];
+
+        yield 'XYZM endpoint M ignored' => [
+            [[0, 0, 0, 1], [2, 0, 0, 2], [1, 1, 0, 3], [0, 0, 0, 9]], CoordinateDimensionEnum::XYZM, true,
+        ];
+    }
+
     #[DataProvider('constraints')]
+    /**
+     * Verify declared type is rechecked.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDeclaredTypeIsRechecked(Constraint $constraint): void
     {
         $value = self::createStub(LineStringInterface::class);
@@ -48,6 +139,9 @@ final class RingValidationTest extends TestCase
         self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
     }
 
+    /**
+     * Verify empty line remains valid but ring rejects it.
+     */
     public function testEmptyLineRemainsValidButRingRejectsIt(): void
     {
         $value = LineStringValidationTest::line([]);
@@ -59,6 +153,9 @@ final class RingValidationTest extends TestCase
         self::assertNull($violations->get(0)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify geography warns without mutating shared constraints.
+     */
     public function testGeographyWarnsWithoutMutatingSharedConstraints(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]], family: SpatialModelEnum::GEOGRAPHY);
@@ -82,9 +179,12 @@ final class RingValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $closure->payload);
     }
 
+    /**
+     * Verify groups payload and localized point errors.
+     */
     public function testGroupsPayloadAndLocalizedPointErrors(): void
     {
-        $value = LineStringValidationTest::line([[0, 0], [INF, 0], [1, 1], [0, 0]]);
+        $value = LineStringValidationTest::line([[0, 0], [\INF, 0], [1, 1], [0, 0]]);
         $root = ['boundary' => $value];
         $constraint = new SpatialAssert\Ring(groups: ['custom'], payload: ['source' => 'consumer']);
         $service = Validation::createValidator();
@@ -106,6 +206,9 @@ final class RingValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $violations->get(1)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify independent boundary failures keep their constraints.
+     */
     public function testIndependentBoundaryFailuresKeepTheirConstraints(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [1, 0], [1, 1]]);
@@ -122,6 +225,11 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testInputContract(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -133,6 +241,9 @@ final class RingValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify metadata compatibility is inherited from line validation.
+     */
     public function testMetadataCompatibilityIsInheritedFromLineValidation(): void
     {
         $points = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]])->getPoints();
@@ -147,7 +258,7 @@ final class RingValidationTest extends TestCase
         $metadataCodes = [SpatialAssert\Components::FAMILY_ERROR,
             SpatialAssert\Components::DIMENSION_ERROR, SpatialAssert\Components::REFERENCE_ERROR];
         foreach ($violations as $violation) {
-            if (in_array($violation->getCode(), $metadataCodes, true)) {
+            if (\in_array($violation->getCode(), $metadataCodes, true)) {
                 $errors[] = $violation->getCode();
                 self::assertStringStartsWith('points[', $violation->getPropertyPath());
                 self::assertNull($violation->getConstraint()?->payload);
@@ -156,72 +267,27 @@ final class RingValidationTest extends TestCase
         self::assertCount(12, $errors);
     }
 
-    /** @param list<list<null|float|int>> $coordinates */
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param bool                    $valid       valid
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('rings')]
     public function testRingRules(array $coordinates, CoordinateDimensionEnum $dimension, bool $valid): void
     {
         $value = LineStringValidationTest::line($coordinates, $dimension);
         $violations = Validation::createValidator()->validate($value, new SpatialAssert\Ring());
-        self::assertSame($valid, 0 === count($violations));
+        self::assertSame($valid, 0 === \count($violations));
     }
 
-    /** @return iterable<string, array{list<list<null|float|int>>, CoordinateDimensionEnum, bool}> */
-    public static function rings(): iterable
-    {
-        $layout = CoordinateDimensionEnum::XY;
-        $xyz = CoordinateDimensionEnum::XYZ;
-        $epsilon = PHP_FLOAT_EPSILON / 4;
-
-        yield 'EMPTY' => [[], $layout, false];
-
-        yield 'single point' => [[[0, 0]], $layout, false];
-
-        yield 'three positions' => [[[0, 0], [1, 0], [0, 0]], $layout, false];
-
-        yield 'triangle with closing repetition' => [[[0, 0], [2, 0], [1, 1], [0, 0]], $layout, true];
-
-        yield 'open four positions' => [[[0, 0], [2, 0], [1, 1], [0, 1]], $layout, false];
-
-        yield 'bow-tie' => [[[0, 0], [2, 2], [0, 2], [2, 0], [0, 0]], $layout, false];
-
-        yield 'collinear retracing' => [[[0, 0], [1, 0], [2, 0], [0, 0]], $layout, false];
-
-        yield 'adjacent duplicate' => [[[0, 0], [1, 0], [1, 0], [0, 1], [0, 0]], $layout, false];
-
-        yield 'EMPTY member' => [[[0, 0], [null, null], [1, 1], [0, 0]], $layout, false];
-
-        yield 'partial null' => [[[0, 0], [1, null], [1, 1], [0, 0]], $layout, false];
-
-        yield 'nonfinite interior point' => [[[0, 0], [INF, 0], [1, 1], [0, 0]], $layout, false];
-
-        yield 'nonfinite endpoint' => [[[NAN, 0], [1, 0], [1, 1], [0, 0]], $layout, false];
-
-        yield 'large coordinates' => [[[0, 0], [1.0e308, 0], [0, 1.0e308], [0, 0]], $layout, true];
-
-        yield 'small coordinates' => [[[0, 0], [1.0e-10, 0], [0, 1.0e-10], [0, 0]], $layout, true];
-
-        yield 'near collinear' => [[[0, 0], [1, 1], [2, 2 + PHP_FLOAT_EPSILON * 2], [0, 0]], $layout, true];
-
-        yield 'near closure interior crossing' => [[[0, 0], [1, 0], [0, 1], [$epsilon, -$epsilon]], $layout, false];
-
-        yield 'Q02 closure without contact movement' => [
-            [[0, 0], [1, 0], [0, 1], [-$epsilon, -$epsilon]], $layout, true,
-        ];
-
-        yield 'closed vertical XYZ' => [[[0, 0, 0], [0, 2, 0], [0, 1, 1], [0, 0, 0]], $xyz, true];
-
-        yield 'XYZ unequal endpoint Z' => [[[0, 0, 0], [2, 0, 0], [1, 1, 0], [0, 0, 1]], $xyz, false];
-
-        yield 'XYM endpoint M ignored' => [
-            [[0, 0, 1], [2, 0, 2], [1, 1, 3], [0, 0, 9]], CoordinateDimensionEnum::XYM, true,
-        ];
-
-        yield 'XYZM endpoint M ignored' => [
-            [[0, 0, 0, 1], [2, 0, 0, 2], [1, 1, 0, 3], [0, 0, 0, 9]], CoordinateDimensionEnum::XYZM, true,
-        ];
-    }
-
-    /** @param list<list<null|float|int>> $coordinates */
+    /**
+     * @param array $coordinates coordinates
+     * @param bool  $closed      closed
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('closures')]
     public function testStandaloneClosure(array $coordinates, bool $closed): void
     {
@@ -233,23 +299,12 @@ final class RingValidationTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{list<list<null|float|int>>, bool}> */
-    public static function closures(): iterable
-    {
-        yield 'EMPTY not closed' => [[], false];
-
-        yield 'equal endpoints' => [[[1, 2], [1, 2]], true];
-
-        yield 'within scaled equality' => [[[1, 2], [1 + PHP_FLOAT_EPSILON, 2]], true];
-
-        yield 'outside scaled equality' => [[[1, 2], [1 + 2 * PHP_FLOAT_EPSILON, 2]], false];
-
-        yield 'EMPTY endpoint' => [[[null, null], [1, 2]], false];
-
-        yield 'infinite endpoint' => [[[INF, 2], [1, 2]], false];
-    }
-
     #[DataProvider('constraints')]
+    /**
+     * Verify unsupported values throw directly.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testUnsupportedValuesThrowDirectly(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -258,18 +313,15 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint takes precedence.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraintTakesPrecedence(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
         $validator->validate(null, new Assert\NotNull());
-    }
-
-    /** @return iterable<string, array{Constraint}> */
-    public static function constraints(): iterable
-    {
-        yield 'ring' => [new SpatialAssert\Ring()];
-
-        yield 'closure' => [new SpatialAssert\FirstPointEqualsLastPoint()];
     }
 }

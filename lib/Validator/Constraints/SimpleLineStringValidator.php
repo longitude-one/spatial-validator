@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,6 +29,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicitly check line simplicity in XY or XYZ according to the declared variant. */
 final class SimpleLineStringValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleLineString) {
@@ -40,13 +46,13 @@ final class SimpleLineStringValidator extends ConstraintValidator
         if (!$value instanceof LineStringInterface || GeometryTypeEnum::LINESTRING !== $value->getType()) {
             throw new UnexpectedValueException($value, LineStringInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new LineString(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations()) || [] === $value->getPoints()) {
+        if ($before !== \count($this->context->getViolations()) || [] === $value->getPoints()) {
             return;
         }
         if (SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
@@ -62,6 +68,11 @@ final class SimpleLineStringValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleLineString $constraint applied validation constraint
+     */
     private function unavailable(SimpleLineString $constraint): void
     {
         $warning = clone $constraint;

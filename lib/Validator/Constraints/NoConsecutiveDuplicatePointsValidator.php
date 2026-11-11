@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,6 +27,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Reject spatially equal consecutive positions, ignoring M. */
 final class NoConsecutiveDuplicatePointsValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof NoConsecutiveDuplicatePoints) {
@@ -43,13 +49,13 @@ final class NoConsecutiveDuplicatePointsValidator extends ConstraintValidator
             $position = PointCoordinates::position($point);
             if (null === $position) {
                 $this->context->buildViolation('Finite, non-empty Point coordinates are required for comparison.')
-                    ->atPath('points[' . $index . ']')->setInvalidValue($point)
+                    ->atPath('points['.$index.']')->setInvalidValue($point)
                     ->setCode(NoConsecutiveDuplicatePoints::INPUT_ERROR)->addViolation()
                 ;
             }
             if (null !== $position && null !== $previous && PointCoordinates::same($previous, $position)) {
                 $this->context->buildViolation('Consecutive points must have different spatial positions.')
-                    ->atPath('points[' . $index . ']')->setInvalidValue($point)
+                    ->atPath('points['.$index.']')->setInvalidValue($point)
                     ->setCode(NoConsecutiveDuplicatePoints::INVALID_ERROR)->addViolation()
                 ;
             }

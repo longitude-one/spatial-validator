@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -53,7 +53,7 @@ final class MultiPolygonValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::MULTIPOLYGON->value);
         }
 
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)
             ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
         ;
@@ -74,11 +74,18 @@ final class MultiPolygonValidator extends ConstraintValidator
         $this->relationships($eligible, $constraint, SpatialModelEnum::GEOGRAPHY === $value->getFamily());
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param MultiPolygon $constraint applied validation constraint
+     * @param string       $code       violation code
+     * @param int          $first      first operand
+     * @param int          $second     second operand
+     */
     private function diagnostic(MultiPolygon $constraint, string $code, int $first, int $second): void
     {
         $associated = $constraint;
-        $message = 'Polygon members {{ first }} and {{ second }} must have disjoint interiors'
-            . ' and only isolated boundary contacts.';
+        $message = 'Polygon members {{ first }} and {{ second }} must have disjoint interiors and only isolated boundary contacts.';
         if (MultiPolygon::UNAVAILABLE_ERROR === $code) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
@@ -89,20 +96,28 @@ final class MultiPolygonValidator extends ConstraintValidator
         try {
             $this->context->buildViolation($message)->setCode($code)
                 ->setParameter('{{ first }}', (string) $first)->setParameter('{{ second }}', (string) $second)
-                ->atPath('polygons[' . $second . ']')->addViolation()
+                ->atPath('polygons['.$second.']')->addViolation()
             ;
         } finally {
             $this->context->setConstraint($constraint);
         }
     }
 
-    /** @phpstan-assert-if-true PolygonInterface $member */
+    /**
+     * @param mixed $member member
+     *
+     * @phpstan-assert-if-true PolygonInterface $member
+     */
     private function isPolygon(mixed $member): bool
     {
         return $member instanceof PolygonInterface;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     private function positions(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -111,7 +126,7 @@ final class MultiPolygonValidator extends ConstraintValidator
             foreach ($ring->getPoints() as $point) {
                 $position = PointCoordinates::position($point);
                 if (null !== $position) {
-                    $points[] = 2 === count($position) ? [...$position, 0.0] : $position;
+                    $points[] = 2 === \count($position) ? [...$position, 0.0] : $position;
                 }
             }
             $rings[] = $points;
@@ -120,7 +135,13 @@ final class MultiPolygonValidator extends ConstraintValidator
         return $rings;
     }
 
-    /** @param array<int, PolygonInterface> $members */
+    /**
+     * @param array        $members    spatial members to inspect
+     * @param MultiPolygon $constraint applied validation constraint
+     * @param bool         $geography  whether the value uses the Geography model
+     *
+     * @phpstan-param array<int, PolygonInterface> $members
+     */
     private function relationships(array $members, MultiPolygon $constraint, bool $geography): void
     {
         foreach ($members as $second => $member) {
@@ -140,15 +161,21 @@ final class MultiPolygonValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Usable.
+     *
+     * @param int $index  component index
+     * @param int $before number of violations before member validation
+     */
     private function usable(int $index, int $before): bool
     {
         foreach ($this->context->getViolations() as $offset => $violation) {
             if ($offset < $before || Polygon::ORIENTATION_ERROR === $violation->getCode()) {
                 continue;
             }
-            $path = $this->context->getPropertyPath('polygons[' . $index . ']');
+            $path = $this->context->getPropertyPath('polygons['.$index.']');
             $memberPath = $violation->getPropertyPath();
-            if ($path === $memberPath || str_starts_with($memberPath, $path . '.')) {
+            if ($path === $memberPath || str_starts_with($memberPath, $path.'.')) {
                 return false;
             }
         }

@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,7 +30,19 @@ use Symfony\Component\Validator\Validation;
  */
 final class MultiPolygonValidationTest extends TestCase
 {
-    /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
+    /**
+     * @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}>
+     */
+    public static function pairs(): iterable
+    {
+        yield from self::planarPairs();
+
+        yield from self::spatialPairs();
+    }
+
+    /**
+     * @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}>
+     */
     public static function planarPairs(): iterable
     {
         $square = [[0, 0], [8, 0], [8, 8], [0, 8], [0, 0]];
@@ -64,7 +76,7 @@ final class MultiPolygonValidationTest extends TestCase
             Dimension::XY,
         ];
 
-        $near = 8 + 16 * PHP_FLOAT_EPSILON;
+        $near = 8 + 16 * \PHP_FLOAT_EPSILON;
 
         yield 'near but disjoint' => [
             [$square],
@@ -74,7 +86,9 @@ final class MultiPolygonValidationTest extends TestCase
         ];
     }
 
-    /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
+    /**
+     * @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}>
+     */
     public static function spatialPairs(): iterable
     {
         $square = [[0, 0], [8, 0], [8, 8], [0, 8], [0, 0]];
@@ -164,7 +178,12 @@ final class MultiPolygonValidationTest extends TestCase
         ];
     }
 
-    /** @param list<list<float|int>> $ring
+    /**
+     * @param array $ring   ring
+     * @param float $height height
+     *
+     * @phpstan-param list<list<float|int>> $ring
+     *
      * @return list<list<float|int>>
      */
     private static function lift(array $ring, float $height): array
@@ -172,8 +191,13 @@ final class MultiPolygonValidationTest extends TestCase
         return array_map(static fn (array $point): array => [...$point, $height], $ring);
     }
 
-    /** @param list<list<list<float|int>>> $rings
-     * @param list<int> $axes
+    /**
+     * @param array $rings rings
+     * @param array $axes  axes
+     * @param float $scale scale
+     *
+     * @phpstan-param list<list<list<float|int>>> $rings
+     * @phpstan-param list<int> $axes
      *
      * @return list<list<list<float>>>
      */
@@ -191,12 +215,18 @@ final class MultiPolygonValidationTest extends TestCase
         return $result;
     }
 
+    /**
+     * Verify degenerate plane is defensively declined.
+     */
     public function testDegeneratePlaneIsDefensivelyDeclined(): void
     {
         $rings = [[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]]];
         self::assertFalse(MultiPolygonTopology::intersects($rings, $rings));
     }
 
+    /**
+     * Verify exact topology at scales and axis permutations.
+     */
     public function testExactTopologyAtScalesAndAxisPermutations(): void
     {
         $datasets = iterator_to_array(self::pairs());
@@ -216,8 +246,14 @@ final class MultiPolygonValidationTest extends TestCase
         }
     }
 
-    /** @param list<list<list<float|int>>> $first
-     * @param list<list<list<float|int>>> $second
+    /**
+     * @param array     $first     first operand
+     * @param array     $second    second operand
+     * @param bool      $invalid   invalid
+     * @param Dimension $dimension dimension
+     *
+     * @phpstan-param list<list<list<float|int>>> $first
+     * @phpstan-param list<list<list<float|int>>> $second
      */
     #[DataProvider('pairs')]
     public function testFilledSurfaceRelationships(
@@ -243,14 +279,9 @@ final class MultiPolygonValidationTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
-    public static function pairs(): iterable
-    {
-        yield from self::planarPairs();
-
-        yield from self::spatialPairs();
-    }
-
+    /**
+     * Verify geography reports distinct aggregate warning.
+     */
     public function testGeographyReportsDistinctAggregateWarning(): void
     {
         $member = PolygonStructureTest::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]]], family: Family::GEOGRAPHY);
@@ -258,7 +289,7 @@ final class MultiPolygonValidationTest extends TestCase
             $constraint = new Rules\MultiPolygon(payload: $payload);
             $value = CollectionValidationTest::aggregate('MultiPolygon', [$member, $member], family: Family::GEOGRAPHY);
             $violations = Validation::createValidator()->validate($value, $constraint);
-            $last = $violations->get(count($violations) - 1);
+            $last = $violations->get(\count($violations) - 1);
             self::assertSame(Rules\MultiPolygon::UNAVAILABLE_ERROR, $last->getCode());
             self::assertSame($payload ?? ['severity' => 'warning'], $last->getConstraint()?->payload);
             self::assertSame($payload, $constraint->payload);
@@ -269,6 +300,9 @@ final class MultiPolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify groups payload nested diagnostics and invalid member isolation.
+     */
     public function testGroupsPayloadNestedDiagnosticsAndInvalidMemberIsolation(): void
     {
         $square = [[[0, 0], [8, 0], [8, 8], [0, 8], [0, 0]]];
@@ -297,6 +331,9 @@ final class MultiPolygonValidationTest extends TestCase
         self::assertSame($root, $last->getRoot());
     }
 
+    /**
+     * Verify measures do not change spatial relationships and empty members remain present.
+     */
     public function testMeasuresDoNotChangeSpatialRelationshipsAndEmptyMembersRemainPresent(): void
     {
         foreach ([Dimension::XYM, Dimension::XYZM] as $dimension) {
@@ -316,6 +353,9 @@ final class MultiPolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify orientation warning does not suppress aggregate topology.
+     */
     public function testOrientationWarningDoesNotSuppressAggregateTopology(): void
     {
         $shell = [[0, 0], [8, 0], [8, 8], [0, 8], [0, 0]];
@@ -329,6 +369,9 @@ final class MultiPolygonValidationTest extends TestCase
         self::assertSame(Rules\MultiPolygon::INTERSECTION_ERROR, $violations->get(1)->getCode());
     }
 
+    /**
+     * Verify triangle members reuse their complete contract.
+     */
     public function testTriangleMembersReuseTheirCompleteContract(): void
     {
         $triangle = PolygonStructureTest::triangle([[[0, 0], [2, 0], [0, 2], [0, 0]]]);

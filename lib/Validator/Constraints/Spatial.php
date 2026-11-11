@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,8 +22,10 @@ use Symfony\Component\Validator\Constraint;
 final class Spatial extends Constraint
 {
     /**
-     * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = null)
     {

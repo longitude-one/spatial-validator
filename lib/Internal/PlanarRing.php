@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,7 +19,11 @@ namespace LongitudeOne\SpatialValidator\Internal;
 /** @internal Exact orientation and point location on a validated, projected linear ring. */
 final class PlanarRing
 {
-    /** @param list<list<float>> $ring */
+    /**
+     * @param array $ring ring
+     *
+     * @phpstan-param list<list<float>> $ring
+     */
     public static function direction(array $ring): int
     {
         $area = [0, []];
@@ -40,14 +44,16 @@ final class PlanarRing
     }
 
     /**
-     * @param list<list<float>> $ring
+     * @param array $ring ring
+     *
+     * @phpstan-param list<list<float>> $ring
      *
      * @return list<array{list<float>, list<float>}>
      */
     public static function edges(array $ring): array
     {
         $edges = [];
-        $previous = $ring[count($ring) - 1];
+        $previous = $ring[\count($ring) - 1];
         foreach ($ring as $point) {
             if ($previous !== $point) {
                 $edges[] = [$previous, $point];
@@ -62,9 +68,13 @@ final class PlanarRing
      * Classify the exact midpoint of two supplied positions: inside=1, outside=2.
      * Callers split boundaries at every contact, so no sampled open interval lies on the other boundary.
      *
-     * @param list<float>       $first
-     * @param list<float>       $second
-     * @param list<list<float>> $ring
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $ring   ring
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<list<float>> $ring
      */
     public static function midpointLocation(array $first, array $second, array $ring): int
     {
@@ -92,9 +102,13 @@ final class PlanarRing
     }
 
     /**
-     * @param list<float> $point
-     * @param list<float> $first
-     * @param list<float> $second
+     * @param array $point  point
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<float> $point
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
      */
     public static function onSegment(array $point, array $first, array $second): bool
     {
@@ -104,9 +118,13 @@ final class PlanarRing
     }
 
     /**
-     * @param list<float>                 $start
-     * @param list<float>                 $end
-     * @param list<array{int, list<int>}> $midpoint Doubled exact coordinates
+     * @param array $start    start
+     * @param array $end      end
+     * @param array $midpoint Doubled exact coordinates
+     *
+     * @phpstan-param list<float> $start
+     * @phpstan-param list<float> $end
+     * @phpstan-param list<array{int, list<int>}> $midpoint
      */
     private static function midpointTurn(array $start, array $end, array $midpoint): int
     {
@@ -120,8 +138,11 @@ final class PlanarRing
     }
 
     /**
-     * @param list<float>                 $point
-     * @param list<array{int, list<int>}> $midpoint
+     * @param array $point    point
+     * @param array $midpoint midpoint
+     *
+     * @phpstan-param list<float> $point
+     * @phpstan-param list<array{int, list<int>}> $midpoint
      *
      * @return list<array{int, list<int>}>
      */

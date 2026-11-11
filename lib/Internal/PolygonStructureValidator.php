@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,6 +29,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** @internal Compose complete linear boundaries and one supporting plane, leaving inter-ring topology to K. */
 final class PolygonStructureValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof PolygonStructure) {
@@ -60,12 +66,17 @@ final class PolygonStructureValidator extends ConstraintValidator
         $this->plane($positions);
     }
 
-    /** @return array<int, list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon    polygon whose ring positions are extracted
+     * @param PolygonStructure $constraint applied validation constraint
+     *
+     * @return array<int, list<list<float>>>
+     */
     private function boundaries(PolygonInterface $polygon, PolygonStructure $constraint): array
     {
         $positions = [];
         foreach (array_values($polygon->getRings()) as $index => $ring) {
-            $path = 'rings[' . $index . ']';
+            $path = 'rings['.$index.']';
             foreach (ComponentMetadata::errors($polygon, $ring) as $code => $message) {
                 $this->error($message, $code, $path);
             }
@@ -85,12 +96,23 @@ final class PolygonStructureValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Error.
+     *
+     * @param string $message message
+     * @param string $code    violation code
+     * @param string $path    property path for the diagnostic
+     */
     private function error(string $message, string $code, string $path = ''): void
     {
         $this->context->buildViolation($message)->setCode($code)->atPath($path)->addViolation();
     }
 
-    /** @param array<int, list<list<float>>> $rings */
+    /**
+     * @param array $rings rings
+     *
+     * @phpstan-param array<int, list<list<float>>> $rings
+     */
     private function plane(array $rings): void
     {
         $exterior = $rings[0] ?? [];
@@ -113,14 +135,19 @@ final class PolygonStructureValidator extends ConstraintValidator
                     $this->error(
                         'Every boundary position must lie in the exterior supporting plane.',
                         PolygonStructure::PLANE_ERROR,
-                        'rings[' . $index . '].points[' . $point . ']'
+                        'rings['.$index.'].points['.$point.']'
                     );
                 }
             }
         }
     }
 
-    /** @return list<list<float>> */
+    /**
+     * @param PolygonInterface    $polygon polygon whose ring positions are extracted
+     * @param LineStringInterface $ring    ring
+     *
+     * @return list<list<float>>
+     */
     private function positions(PolygonInterface $polygon, LineStringInterface $ring): array
     {
         if ([] !== ComponentMetadata::errors($polygon, $ring)) {
@@ -138,6 +165,11 @@ final class PolygonStructureValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param PolygonStructure $constraint applied validation constraint
+     */
     private function unavailable(PolygonStructure $constraint): void
     {
         $warning = clone $constraint;

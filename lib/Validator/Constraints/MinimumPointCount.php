@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,8 +25,11 @@ final class MinimumPointCount extends Constraint
     public const string INVALID_ERROR = 'minimumpointcount-invalid';
 
     /**
-     * @param null|string[] $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param int        $limit   minimum required number of positions
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(public int $limit = 2, ?array $groups = null, mixed $payload = null)
     {

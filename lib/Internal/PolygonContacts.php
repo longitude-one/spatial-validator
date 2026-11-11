@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -34,7 +34,11 @@ final class PolygonContacts
     private array $points = [];
 
     /**
-     * @param list<list<float>> $points
+     * @param int   $first  first operand
+     * @param int   $second second operand
+     * @param array $points coordinate positions to inspect
+     *
+     * @phpstan-param list<list<float>> $points
      */
     public function add(int $first, int $second, array $points): bool
     {
@@ -42,20 +46,26 @@ final class PolygonContacts
         foreach ($points as $point) {
             $index = array_search($point, $this->points, true);
             if (false === $index) {
-                $index = count($this->points);
+                $index = \count($this->points);
                 $this->points[] = $point;
             }
             foreach ([$first, $second] as $ring) {
-                $connected = $this->join('ring' . $ring, 'point' . $index) && $connected;
+                $connected = $this->join('ring'.$ring, 'point'.$index) && $connected;
             }
         }
 
         return $connected;
     }
 
+    /**
+     * Join.
+     *
+     * @param string $ring  ring
+     * @param string $point point
+     */
     private function join(string $ring, string $point): bool
     {
-        $edge = $ring . ':' . $point;
+        $edge = $ring.':'.$point;
         if (isset($this->incidences[$edge])) {
             return true;
         }
@@ -70,6 +80,11 @@ final class PolygonContacts
         return true;
     }
 
+    /**
+     * Root.
+     *
+     * @param string $node node
+     */
     private function root(string $node): string
     {
         while (isset($this->parents[$node])) {

@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -32,8 +32,11 @@ final class RobustPredicates
     public const int BASE = 32768;
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
@@ -57,16 +60,19 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      */
     public static function compare(array $first, array $second): int
     {
-        $comparison = count($first) <=> count($second);
+        $comparison = \count($first) <=> \count($second);
         if (0 !== $comparison) {
             return $comparison;
         }
-        for ($index = count($first) - 1; 0 <= $index; --$index) {
+        for ($index = \count($first) - 1; 0 <= $index; --$index) {
             if ($first[$index] !== $second[$index]) {
                 return $first[$index] <=> $second[$index];
             }
@@ -76,10 +82,15 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<float> $first
-     * @param list<float> $second
-     * @param list<float> $third
-     * @param list<float> $fourth
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $fourth fourth
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param list<float> $fourth
      */
     public static function coplanar(array $first, array $second, array $third, array $fourth): bool
     {
@@ -104,8 +115,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first  Greater or equal magnitude
-     * @param list<int> $second
+     * @param array $first  Greater or equal magnitude
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */
@@ -122,7 +136,11 @@ final class RobustPredicates
         return $result;
     }
 
-    /** @return array{int, list<int>} */
+    /**
+     * @param float $value spatial value to validate
+     *
+     * @return array{int, list<int>}
+     */
     public static function integer(float $value): array
     {
         if (!is_finite($value)) {
@@ -134,7 +152,7 @@ final class RobustPredicates
         $exponent = (($bytes[1] & 127) << 4) | ($bytes[2] >> 4);
         $leading = ($bytes[2] & 15) + (0 === $exponent ? 0 : 16);
         $digits = [$leading];
-        foreach (array_slice($bytes, 2) as $byte) {
+        foreach (\array_slice($bytes, 2) as $byte) {
             $carry = $byte;
             foreach ($digits as $index => $digit) {
                 $total = $digit * 256 + $carry;
@@ -150,14 +168,17 @@ final class RobustPredicates
     }
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
     public static function multiply(array $first, array $second): array
     {
-        $result = array_fill(0, count($first[1]) + count($second[1]), 0);
+        $result = array_fill(0, \count($first[1]) + \count($second[1]), 0);
         foreach ($first[1] as $left => $digit) {
             if (0 === $digit) {
                 continue;
@@ -169,17 +190,22 @@ final class RobustPredicates
                 $result[$offset] = $product % self::BASE;
                 $carry = intdiv($product, self::BASE);
             }
-            $result[$left + count($second[1])] = $carry;
+            $result[$left + \count($second[1])] = $carry;
         }
 
         return self::signed($first[0] * $second[0], array_values($result));
     }
 
     /**
-     * @param list<float>     $first
-     * @param list<float>     $second
-     * @param list<float>     $third
-     * @param array{int, int} $axes
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $axes   axes
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param array{int, int} $axes
      */
     public static function orientation(array $first, array $second, array $third, array $axes = [0, 1]): int
     {
@@ -198,7 +224,10 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $digits
+     * @param array $digits digits
+     * @param int   $bits   bits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return list<int>
      */
@@ -218,7 +247,10 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $digits
+     * @param int   $sign   sign
+     * @param array $digits digits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return array{int, list<int>}
      */
@@ -232,8 +264,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
@@ -243,8 +278,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */
@@ -252,7 +290,7 @@ final class RobustPredicates
     {
         $result = [];
         $carry = 0;
-        $length = max(count($first), count($second));
+        $length = max(\count($first), \count($second));
         for ($index = 0; $index < $length; ++$index) {
             $total = ($first[$index] ?? 0) + ($second[$index] ?? 0) + $carry;
             $result[] = $total % self::BASE;

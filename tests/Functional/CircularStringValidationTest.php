@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,7 +40,55 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class CircularStringValidationTest extends TestCase
 {
-    /** @param list<list<null|float|int>> $coordinates */
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, bool}>
+     */
+    public static function cases(): iterable
+    {
+        yield 'EMPTY' => [[], true];
+
+        yield 'one' => [[[0, 0]], false];
+
+        yield 'two' => [[[0, 0], [1, 0]], false];
+
+        yield 'four' => [[[0, 0], [1, 0], [2, 0], [3, 0]], false];
+
+        yield 'collinear' => [[[0, 0], [1, 0], [2, 0]], true];
+
+        yield 'full circle' => [[[1, 0], [-1, 0], [1, 0]], true];
+
+        yield 'AAB' => [[[0, 0], [0, 0], [1, 0]], false];
+
+        yield 'ABB' => [[[0, 0], [1, 0], [1, 0]], false];
+
+        yield 'EMPTY point' => [[[0, 0], [null, null], [1, 0]], false];
+
+        yield 'invalid point despite cardinality' => [[[0, 0], [\INF, 0]], false];
+
+        yield 'retraced remains valid' => [[[-1, 0], [0, 1], [1, 0], [0, 1], [-1, 0]], true];
+    }
+
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
+    public static function constraints(): iterable
+    {
+        yield 'validity' => [new SpatialAssert\CircularString()];
+
+        yield 'count' => [new SpatialAssert\CircularPointCount()];
+
+        yield 'points' => [new SpatialAssert\CircularArcPoints()];
+
+        yield 'simplicity' => [new SpatialAssert\SimpleCircularString()];
+    }
+
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param SpatialModelEnum        $family      family
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     public static function curve(
         array $coordinates,
         CoordinateDimensionEnum $dimension = CoordinateDimensionEnum::XY,
@@ -59,6 +107,11 @@ final class CircularStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify declared type must match.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDeclaredTypeMustMatch(Constraint $constraint): void
     {
         $curve = self::createStub(CircularStringInterface::class);
@@ -68,6 +121,9 @@ final class CircularStringValidationTest extends TestCase
         self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
     }
 
+    /**
+     * Verify dimensions and families.
+     */
     public function testDimensionsAndFamilies(): void
     {
         foreach (SpatialModelEnum::cases() as $family) {
@@ -88,6 +144,9 @@ final class CircularStringValidationTest extends TestCase
         ));
     }
 
+    /**
+     * Verify direct composition preserves context and active group.
+     */
     public function testDirectCompositionPreservesContextAndActiveGroup(): void
     {
         $curve = self::curve([[-1, 0], [0, 1], [1, 0]]);
@@ -112,6 +171,11 @@ final class CircularStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify direct input exception.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDirectInputException(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -120,6 +184,11 @@ final class CircularStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testInputContract(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -131,6 +200,9 @@ final class CircularStringValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify localized context and payload.
+     */
     public function testLocalizedContextAndPayload(): void
     {
         $value = self::curve([[0, 0], [0, 0], [1, 0]]);
@@ -149,7 +221,12 @@ final class CircularStringValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $violations->get(0)->getConstraint()?->payload);
     }
 
-    /** @param list<list<null|float|int>> $coordinates */
+    /**
+     * @param array $coordinates coordinates
+     * @param bool  $valid       valid
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('cases')]
     public function testValidity(array $coordinates, bool $valid): void
     {
@@ -157,52 +234,19 @@ final class CircularStringValidationTest extends TestCase
             self::curve($coordinates),
             new SpatialAssert\CircularString()
         );
-        self::assertSame($valid, 0 === count($violations));
-    }
-
-    /** @return iterable<string, array{list<list<null|float|int>>, bool}> */
-    public static function cases(): iterable
-    {
-        yield 'EMPTY' => [[], true];
-
-        yield 'one' => [[[0, 0]], false];
-
-        yield 'two' => [[[0, 0], [1, 0]], false];
-
-        yield 'four' => [[[0, 0], [1, 0], [2, 0], [3, 0]], false];
-
-        yield 'collinear' => [[[0, 0], [1, 0], [2, 0]], true];
-
-        yield 'full circle' => [[[1, 0], [-1, 0], [1, 0]], true];
-
-        yield 'AAB' => [[[0, 0], [0, 0], [1, 0]], false];
-
-        yield 'ABB' => [[[0, 0], [1, 0], [1, 0]], false];
-
-        yield 'EMPTY point' => [[[0, 0], [null, null], [1, 0]], false];
-
-        yield 'invalid point despite cardinality' => [[[0, 0], [INF, 0]], false];
-
-        yield 'retraced remains valid' => [[[-1, 0], [0, 1], [1, 0], [0, 1], [-1, 0]], true];
+        self::assertSame($valid, 0 === \count($violations));
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraint(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
         $validator->validate(null, new Assert\NotNull());
-    }
-
-    /** @return iterable<string, array{Constraint}> */
-    public static function constraints(): iterable
-    {
-        yield 'validity' => [new SpatialAssert\CircularString()];
-
-        yield 'count' => [new SpatialAssert\CircularPointCount()];
-
-        yield 'points' => [new SpatialAssert\CircularArcPoints()];
-
-        yield 'simplicity' => [new SpatialAssert\SimpleCircularString()];
     }
 }

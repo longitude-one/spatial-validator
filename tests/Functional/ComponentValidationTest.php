@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -42,6 +42,85 @@ use Symfony\Component\Validator\Validation;
  */
 final class ComponentValidationTest extends TestCase
 {
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function aggregatePaths(): iterable
+    {
+        yield 'lines' => ['MultiLineString', 'lineStrings[0]'];
+
+        yield 'polygons' => ['MultiPolygon', 'polygons[0]'];
+
+        yield 'polygon rings' => ['Polygon', 'rings[0]'];
+
+        yield 'triangle rings' => ['Triangle', 'rings[0]'];
+
+        yield 'curves' => ['CompoundCurve', 'curves[0]'];
+
+        yield 'patches' => ['PolyhedralSurface', 'patches[0]'];
+    }
+
+    /**
+     * @return iterable<string, array{bool, list<string>}>
+     */
+    public static function cycles(): iterable
+    {
+        yield 'direct' => [false, ['geometries[0]', 'geometries[1]']];
+
+        yield 'indirect' => [true, ['geometries[0].geometries[0]', 'geometries[1]']];
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function permittedMembers(): iterable
+    {
+        yield 'line collection' => ['MultiLineString', 'LineString', 'lineStrings[0]'];
+
+        yield 'polygon collection' => ['MultiPolygon', 'Polygon', 'polygons[0]'];
+
+        yield 'triangle subtype in polygon collection' => ['MultiPolygon', 'Triangle', 'polygons[0]'];
+
+        yield 'polygon ring' => ['Polygon', 'LineString', 'rings[0]'];
+
+        yield 'triangle ring' => ['Triangle', 'LineString', 'rings[0]'];
+
+        yield 'linear curve' => ['CompoundCurve', 'LineString', 'curves[0]'];
+
+        yield 'circular curve' => ['CompoundCurve', 'CircularString', 'curves[0]'];
+
+        yield 'polygon patch' => ['PolyhedralSurface', 'Polygon', 'patches[0]'];
+
+        yield 'triangle patch' => ['PolyhedralSurface', 'Triangle', 'patches[0]'];
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function pointAggregates(): iterable
+    {
+        yield 'line' => ['LineString'];
+
+        yield 'arc' => ['CircularString'];
+
+        yield 'multi-point' => ['MultiPoint'];
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function variants(): iterable
+    {
+        foreach (['Dimension2', 'Dimension3z', 'Dimension3m', 'Dimension4zm'] as $dimension) {
+            foreach (['Geometry', 'Geography'] as $family) {
+                yield $dimension.' '.$family => [$dimension, $family];
+            }
+        }
+    }
+
+    /**
+     * Verify ancestor state is released after an exception.
+     */
     public function testAncestorStateIsReleasedAfterAnException(): void
     {
         $fail = true;
@@ -71,7 +150,10 @@ final class ComponentValidationTest extends TestCase
         self::assertSame($value, $violations->get(0)->getRoot());
     }
 
-    public function testCycleIsReportedEvenForAForbiddenMemberType(): void
+    /**
+     * Verify cycle is reported even for a forbidden member type.
+     */
+    public function testCycleIsReportedEvenForForbiddenMemberType(): void
     {
         $members = [];
         $value = $this->aggregate('CompoundCurve', static function () use (&$members): array {
@@ -86,7 +168,12 @@ final class ComponentValidationTest extends TestCase
         self::assertSame('curves[0]', $violations->get(1)->getPropertyPath());
     }
 
-    /** @param list<string> $paths */
+    /**
+     * @param bool  $indirect indirect
+     * @param array $paths    paths
+     *
+     * @phpstan-param list<string> $paths
+     */
     #[DataProvider('cycles')]
     public function testCyclesStopOnlyTheirBranch(bool $indirect, array $paths): void
     {
@@ -112,14 +199,9 @@ final class ComponentValidationTest extends TestCase
         self::assertContains(SpatialAssert\FiniteCoordinates::INVALID_ERROR, $codes);
     }
 
-    /** @return iterable<string, array{bool, list<string>}> */
-    public static function cycles(): iterable
-    {
-        yield 'direct' => [false, ['geometries[0]', 'geometries[1]']];
-
-        yield 'indirect' => [true, ['geometries[0].geometries[0]', 'geometries[1]']];
-    }
-
+    /**
+     * Verify direct aggregate requires its interface.
+     */
     public function testDirectAggregateRequiresItsInterface(): void
     {
         $value = self::createStub(SpatialInterface::class);
@@ -132,6 +214,9 @@ final class ComponentValidationTest extends TestCase
         );
     }
 
+    /**
+     * Verify each metadata mismatch is an error and payload does not change warnings.
+     */
     public function testEachMetadataMismatchIsAnErrorAndPayloadDoesNotChangeWarnings(): void
     {
         $member = $this->aggregate(
@@ -172,6 +257,9 @@ final class ComponentValidationTest extends TestCase
         self::assertSame($payload, $constraint->payload);
     }
 
+    /**
+     * Verify empty parent still validates members without mutation.
+     */
     public function testEmptyParentStillValidatesMembersWithoutMutation(): void
     {
         $empty = new Point();
@@ -193,9 +281,15 @@ final class ComponentValidationTest extends TestCase
     }
 
     #[DataProvider('variants')]
+    /**
+     * Verify matching family and coordinate variant are accepted.
+     *
+     * @param string $dimensionName dimension name
+     * @param string $familyName    family name
+     */
     public function testMatchingFamilyAndCoordinateVariantAreAccepted(string $dimensionName, string $familyName): void
     {
-        $class = 'LongitudeOne\SpatialTypes\Types\\' . $dimensionName . '\\' . $familyName . '\Point';
+        $class = 'LongitudeOne\SpatialTypes\Types\\'.$dimensionName.'\\'.$familyName.'\Point';
         $dimension = match ($dimensionName) {
             'Dimension2' => CoordinateDimensionEnum::XY,
             'Dimension3z' => CoordinateDimensionEnum::XYZ,
@@ -215,17 +309,13 @@ final class ComponentValidationTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($parent, new SpatialAssert\Components()));
     }
 
-    /** @return iterable<string, array{string, string}> */
-    public static function variants(): iterable
-    {
-        foreach (['Dimension2', 'Dimension3z', 'Dimension3m', 'Dimension4zm'] as $dimension) {
-            foreach (['Geometry', 'Geography'] as $family) {
-                yield $dimension . ' ' . $family => [$dimension, $family];
-            }
-        }
-    }
-
     #[DataProvider('aggregatePaths')]
+    /**
+     * Verify member type and literal paths.
+     *
+     * @param string $type type
+     * @param string $path property path for the diagnostic
+     */
     public function testMemberTypeAndLiteralPaths(string $type, string $path): void
     {
         $value = $this->aggregate($type, [new Point()]);
@@ -235,22 +325,9 @@ final class ComponentValidationTest extends TestCase
         self::assertSame($path, $violations->get(0)->getPropertyPath());
     }
 
-    /** @return iterable<string, array{string, string}> */
-    public static function aggregatePaths(): iterable
-    {
-        yield 'lines' => ['MultiLineString', 'lineStrings[0]'];
-
-        yield 'polygons' => ['MultiPolygon', 'polygons[0]'];
-
-        yield 'polygon rings' => ['Polygon', 'rings[0]'];
-
-        yield 'triangle rings' => ['Triangle', 'rings[0]'];
-
-        yield 'curves' => ['CompoundCurve', 'curves[0]'];
-
-        yield 'patches' => ['PolyhedralSurface', 'patches[0]'];
-    }
-
+    /**
+     * Verify nested paths context groups and independent failures.
+     */
     public function testNestedPathsContextGroupsAndIndependentFailures(): void
     {
         $bad = $this->invalidPoint();
@@ -285,6 +362,9 @@ final class ComponentValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $constraint->payload);
     }
 
+    /**
+     * Verify null and leaf have no components.
+     */
     public function testNullAndLeafHaveNoComponents(): void
     {
         $service = Validation::createValidator();
@@ -293,18 +373,25 @@ final class ComponentValidationTest extends TestCase
     }
 
     #[DataProvider('permittedMembers')]
+    /**
+     * Verify permitted members keep their specialized route.
+     *
+     * @param string $parentType parent type
+     * @param string $memberType member type
+     * @param string $path       property path for the diagnostic
+     */
     public function testPermittedMembersKeepTheirSpecializedRoute(
         string $parentType,
         string $memberType,
         string $path,
     ): void {
-        if (in_array($memberType, ['LineString', 'CircularString'], true)) {
+        if (\in_array($memberType, ['LineString', 'CircularString'], true)) {
             $member = $this->aggregate($memberType, [$this->invalidPoint(), new Point(1, 1)]);
             $parent = $this->aggregate($parentType, [$member]);
             $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
             self::assertCount(2, $violations);
             self::assertSame(SpatialAssert\FiniteCoordinates::INVALID_ERROR, $violations->get(0)->getCode());
-            self::assertSame($path . '.points[0]', $violations->get(0)->getPropertyPath());
+            self::assertSame($path.'.points[0]', $violations->get(0)->getPropertyPath());
 
             return;
         }
@@ -312,41 +399,24 @@ final class ComponentValidationTest extends TestCase
         $parent = $this->aggregate($parentType, [$member]);
         $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
         self::assertCount(1, $violations);
-        if (in_array($memberType, ['Polygon', 'Triangle'], true)) {
+        if (\in_array($memberType, ['Polygon', 'Triangle'], true)) {
             self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
             self::assertNull($violations->get(0)->getConstraint()?->payload);
             self::assertSame($path, $violations->get(0)->getPropertyPath());
 
             return;
         }
-        self::assertSame($memberType . ' validation is not implemented yet.', $violations->get(0)->getMessage());
+        self::assertSame($memberType.' validation is not implemented yet.', $violations->get(0)->getMessage());
         self::assertSame($path, $violations->get(0)->getPropertyPath());
         self::assertSame(['severity' => 'warning'], $violations->get(0)->getConstraint()?->payload);
     }
 
-    /** @return iterable<string, array{string, string, string}> */
-    public static function permittedMembers(): iterable
-    {
-        yield 'line collection' => ['MultiLineString', 'LineString', 'lineStrings[0]'];
-
-        yield 'polygon collection' => ['MultiPolygon', 'Polygon', 'polygons[0]'];
-
-        yield 'triangle subtype in polygon collection' => ['MultiPolygon', 'Triangle', 'polygons[0]'];
-
-        yield 'polygon ring' => ['Polygon', 'LineString', 'rings[0]'];
-
-        yield 'triangle ring' => ['Triangle', 'LineString', 'rings[0]'];
-
-        yield 'linear curve' => ['CompoundCurve', 'LineString', 'curves[0]'];
-
-        yield 'circular curve' => ['CompoundCurve', 'CircularString', 'curves[0]'];
-
-        yield 'polygon patch' => ['PolyhedralSurface', 'Polygon', 'patches[0]'];
-
-        yield 'triangle patch' => ['PolyhedralSurface', 'Triangle', 'patches[0]'];
-    }
-
     #[DataProvider('pointAggregates')]
+    /**
+     * Verify point members require both interface and type.
+     *
+     * @param string $type type
+     */
     public function testPointMembersRequireBothInterfaceAndType(string $type): void
     {
         $fake = self::createStub(SpatialInterface::class);
@@ -363,20 +433,13 @@ final class ComponentValidationTest extends TestCase
         self::assertCount(3, $violations);
         foreach ($violations as $index => $violation) {
             self::assertSame(SpatialAssert\Components::TYPE_ERROR, $violation->getCode());
-            self::assertSame('points[' . $index . ']', $violation->getPropertyPath());
+            self::assertSame('points['.$index.']', $violation->getPropertyPath());
         }
     }
 
-    /** @return iterable<string, array{string}> */
-    public static function pointAggregates(): iterable
-    {
-        yield 'line' => ['LineString'];
-
-        yield 'arc' => ['CircularString'];
-
-        yield 'multi-point' => ['MultiPoint'];
-    }
-
+    /**
+     * Verify service converts unsupported value into type violation.
+     */
     public function testServiceConvertsUnsupportedValueIntoTypeViolation(): void
     {
         $violations = Validation::createValidator()->validate('', new SpatialAssert\Components());
@@ -384,6 +447,9 @@ final class ComponentValidationTest extends TestCase
         self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
     }
 
+    /**
+     * Verify shared aggregate is validated along each independent path.
+     */
     public function testSharedAggregateIsValidatedAlongEachIndependentPath(): void
     {
         $line = $this->aggregate('LineString', [$this->invalidPoint()]);
@@ -399,18 +465,27 @@ final class ComponentValidationTest extends TestCase
         self::assertSame(['geometries[0].points[0]', 'geometries[1].points[0]'], $paths);
     }
 
+    /**
+     * Verify unsupported value throws directly.
+     */
     public function testUnsupportedValueThrowsDirectly(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        (new SpatialAssert\ComponentsValidator())->validate('', new SpatialAssert\Components());
+        new SpatialAssert\ComponentsValidator()->validate('', new SpatialAssert\Components());
     }
 
+    /**
+     * Verify wrong constraint takes precedence.
+     */
     public function testWrongConstraintTakesPrecedence(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        (new SpatialAssert\ComponentsValidator())->validate(null, new Assert\NotNull());
+        new SpatialAssert\ComponentsValidator()->validate(null, new Assert\NotNull());
     }
 
+    /**
+     * Verify wrong member type still reports every metadata mismatch.
+     */
     public function testWrongMemberTypeStillReportsEveryMetadataMismatch(): void
     {
         $line = $this->aggregate(
@@ -433,7 +508,15 @@ final class ComponentValidationTest extends TestCase
         ], $codes);
     }
 
-    /** @param array<mixed>|\Closure(): array<mixed> $members */
+    /**
+     * @param string                  $type      type
+     * @param array|\Closure          $members   spatial members to inspect
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     * @param SpatialReference|null   $reference reference
+     *
+     * @phpstan-param array<mixed>|\Closure(): array<mixed> $members
+     */
     private function aggregate(
         string $type,
         array|\Closure $members = [],
@@ -444,7 +527,7 @@ final class ComponentValidationTest extends TestCase
         $name = 'GeometryCollection' === $type ? 'Collection' : $type;
 
         /** @var class-string<SpatialInterface> $interface */
-        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\' . $name . 'Interface';
+        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\'.$name.'Interface';
         $value = self::createStub($interface);
         $value->method('getType')->willReturn(GeometryTypeEnum::from($type));
         $value->method('getFamily')->willReturn($family);
@@ -467,6 +550,9 @@ final class ComponentValidationTest extends TestCase
         return $value;
     }
 
+    /**
+     * Invalid point.
+     */
     private function invalidPoint(): PointInterface
     {
         $point = self::createStub(PointInterface::class);
@@ -474,7 +560,7 @@ final class ComponentValidationTest extends TestCase
         $point->method('getFamily')->willReturn(SpatialModelEnum::GEOMETRY);
         $point->method('getDimension')->willReturn(CoordinateDimensionEnum::XY);
         $point->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-        $point->method('getX')->willReturn(INF);
+        $point->method('getX')->willReturn(\INF);
         $point->method('getY')->willReturn(0.0);
         $point->method('isEmpty')->willReturn(false);
 

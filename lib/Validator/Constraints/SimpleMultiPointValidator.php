@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -28,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicit aggregate property, independent from ordinary validity. */
 final class SimpleMultiPointValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleMultiPoint) {
@@ -39,13 +45,13 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         if (!$value instanceof MultiPointInterface || GeometryTypeEnum::MULTIPOINT !== $value->getType()) {
             throw new UnexpectedValueException($value, MultiPointInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new MultiPoint(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations())) {
+        if ($before !== \count($this->context->getViolations())) {
             return;
         }
         $positions = $this->positions($value);
@@ -60,15 +66,20 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         $this->compare($value, $positions);
     }
 
-    /** @param array<int, list<float>> $positions */
+    /**
+     * @param MultiPointInterface $value     spatial value to validate
+     * @param array               $positions positions
+     *
+     * @phpstan-param array<int, list<float>> $positions
+     */
     private function compare(MultiPointInterface $value, array $positions): void
     {
         foreach ($positions as $index => $position) {
             foreach ($positions as $previous => $other) {
                 if ($previous < $index && PointCoordinates::same($position, $other)) {
                     $this->context->buildViolation('The point repeats a spatial position.')
-                        ->atPath('points[' . $index . ']')->setInvalidValue(array_values($value->getPoints())[$index])
-                        ->setParameter('{{ other }}', 'points[' . $previous . ']')
+                        ->atPath('points['.$index.']')->setInvalidValue(array_values($value->getPoints())[$index])
+                        ->setParameter('{{ other }}', 'points['.$previous.']')
                         ->setCode(SimpleMultiPoint::INVALID_ERROR)->addViolation()
                     ;
                 }
@@ -76,7 +87,11 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         }
     }
 
-    /** @return array<int, list<float>> */
+    /**
+     * @param MultiPointInterface $value spatial value to validate
+     *
+     * @return array<int, list<float>>
+     */
     private function positions(MultiPointInterface $value): array
     {
         $positions = [];
@@ -90,6 +105,11 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleMultiPoint $constraint applied validation constraint
+     */
     private function unavailable(SimpleMultiPoint $constraint): void
     {
         $warning = clone $constraint;

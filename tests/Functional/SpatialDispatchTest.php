@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,7 +36,12 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpatialDispatchTest extends TestCase
 {
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testEveryTypeDelegatesInTheOriginalContext(GeometryTypeEnum $type, string $interface): void
     {
@@ -45,7 +50,7 @@ final class SpatialDispatchTest extends TestCase
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
-        if (in_array($type, $implemented, true)) {
+        if (\in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
@@ -78,7 +83,7 @@ final class SpatialDispatchTest extends TestCase
         $specialized = $violation->getConstraint();
         self::assertNotNull($specialized);
         self::assertSame(SpecializedValidationTest::constraint($type)::class, $specialized::class);
-        self::assertSame($type->value . ' validation is not implemented yet.', $violation->getMessage());
+        self::assertSame($type->value.' validation is not implemented yet.', $violation->getMessage());
         self::assertSame(['severity' => 'warning'], $specialized->payload);
         self::assertSame(['custom'], $specialized->groups);
         self::assertSame($payload, $constraint->payload);
@@ -87,6 +92,9 @@ final class SpatialDispatchTest extends TestCase
         self::assertSame($value, $violation->getInvalidValue());
     }
 
+    /**
+     * Verify triangle dispatch retains its interface precondition.
+     */
     public function testTriangleDispatchRetainsItsInterfacePrecondition(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
@@ -101,6 +109,9 @@ final class SpatialDispatchTest extends TestCase
         );
     }
 
+    /**
+     * Verify unknown type name has an explicit defensive failure.
+     */
     public function testUnknownTypeNameHasAnExplicitDefensiveFailure(): void
     {
         // SpatialInterface currently returns a closed enum: exercise the future-proof mapping fallback directly.

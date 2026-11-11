@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -51,6 +51,13 @@ final class PolygonValidator extends ConstraintValidator
         $this->polygon($value, $constraint);
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param string  $code       violation code
+     * @param Polygon $constraint applied validation constraint
+     * @param string  $path       property path for the diagnostic
+     */
     private function diagnostic(string $code, Polygon $constraint, string $path = ''): void
     {
         $messages = [
@@ -62,7 +69,7 @@ final class PolygonValidator extends ConstraintValidator
             Polygon::UNAVAILABLE_ERROR => 'Geography Polygon topology and orientation are not implemented yet.',
         ];
         $associated = $constraint;
-        if (in_array($code, [Polygon::ORIENTATION_ERROR, Polygon::UNAVAILABLE_ERROR], true)) {
+        if (\in_array($code, [Polygon::ORIENTATION_ERROR, Polygon::UNAVAILABLE_ERROR], true)) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
         }
@@ -75,12 +82,18 @@ final class PolygonValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Polygon.
+     *
+     * @param PolygonInterface $value      spatial value to validate
+     * @param Polygon          $constraint applied validation constraint
+     */
     private function polygon(PolygonInterface $value, Polygon $constraint): void
     {
         if (GeometryTypeEnum::POLYGON !== $value->getType()) {
             throw new UnexpectedValueException($value, GeometryTypeEnum::POLYGON->value);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new PolygonStructure(groups: $constraint->groups, payload: $constraint->payload),
@@ -94,11 +107,11 @@ final class PolygonValidator extends ConstraintValidator
 
             return;
         }
-        if ($before !== count($this->context->getViolations())) {
+        if ($before !== \count($this->context->getViolations())) {
             return;
         }
         foreach (PolygonTopology::errors(PolygonTopology::project($value)) as [$index, $code]) {
-            $this->diagnostic($code, $constraint, 'rings[' . $index . ']');
+            $this->diagnostic($code, $constraint, 'rings['.$index.']');
         }
     }
 }

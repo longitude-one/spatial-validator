@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,7 +27,11 @@ use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
  */
 final class CompoundCurveArcs
 {
-    /** @return array{list<Arc>, list<string>} */
+    /**
+     * @param CompoundCurveInterface $value spatial value to validate
+     *
+     * @return array{list<Arc>, list<string>}
+     */
     public static function build(CompoundCurveInterface $value): array
     {
         $arcs = [];
@@ -40,8 +44,8 @@ final class CompoundCurveArcs
                 ? CircularArcs::build($positions) : self::segments($positions);
             foreach ($parts as $part => $arc) {
                 $arcs[] = $arc;
-                $paths[] = 'curves[' . $index . '].' . ($curve instanceof CircularStringInterface ? 'arcs' : 'segments')
-                    . '[' . $part . ']';
+                $paths[] = 'curves['.$index.'].'.($curve instanceof CircularStringInterface ? 'arcs' : 'segments')
+                    .'['.$part.']';
             }
         }
 
@@ -49,14 +53,16 @@ final class CompoundCurveArcs
     }
 
     /**
-     * @param list<list<float>> $positions
+     * @param array $positions positions
+     *
+     * @phpstan-param list<list<float>> $positions
      *
      * @return list<Arc>
      */
     private static function segments(array $positions): array
     {
         $parts = [];
-        $count = count($positions);
+        $count = \count($positions);
         for ($index = 1; $index < $count; ++$index) {
             $parts[] = CircularArcs::build([$positions[$index - 1], $positions[$index - 1], $positions[$index]])[0];
         }

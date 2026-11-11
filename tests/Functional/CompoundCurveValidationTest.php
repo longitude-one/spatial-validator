@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -39,7 +39,23 @@ use Symfony\Component\Validator\Validation;
  */
 final class CompoundCurveValidationTest extends TestCase
 {
-    /** @param list<SpatialInterface> $curves */
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
+    public static function constraints(): iterable
+    {
+        yield 'validity' => [new SpatialAssert\CompoundCurve()];
+
+        yield 'simplicity' => [new SpatialAssert\SimpleCompoundCurve()];
+    }
+
+    /**
+     * @param array                   $curves    curves
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     *
+     * @phpstan-param list<SpatialInterface> $curves
+     */
     public static function curve(
         array $curves,
         CoordinateDimensionEnum $dimension = CoordinateDimensionEnum::XY,
@@ -56,7 +72,10 @@ final class CompoundCurveValidationTest extends TestCase
         return $value;
     }
 
-    public function testBrokenZJoinAndLocalizedContext(): void
+    /**
+     * Verify broken z join and localized context.
+     */
+    public function testBrokenAltitudeJoinAndLocalizedContext(): void
     {
         $dimension = CoordinateDimensionEnum::XYZ;
         $first = LineStringValidationTest::line([[0, 0, 0], [1, 0, 0]], $dimension);
@@ -79,6 +98,9 @@ final class CompoundCurveValidationTest extends TestCase
         self::assertSame([$first, $second], $value->getCurves());
     }
 
+    /**
+     * Verify continuity and m.
+     */
     public function testContinuityAndM(): void
     {
         $service = Validation::createValidator();
@@ -103,6 +125,11 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify direct input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDirectInputContract(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -110,6 +137,9 @@ final class CompoundCurveValidationTest extends TestCase
         $validator->validate('', $constraint);
     }
 
+    /**
+     * Verify empty and invalid members.
+     */
     public function testEmptyAndInvalidMembers(): void
     {
         $service = Validation::createValidator();
@@ -124,21 +154,24 @@ final class CompoundCurveValidationTest extends TestCase
         }
         $violations = $service->validate(self::curve([new Polygon([])]), new SpatialAssert\CompoundCurve());
         self::assertSame(SpatialAssert\Components::TYPE_ERROR, $violations->get(0)->getCode());
-        $value = self::curve([LineStringValidationTest::line([[0, 0], [INF, 0]]),
+        $value = self::curve([LineStringValidationTest::line([[0, 0], [\INF, 0]]),
             LineStringValidationTest::line([[2, 0], [3, 0]])]);
         $violations = $service->validate($value, new SpatialAssert\CompoundCurve());
-        self::assertGreaterThan(0, count($violations));
+        self::assertGreaterThan(0, \count($violations));
         foreach ($violations as $violation) {
             self::assertNotSame(SpatialAssert\CompoundCurve::JOIN_ERROR, $violation->getCode());
         }
     }
 
+    /**
+     * Verify finite join equality has no added tolerance.
+     */
     public function testFiniteJoinEqualityHasNoAddedTolerance(): void
     {
         $service = Validation::createValidator();
         foreach ([1.0, 1.0E100] as $scale) {
             foreach ([1.0, 4.0] as $distance) {
-                $join = $scale + $distance * PHP_FLOAT_EPSILON * $scale;
+                $join = $scale + $distance * \PHP_FLOAT_EPSILON * $scale;
                 $value = self::curve([
                     LineStringValidationTest::line([[0, 0], [$scale, 0]]),
                     LineStringValidationTest::line([[$join, 0], [2 * $scale, $scale]]),
@@ -149,6 +182,9 @@ final class CompoundCurveValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify geography warnings and payload.
+     */
     public function testGeographyWarningsAndPayload(): void
     {
         $family = SpatialModelEnum::GEOGRAPHY;
@@ -175,6 +211,11 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testInputContract(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -187,6 +228,9 @@ final class CompoundCurveValidationTest extends TestCase
         self::assertCount(1, $service->validate($candidate, $constraint));
     }
 
+    /**
+     * Verify metadata and point failures remain localized.
+     */
     public function testMetadataAndPointFailuresRemainLocalized(): void
     {
         $member = LineStringValidationTest::line([[0, 0, 1], [1, 0, 2]], CoordinateDimensionEnum::XYM);
@@ -207,18 +251,15 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint first.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraintFirst(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
         $validator->validate(null, new Assert\NotNull());
-    }
-
-    /** @return iterable<string, array{Constraint}> */
-    public static function constraints(): iterable
-    {
-        yield 'validity' => [new SpatialAssert\CompoundCurve()];
-
-        yield 'simplicity' => [new SpatialAssert\SimpleCompoundCurve()];
     }
 }

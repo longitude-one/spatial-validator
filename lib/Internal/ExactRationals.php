@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,6 +25,8 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class ExactRationals
 {
     /**
+     * @param float $number number
+     *
      * @return Rational
      */
     public static function number(float $number): array
@@ -33,8 +35,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -51,8 +56,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -65,8 +73,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -79,8 +90,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -94,14 +108,17 @@ final class ExactRationals
     /**
      * Divide positive magnitudes known to divide exactly.
      *
-     * @param list<int> $value
-     * @param list<int> $divisor
+     * @param array $value   spatial value to validate
+     * @param array $divisor divisor
+     *
+     * @phpstan-param list<int> $value
+     * @phpstan-param list<int> $divisor
      *
      * @return list<int>
      */
     private static function divide(array $value, array $divisor): array
     {
-        $shift = max(0, (count($value) - count($divisor)) * 15 + 15);
+        $shift = max(0, (\count($value) - \count($divisor)) * 15 + 15);
         $result = array_fill(0, intdiv($shift, 15) + 1, 0);
         for ($bit = $shift; 0 <= $bit; --$bit) {
             $candidate = RobustPredicates::shift($divisor, $bit);
@@ -115,8 +132,11 @@ final class ExactRationals
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */
@@ -136,7 +156,9 @@ final class ExactRationals
     }
 
     /**
-     * @param list<int> $digits
+     * @param array $digits digits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return array{list<int>, int}
      */
@@ -157,7 +179,7 @@ final class ExactRationals
             ++$shift;
         }
         $carry = 0;
-        for ($index = count($digits) - 1; 0 <= $index; --$index) {
+        for ($index = \count($digits) - 1; 0 <= $index; --$index) {
             $total = $digits[$index] + $carry * RobustPredicates::BASE;
             $digits[$index] = $total >> $shift;
             $carry = $total % (1 << $shift);
@@ -167,8 +189,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Magnitude $numerator
-     * @param Magnitude $denominator
+     * @param array $numerator   numerator
+     * @param array $denominator denominator
+     *
+     * @phpstan-param Magnitude $numerator
+     * @phpstan-param Magnitude $denominator
      *
      * @return Rational
      */

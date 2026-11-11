@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -61,38 +61,86 @@ final class SpatialValidator extends ConstraintValidator
         ;
     }
 
-    /** @return class-string<Constraint> */
-    private function constraintClass(string $type): string
+    /**
+     * Select the specialized constraint for the declared geometry type.
+     *
+     * @param string $type declared geometry type
+     *
+     * @return class-string<Constraint>
+     */
+    private function collectionConstraintClass(string $type): string
     {
         return match ($type) {
-            GeometryTypeEnum::BREPSOLID->value => BRepSolid::class,
-            GeometryTypeEnum::CIRCLE->value => Circle::class,
-            GeometryTypeEnum::CIRCULARSTRING->value => CircularString::class,
-            GeometryTypeEnum::CLOTHOID->value => Clothoid::class,
-            GeometryTypeEnum::COMPOUNDCURVE->value => CompoundCurve::class,
-            GeometryTypeEnum::COMPOUNDSURFACE->value => CompoundSurface::class,
-            GeometryTypeEnum::CURVE->value => Curve::class,
-            GeometryTypeEnum::CURVEPOLYGON->value => CurvePolygon::class,
-            GeometryTypeEnum::ELLIPTICALCURVE->value => EllipticalCurve::class,
-            GeometryTypeEnum::GEODESICSTRING->value => GeodesicString::class,
-            GeometryTypeEnum::GEOMETRY->value => Geometry::class,
             GeometryTypeEnum::GEOMETRYCOLLECTION->value => GeometryCollection::class,
-            GeometryTypeEnum::LINESTRING->value => LineString::class,
             GeometryTypeEnum::MULTICURVE->value => MultiCurve::class,
             GeometryTypeEnum::MULTILINESTRING->value => MultiLineString::class,
             GeometryTypeEnum::MULTIPOINT->value => MultiPoint::class,
             GeometryTypeEnum::MULTIPOLYGON->value => MultiPolygon::class,
             GeometryTypeEnum::MULTISURFACE->value => MultiSurface::class,
-            GeometryTypeEnum::NURBSCURVE->value => NURBSCurve::class,
+            default => $this->curveConstraintClass($type),
+        };
+    }
+
+    /**
+     * Select the specialized constraint for the declared geometry type.
+     *
+     * @param string $type declared geometry type
+     *
+     * @return class-string<Constraint>
+     */
+    private function constraintClass(string $type): string
+    {
+        return match ($type) {
+            GeometryTypeEnum::BREPSOLID->value => BRepSolid::class,
+            GeometryTypeEnum::CURVE->value => Curve::class,
+            GeometryTypeEnum::GEOMETRY->value => Geometry::class,
+            GeometryTypeEnum::LINESTRING->value => LineString::class,
             GeometryTypeEnum::POINT->value => Point::class,
+            GeometryTypeEnum::SOLID->value => Solid::class,
+            default => $this->collectionConstraintClass($type),
+        };
+    }
+
+    /**
+     * Select the specialized constraint for the declared geometry type.
+     *
+     * @param string $type declared geometry type
+     *
+     * @return class-string<Constraint>
+     */
+    private function curveConstraintClass(string $type): string
+    {
+        return match ($type) {
+            GeometryTypeEnum::CIRCLE->value => Circle::class,
+            GeometryTypeEnum::CIRCULARSTRING->value => CircularString::class,
+            GeometryTypeEnum::CLOTHOID->value => Clothoid::class,
+            GeometryTypeEnum::COMPOUNDCURVE->value => CompoundCurve::class,
+            GeometryTypeEnum::ELLIPTICALCURVE->value => EllipticalCurve::class,
+            GeometryTypeEnum::GEODESICSTRING->value => GeodesicString::class,
+            GeometryTypeEnum::NURBSCURVE->value => NURBSCurve::class,
+            GeometryTypeEnum::SPIRALCURVE->value => SpiralCurve::class,
+            default => $this->surfaceConstraintClass($type),
+        };
+    }
+
+    /**
+     * Select the specialized constraint for the declared geometry type.
+     *
+     * @param string $type declared geometry type
+     *
+     * @return class-string<Constraint>
+     */
+    private function surfaceConstraintClass(string $type): string
+    {
+        return match ($type) {
+            GeometryTypeEnum::COMPOUNDSURFACE->value => CompoundSurface::class,
+            GeometryTypeEnum::CURVEPOLYGON->value => CurvePolygon::class,
             GeometryTypeEnum::POLYGON->value => Polygon::class,
             GeometryTypeEnum::POLYHEDRALSURFACE->value => PolyhedralSurface::class,
-            GeometryTypeEnum::SOLID->value => Solid::class,
-            GeometryTypeEnum::SPIRALCURVE->value => SpiralCurve::class,
             GeometryTypeEnum::SURFACE->value => Surface::class,
             GeometryTypeEnum::TIN->value => TIN::class,
             GeometryTypeEnum::TRIANGLE->value => Triangle::class,
-            default => throw new UnsupportedSpatialTypeException('Unsupported spatial type: ' . $type),
+            default => throw new UnsupportedSpatialTypeException('Unsupported spatial type: '.$type),
         };
     }
 }

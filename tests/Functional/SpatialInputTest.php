@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,60 +36,19 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpatialInputTest extends TestCase
 {
-    #[DataProvider('unsupportedValues')]
-    public function testDirectInvocationRejectsUnsupportedValues(mixed $value): void
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function constraintCheckValues(): iterable
     {
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessageIsOrContains(SpatialInterface::class);
-        (new SpatialValidator())->validate($value, new Spatial());
+        yield 'null' => [null];
+
+        yield 'empty string' => [''];
     }
 
-    public function testNotNullDoesNotAllowEmptyStrings(): void
-    {
-        $constraint = new Sequentially([new NotNull(), new Spatial()]);
-        $validator = Validation::createValidator();
-        $absent = $validator->validate(null, $constraint);
-        $string = $validator->validate('', $constraint);
-        $empty = $validator->validate(new Point(), $constraint);
-
-        self::assertCount(1, $absent);
-        self::assertInstanceOf(NotNull::class, $absent->get(0)->getConstraint());
-        self::assertCount(1, $string);
-        self::assertInstanceOf(Spatial::class, $string->get(0)->getConstraint());
-        self::assertSame('This value should be of type {{ type }}.', $string->get(0)->getMessageTemplate());
-        self::assertCount(0, $empty);
-    }
-
-    public function testNullIsIgnored(): void
-    {
-        (new SpatialValidator())->validate(null, new Spatial());
-        self::assertCount(0, Validation::createValidator()->validate(null, new Spatial()));
-    }
-
-    public function testPresenceCanRunBeforeSpatialValidation(): void
-    {
-        $constraint = new Sequentially([new NotBlank(), new Spatial()]);
-        $validator = Validation::createValidator();
-        $absent = $validator->validate(null, $constraint);
-        $empty = $validator->validate(new Point(), $constraint);
-
-        self::assertCount(1, $absent);
-        self::assertInstanceOf(NotBlank::class, $absent->get(0)->getConstraint());
-        self::assertCount(0, $empty);
-    }
-
-    #[DataProvider('unsupportedValues')]
-    public function testServiceConvertsUnsupportedValuesToTypeViolations(mixed $value): void
-    {
-        $violations = Validation::createValidator()->validate($value, new Spatial());
-
-        self::assertCount(1, $violations);
-        self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
-        self::assertSame(SpatialInterface::class, $violations->get(0)->getParameters()['{{ type }}']);
-        self::assertSame($value, $violations->get(0)->getInvalidValue());
-    }
-
-    /** @return iterable<string, array{mixed}> */
+    /**
+     * @return iterable<string, array{mixed}>
+     */
     public static function unsupportedValues(): iterable
     {
         yield 'integer' => [42];
@@ -109,19 +68,88 @@ final class SpatialInputTest extends TestCase
         yield 'object' => [(object) []];
     }
 
+    #[DataProvider('unsupportedValues')]
+    /**
+     * Verify direct invocation rejects unsupported values.
+     *
+     * @param mixed $value spatial value to validate
+     */
+    public function testDirectInvocationRejectsUnsupportedValues(mixed $value): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessageIsOrContains(SpatialInterface::class);
+        new SpatialValidator()->validate($value, new Spatial());
+    }
+
+    /**
+     * Verify not null does not allow empty strings.
+     */
+    public function testNotNullDoesNotAllowEmptyStrings(): void
+    {
+        $constraint = new Sequentially([new NotNull(), new Spatial()]);
+        $validator = Validation::createValidator();
+        $absent = $validator->validate(null, $constraint);
+        $string = $validator->validate('', $constraint);
+        $empty = $validator->validate(new Point(), $constraint);
+
+        self::assertCount(1, $absent);
+        self::assertInstanceOf(NotNull::class, $absent->get(0)->getConstraint());
+        self::assertCount(1, $string);
+        self::assertInstanceOf(Spatial::class, $string->get(0)->getConstraint());
+        self::assertSame('This value should be of type {{ type }}.', $string->get(0)->getMessageTemplate());
+        self::assertCount(0, $empty);
+    }
+
+    /**
+     * Verify null is ignored.
+     */
+    public function testNullIsIgnored(): void
+    {
+        new SpatialValidator()->validate(null, new Spatial());
+        self::assertCount(0, Validation::createValidator()->validate(null, new Spatial()));
+    }
+
+    /**
+     * Verify presence can run before spatial validation.
+     */
+    public function testPresenceCanRunBeforeSpatialValidation(): void
+    {
+        $constraint = new Sequentially([new NotBlank(), new Spatial()]);
+        $validator = Validation::createValidator();
+        $absent = $validator->validate(null, $constraint);
+        $empty = $validator->validate(new Point(), $constraint);
+
+        self::assertCount(1, $absent);
+        self::assertInstanceOf(NotBlank::class, $absent->get(0)->getConstraint());
+        self::assertCount(0, $empty);
+    }
+
+    #[DataProvider('unsupportedValues')]
+    /**
+     * Verify service converts unsupported values to type violations.
+     *
+     * @param mixed $value spatial value to validate
+     */
+    public function testServiceConvertsUnsupportedValuesToTypeViolations(mixed $value): void
+    {
+        $violations = Validation::createValidator()->validate($value, new Spatial());
+
+        self::assertCount(1, $violations);
+        self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
+        self::assertSame(SpatialInterface::class, $violations->get(0)->getParameters()['{{ type }}']);
+        self::assertSame($value, $violations->get(0)->getInvalidValue());
+    }
+
     #[DataProvider('constraintCheckValues')]
+    /**
+     * Verify wrong constraint is rejected before value handling.
+     *
+     * @param mixed $value spatial value to validate
+     */
     public function testWrongConstraintIsRejectedBeforeValueHandling(mixed $value): void
     {
         $this->expectException(UnexpectedTypeException::class);
         $this->expectExceptionMessageIsOrContains(Spatial::class);
-        (new SpatialValidator())->validate($value, new NotNull());
-    }
-
-    /** @return iterable<string, array{mixed}> */
-    public static function constraintCheckValues(): iterable
-    {
-        yield 'null' => [null];
-
-        yield 'empty string' => [''];
+        new SpatialValidator()->validate($value, new NotNull());
     }
 }

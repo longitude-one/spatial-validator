@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,91 +40,23 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class LineStringSimplicityTest extends TestCase
 {
-    public function testDefensiveSpatialHelpers(): void
+    /**
+     * @return iterable<string, array{LineStringInterface}>
+     */
+    public static function nearClosureLines(): iterable
     {
-        self::assertNull(PointCoordinates::position('POINT (0 0)'));
-        self::assertFalse(PointCoordinates::same([0.0, 0.0], [0.0, 0.0, 0.0]));
-        self::assertSame(0, SegmentIntersections::kind(
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0],
-            [2.0, 2.0, 2.0]
-        ));
-        self::assertSame(0, SegmentIntersections::kind([0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0]));
-        self::assertSame(0, SegmentIntersections::kind([0.0, 0.0], [1.0, 1.0], [0.0, 2.0], [1.0, 3.0]));
-        self::assertSame(1, SegmentIntersections::kind([0.0, 0.0], [1.0, 0.0], [1.0, 0.0], [2.0, 0.0]));
-    }
+        $epsilon = \PHP_FLOAT_EPSILON / 4;
 
-    public function testDirectCompositionUsesOriginalContextAndGroup(): void
-    {
-        $value = LineStringValidationTest::line([[0, 0], [1, 1]]);
-        $constraint = new SpatialAssert\LineString(groups: ['direct'], payload: ['source' => 'consumer']);
-        $context = $this->createMock(ExecutionContextInterface::class);
-        $service = $this->createMock(ValidatorInterface::class);
-        $contextual = $this->createMock(ContextualValidatorInterface::class);
-        $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')->with(self::identicalTo($context))
-            ->willReturn($contextual)
-        ;
-        $rules = [
-            new SpatialAssert\Components(groups: ['direct'], payload: $constraint->payload),
-            new SpatialAssert\MinimumPointCount(groups: ['direct'], payload: $constraint->payload),
-            new SpatialAssert\NonEmptyPoints(groups: ['direct'], payload: $constraint->payload),
-            new SpatialAssert\NoConsecutiveDuplicatePoints(groups: ['direct'], payload: $constraint->payload),
+        yield 'XY interior crossing near closure' => [new PlanarLine([[0, 0], [1, 0], [0, 1], [$epsilon, -$epsilon]])];
+
+        yield 'XYZ coplanar interior crossing near closure' => [
+            new ElevatedLine([[0, 0, 5], [1, 0, 5], [0, 1, 5], [$epsilon, -$epsilon, 5]]),
         ];
-        $contextual->expects(self::once())->method('validate')
-            ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
-        ;
-        $validator = new SpatialAssert\LineStringValidator();
-        $validator->initialize($context);
-        $validator->validate($value, $constraint);
     }
 
-    public function testEmptyGeographyAndInvalidInputDoNotRunGeodeticPredicates(): void
-    {
-        $service = Validation::createValidator();
-        self::assertCount(0, $service->validate(
-            LineStringValidationTest::line([], family: SpatialModelEnum::GEOGRAPHY),
-            new SpatialAssert\SimpleLineString()
-        ));
-        $invalid = LineStringValidationTest::line([[INF, 0], [1, 1]]);
-        $violations = $service->validate($invalid, new SpatialAssert\SimpleLineString());
-        self::assertGreaterThan(0, count($violations));
-        self::assertSame(SpatialAssert\FiniteCoordinates::INVALID_ERROR, $violations->get(0)->getCode());
-    }
-
-    public function testExactCoplanarityAtExtremeScales(): void
-    {
-        self::assertTrue(RobustPredicates::coplanar(
-            [0.0, 0.0, 0.0],
-            [1.0e308, 0.0, 0.0],
-            [0.0, 1.0e308, 0.0],
-            [1.0e308, 1.0e308, 0.0]
-        ));
-        self::assertFalse(RobustPredicates::coplanar(
-            [0.0, 0.0, 0.0],
-            [1.0e308, 0.0, 0.0],
-            [0.0, 1.0e308, 0.0],
-            [0.0, 0.0, 5.0e-324]
-        ));
-        self::assertFalse(RobustPredicates::coplanar(
-            [0.0, 0.0, 0.0],
-            [5.0e-324, 0.0, 0.0],
-            [0.0, 5.0e-324, 0.0],
-            [0.0, 0.0, 5.0e-324]
-        ));
-    }
-
-    /** @param list<list<float>> $points */
-    #[DataProvider('orientations')]
-    public function testExactOrientation(array $points, int $sign): void
-    {
-        self::assertSame($sign, RobustPredicates::orientation(...$points));
-        self::assertSame(-$sign, RobustPredicates::orientation($points[0], $points[2], $points[1]));
-    }
-
-    /** @return iterable<string, array{list<list<float>>, int}> */
+    /**
+     * @return iterable<string, array{list<list<float>>, int}>
+     */
     public static function orientations(): iterable
     {
         yield 'different scales' => [[[1.0, 1.0], [1.0e100, 1.0], [1.0, 1.0e100]], 1];
@@ -135,7 +67,7 @@ final class LineStringSimplicityTest extends TestCase
 
         yield 'collinear and signed zero' => [[[-0.0, 0.0], [1.0, 1.0], [2.0, 2.0]], 0];
 
-        yield 'cancellation' => [[[0.0, 0.0], [1.0, 1.0], [1.0 + PHP_FLOAT_EPSILON, 1.0]], -1];
+        yield 'cancellation' => [[[0.0, 0.0], [1.0, 1.0], [1.0 + \PHP_FLOAT_EPSILON, 1.0]], -1];
 
         yield 'overflow products' => [[[0.0, 0.0], [1.0e308, 1.0e308], [1.0e308, 5.0e307]], -1];
 
@@ -146,22 +78,9 @@ final class LineStringSimplicityTest extends TestCase
         yield 'tiny mixed signs' => [[[-1.0e-200, 1.0e-200], [1.0e-200, 1.0e-200], [0.0, -1.0e-200]], -1];
     }
 
-    /** @param list<list<float|int>> $coordinates */
-    #[DataProvider('simplicity')]
-    public function testExplicitSimplicity(array $coordinates, CoordinateDimensionEnum $dimension, bool $simple): void
-    {
-        $line = LineStringValidationTest::line($coordinates, $dimension);
-        $service = Validation::createValidator();
-        self::assertCount(0, $service->validate($line, new SpatialAssert\LineString()));
-        $violations = $service->validate($line, new SpatialAssert\SimpleLineString());
-        self::assertSame($simple, 0 === count($violations));
-        if (!$simple) {
-            self::assertSame(SpatialAssert\SimpleLineString::INVALID_ERROR, $violations->get(0)->getCode());
-            self::assertNull($violations->get(0)->getConstraint()?->payload);
-        }
-    }
-
-    /** @return iterable<string, array{list<list<float|int>>, CoordinateDimensionEnum, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int>>, CoordinateDimensionEnum, bool}>
+     */
     public static function simplicity(): iterable
     {
         $layout = CoordinateDimensionEnum::XY;
@@ -221,9 +140,134 @@ final class LineStringSimplicityTest extends TestCase
             true,
         ];
 
-        yield 'near degenerate' => [[[0, 0], [1, 1], [2, 2 + PHP_FLOAT_EPSILON * 2], [3, 3]], $layout, true];
+        yield 'near degenerate' => [[[0, 0], [1, 1], [2, 2 + \PHP_FLOAT_EPSILON * 2], [3, 3]], $layout, true];
     }
 
+    /**
+     * Verify defensive spatial helpers.
+     */
+    public function testDefensiveSpatialHelpers(): void
+    {
+        self::assertNull(PointCoordinates::position('POINT (0 0)'));
+        self::assertFalse(PointCoordinates::same([0.0, 0.0], [0.0, 0.0, 0.0]));
+        self::assertSame(0, SegmentIntersections::kind(
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0],
+            [2.0, 2.0, 2.0]
+        ));
+        self::assertSame(0, SegmentIntersections::kind([0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0]));
+        self::assertSame(0, SegmentIntersections::kind([0.0, 0.0], [1.0, 1.0], [0.0, 2.0], [1.0, 3.0]));
+        self::assertSame(1, SegmentIntersections::kind([0.0, 0.0], [1.0, 0.0], [1.0, 0.0], [2.0, 0.0]));
+    }
+
+    /**
+     * Verify direct composition uses original context and group.
+     */
+    public function testDirectCompositionUsesOriginalContextAndGroup(): void
+    {
+        $value = LineStringValidationTest::line([[0, 0], [1, 1]]);
+        $constraint = new SpatialAssert\LineString(groups: ['direct'], payload: ['source' => 'consumer']);
+        $context = $this->createMock(ExecutionContextInterface::class);
+        $service = $this->createMock(ValidatorInterface::class);
+        $contextual = $this->createMock(ContextualValidatorInterface::class);
+        $context->method('getGroup')->willReturn('direct');
+        $context->expects(self::once())->method('getValidator')->willReturn($service);
+        $service->expects(self::once())->method('inContext')->with(self::identicalTo($context))
+            ->willReturn($contextual)
+        ;
+        $rules = [
+            new SpatialAssert\Components(groups: ['direct'], payload: $constraint->payload),
+            new SpatialAssert\MinimumPointCount(groups: ['direct'], payload: $constraint->payload),
+            new SpatialAssert\NonEmptyPoints(groups: ['direct'], payload: $constraint->payload),
+            new SpatialAssert\NoConsecutiveDuplicatePoints(groups: ['direct'], payload: $constraint->payload),
+        ];
+        $contextual->expects(self::once())->method('validate')
+            ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
+        ;
+        $validator = new SpatialAssert\LineStringValidator();
+        $validator->initialize($context);
+        $validator->validate($value, $constraint);
+    }
+
+    /**
+     * Verify empty geography and invalid input do not run geodetic predicates.
+     */
+    public function testEmptyGeographyAndInvalidInputDoNotRunGeodeticPredicates(): void
+    {
+        $service = Validation::createValidator();
+        self::assertCount(0, $service->validate(
+            LineStringValidationTest::line([], family: SpatialModelEnum::GEOGRAPHY),
+            new SpatialAssert\SimpleLineString()
+        ));
+        $invalid = LineStringValidationTest::line([[\INF, 0], [1, 1]]);
+        $violations = $service->validate($invalid, new SpatialAssert\SimpleLineString());
+        self::assertGreaterThan(0, \count($violations));
+        self::assertSame(SpatialAssert\FiniteCoordinates::INVALID_ERROR, $violations->get(0)->getCode());
+    }
+
+    /**
+     * Verify exact coplanarity at extreme scales.
+     */
+    public function testExactCoplanarityAtExtremeScales(): void
+    {
+        self::assertTrue(RobustPredicates::coplanar(
+            [0.0, 0.0, 0.0],
+            [1.0e308, 0.0, 0.0],
+            [0.0, 1.0e308, 0.0],
+            [1.0e308, 1.0e308, 0.0]
+        ));
+        self::assertFalse(RobustPredicates::coplanar(
+            [0.0, 0.0, 0.0],
+            [1.0e308, 0.0, 0.0],
+            [0.0, 1.0e308, 0.0],
+            [0.0, 0.0, 5.0e-324]
+        ));
+        self::assertFalse(RobustPredicates::coplanar(
+            [0.0, 0.0, 0.0],
+            [5.0e-324, 0.0, 0.0],
+            [0.0, 5.0e-324, 0.0],
+            [0.0, 0.0, 5.0e-324]
+        ));
+    }
+
+    /**
+     * @param array $points coordinate positions to inspect
+     * @param int   $sign   sign
+     *
+     * @phpstan-param list<list<float>> $points
+     */
+    #[DataProvider('orientations')]
+    public function testExactOrientation(array $points, int $sign): void
+    {
+        self::assertSame($sign, RobustPredicates::orientation(...$points));
+        self::assertSame(-$sign, RobustPredicates::orientation($points[0], $points[2], $points[1]));
+    }
+
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param bool                    $simple      simple
+     *
+     * @phpstan-param list<list<float|int>> $coordinates
+     */
+    #[DataProvider('simplicity')]
+    public function testExplicitSimplicity(array $coordinates, CoordinateDimensionEnum $dimension, bool $simple): void
+    {
+        $line = LineStringValidationTest::line($coordinates, $dimension);
+        $service = Validation::createValidator();
+        self::assertCount(0, $service->validate($line, new SpatialAssert\LineString()));
+        $violations = $service->validate($line, new SpatialAssert\SimpleLineString());
+        self::assertSame($simple, 0 === \count($violations));
+        if (!$simple) {
+            self::assertSame(SpatialAssert\SimpleLineString::INVALID_ERROR, $violations->get(0)->getCode());
+            self::assertNull($violations->get(0)->getConstraint()?->payload);
+        }
+    }
+
+    /**
+     * Verify geography warning uses separate constraint.
+     */
     public function testGeographyWarningUsesSeparateConstraint(): void
     {
         $line = LineStringValidationTest::line([[0, 0], [1, 1]], family: SpatialModelEnum::GEOGRAPHY);
@@ -243,6 +287,9 @@ final class LineStringSimplicityTest extends TestCase
         self::assertSame(['source' => 'consumer'], $custom->payload);
     }
 
+    /**
+     * Verify integer orientation oracle.
+     */
     public function testIntegerOrientationOracle(): void
     {
         for ($index = 1; $index <= 80; ++$index) {
@@ -257,9 +304,14 @@ final class LineStringSimplicityTest extends TestCase
     }
 
     #[DataProvider('nearClosureLines')]
+    /**
+     * Verify near closure does not permit interior crossing.
+     *
+     * @param LineStringInterface $line line
+     */
     public function testNearClosureDoesNotPermitInteriorCrossing(LineStringInterface $line): void
     {
-        $epsilon = PHP_FLOAT_EPSILON / 4;
+        $epsilon = \PHP_FLOAT_EPSILON / 4;
         self::assertTrue(PointCoordinates::same([0.0, 0.0], [$epsilon, -$epsilon]));
         $service = Validation::createValidator();
         self::assertCount(0, $service->validate($line, new SpatialAssert\LineString()));
@@ -268,21 +320,12 @@ final class LineStringSimplicityTest extends TestCase
         self::assertSame(SpatialAssert\SimpleLineString::INVALID_ERROR, $violations->get(0)->getCode());
     }
 
-    /** @return iterable<string, array{LineStringInterface}> */
-    public static function nearClosureLines(): iterable
-    {
-        $epsilon = PHP_FLOAT_EPSILON / 4;
-
-        yield 'XY interior crossing near closure' => [new PlanarLine([[0, 0], [1, 0], [0, 1], [$epsilon, -$epsilon]])];
-
-        yield 'XYZ coplanar interior crossing near closure' => [
-            new ElevatedLine([[0, 0, 5], [1, 0, 5], [0, 1, 5], [$epsilon, -$epsilon, 5]]),
-        ];
-    }
-
+    /**
+     * Verify non finite predicate input is rejected.
+     */
     public function testNonFinitePredicateInputIsRejected(): void
     {
         $this->expectException(InvalidCoordinates::class);
-        RobustPredicates::orientation([INF, 0.0], [0.0, 0.0], [1.0, 1.0]);
+        RobustPredicates::orientation([\INF, 0.0], [0.0, 0.0], [1.0, 1.0]);
     }
 }

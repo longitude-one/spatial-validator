@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -24,7 +24,12 @@ final class ComponentMetadata
 {
     public const string TYPE_ERROR = Components::TYPE_ERROR;
 
-    /** @return array<string, string> Violation code => message */
+    /**
+     * @param SpatialInterface $parent parent
+     * @param SpatialInterface $member member
+     *
+     * @return array<string, string> Violation code => message
+     */
     public static function errors(SpatialInterface $parent, SpatialInterface $member): array
     {
         $errors = [];

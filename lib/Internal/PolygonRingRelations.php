@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,10 +22,13 @@ final class PolygonRingRelations
     /**
      * Return exact isolated contact positions, or null for a proper crossing/shared interval.
      *
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
      *
-     * @return null|list<list<float>>
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
+     *
+     * @return list<list<float>>|null
      */
     public static function contacts(array $first, array $second): ?array
     {
@@ -41,7 +44,7 @@ final class PolygonRingRelations
                     return null;
                 }
                 foreach ($endpoints as $point) {
-                    if (!in_array($point, $contacts, true)) {
+                    if (!\in_array($point, $contacts, true)) {
                         $contacts[] = $point;
                     }
                 }
@@ -55,9 +58,13 @@ final class PolygonRingRelations
      * Bitmask of inside=1/outside=2 open boundary intervals relative to the other ring.
      * Split at all contacts, including vertices of the other ring lying inside an edge.
      *
-     * @param list<list<float>> $ring
-     * @param list<list<float>> $other
-     * @param list<list<float>> $contacts
+     * @param array $ring     ring
+     * @param array $other    other
+     * @param array $contacts contacts
+     *
+     * @phpstan-param list<list<float>> $ring
+     * @phpstan-param list<list<float>> $other
+     * @phpstan-param list<list<float>> $contacts
      */
     public static function locations(array $ring, array $other, array $contacts): int
     {
@@ -65,12 +72,12 @@ final class PolygonRingRelations
         foreach (PlanarRing::edges($ring) as [$start, $end]) {
             $split = [$start, $end];
             foreach ($contacts as $point) {
-                if (PlanarRing::onSegment($point, $start, $end) && !in_array($point, $split, true)) {
+                if (PlanarRing::onSegment($point, $start, $end) && !\in_array($point, $split, true)) {
                     $split[] = $point;
                 }
             }
             usort($split, static fn (array $left, array $right): int => $left <=> $right);
-            $count = count($split);
+            $count = \count($split);
             for ($index = 1; $index < $count; ++$index) {
                 $locations |= PlanarRing::midpointLocation($split[$index - 1], $split[$index], $other);
             }
@@ -80,10 +87,15 @@ final class PolygonRingRelations
     }
 
     /**
-     * @param list<float> $start
-     * @param list<float> $end
-     * @param list<float> $otherStart
-     * @param list<float> $otherEnd
+     * @param array $start      start
+     * @param array $end        end
+     * @param array $otherStart other start
+     * @param array $otherEnd   other end
+     *
+     * @phpstan-param list<float> $start
+     * @phpstan-param list<float> $end
+     * @phpstan-param list<float> $otherStart
+     * @phpstan-param list<float> $otherEnd
      *
      * @return list<list<float>>
      */

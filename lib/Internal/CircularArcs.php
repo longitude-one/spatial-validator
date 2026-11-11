@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -33,14 +33,16 @@ use LongitudeOne\SpatialValidator\Internal\ExactRationals as Exact;
 final class CircularArcs
 {
     /**
-     * @param list<list<float>> $points
+     * @param array $points coordinate positions to inspect
+     *
+     * @phpstan-param list<list<float>> $points
      *
      * @return list<Arc>
      */
     public static function build(array $points): array
     {
         $arcs = [];
-        $count = count($points);
+        $count = \count($points);
         for ($index = 0; $index + 2 < $count; $index += 2) {
             $arcs[] = self::arc($points[$index], $points[$index + 1], $points[$index + 2]);
         }
@@ -49,8 +51,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector $first
-     * @param Vector $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Vector $first
+     * @phpstan-param Vector $second
      *
      * @return Vector
      */
@@ -68,8 +73,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector $first
-     * @param Vector $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Vector $first
+     * @phpstan-param Vector $second
      *
      * @return Vector
      */
@@ -79,8 +87,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector $first
-     * @param Vector $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Vector $first
+     * @phpstan-param Vector $second
      *
      * @return Rational
      */
@@ -95,8 +106,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Algebraic $point
-     * @param Vector    $position
+     * @param array $point    point
+     * @param array $position position
+     *
+     * @phpstan-param Algebraic $point
+     * @phpstan-param Vector $position
      */
     public static function equals(array $point, array $position): bool
     {
@@ -110,10 +124,14 @@ final class CircularArcs
         return true;
     }
 
-    /** Classify a support point: -1 outside, 0 endpoint, 1 interior.
+    /**
+     * Classify a support point: -1 outside, 0 endpoint, 1 interior.
      *
-     * @param Arc       $arc
-     * @param Algebraic $point
+     * @param array $arc   arc
+     * @param array $point point
+     *
+     * @phpstan-param Arc $arc
+     * @phpstan-param Algebraic $point
      */
     public static function location(array $arc, array $point): int
     {
@@ -151,11 +169,16 @@ final class CircularArcs
         return self::radicalSign($base, $coefficient, $point[2]) === $middle[0][0] ? 1 : -1;
     }
 
-    /** Sign of a + b sqrt(c), without rounding the algebraic point.
+    /**
+     * Sign of a + b sqrt(c), without rounding the algebraic point.
      *
-     * @param Rational $first
-     * @param Rational $second
-     * @param Rational $radicand
+     * @param array $first    first operand
+     * @param array $second   second operand
+     * @param array $radicand radicand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
+     * @phpstan-param Rational $radicand
      */
     public static function radicalSign(array $first, array $second, array $radicand): int
     {
@@ -176,7 +199,9 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector $position
+     * @param array $position position
+     *
+     * @phpstan-param Vector $position
      *
      * @return Algebraic
      */
@@ -186,8 +211,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector   $vector
-     * @param Rational $factor
+     * @param array $vector vector
+     * @param array $factor factor
+     *
+     * @phpstan-param Vector $vector
+     * @phpstan-param Rational $factor
      *
      * @return Vector
      */
@@ -197,8 +225,11 @@ final class CircularArcs
     }
 
     /**
-     * @param Vector $first
-     * @param Vector $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Vector $first
+     * @phpstan-param Vector $second
      *
      * @return Vector
      */
@@ -208,9 +239,13 @@ final class CircularArcs
     }
 
     /**
-     * @param list<float> $first
-     * @param list<float> $middle
-     * @param list<float> $last
+     * @param array $first  first operand
+     * @param array $middle middle
+     * @param array $last   last
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $middle
+     * @phpstan-param list<float> $last
      *
      * @return Arc
      */
@@ -228,7 +263,7 @@ final class CircularArcs
         $segment = !$full && 0 === self::dot($normal, $normal)[0][0];
         if ($full) {
             $center = self::scale(self::sum($start, $intermediate), Exact::number(0.5));
-            $normal = 2 === count($first) ? self::vector([0.0, 0.0, 1.0]) : null;
+            $normal = 2 === \count($first) ? self::vector([0.0, 0.0, 1.0]) : null;
         } elseif (!$segment) {
             $numerator = self::sum(
                 self::scale(self::cross($right, $normal), self::dot($left, $left)),
@@ -248,7 +283,9 @@ final class CircularArcs
     }
 
     /**
-     * @param list<float> $point
+     * @param array $point point
+     *
+     * @phpstan-param list<float> $point
      *
      * @return Vector
      */

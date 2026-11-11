@@ -3,8 +3,9 @@
 /node_modules/
 /.phpunit-cache/
 /.php-cs-fixer.cache
-/quality/php-cs-fixer/.php-cs-fixer.cache
+/quality/php-cs-fixer/.php_cs.cache
 /.phpcs-cache
+/quality/php-code-sniffer/.phpcs-cache
 /build/
 composer.lock
 package-lock.json

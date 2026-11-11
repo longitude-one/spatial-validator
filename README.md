@@ -49,7 +49,7 @@ Run `composer update` in the corresponding directory to refresh an existing loca
 | `composer cs-fix` | Apply coding fixes locally |
 | `composer phpstan` | PHPStan level 9 over `lib/` and `tests/` |
 | `composer phpmd` | PHPMD 3 source and test rulesets |
-| `composer phpcs` | PHP_CodeSniffer PSR-12 checks |
+| `composer phpcs` | PHP_CodeSniffer PSR-2 and shared LongitudeOne checks |
 | `composer markdown` | Markdownlint |
 | `composer quality` | All static and Markdown checks |
 | `composer check` | Root Composer validation, all PHP audits, tests, coverage and quality checks |

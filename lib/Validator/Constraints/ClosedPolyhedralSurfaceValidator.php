@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -28,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Add closure and enclosed nonzero volume to complete general surface validity. */
 final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof ClosedPolyhedralSurface) {
@@ -42,7 +48,7 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         ) {
             throw new UnexpectedValueException($value, PolyhedralSurfaceInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new PolyhedralSurface(groups: $constraint->groups, payload: $constraint->payload),
@@ -61,6 +67,11 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Has errors.
+     *
+     * @param int $before number of violations before member validation
+     */
     private function hasErrors(int $before): bool
     {
         foreach ($this->context->getViolations() as $index => $violation) {
@@ -72,7 +83,11 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         return false;
     }
 
-    /** @return list<list<list<list<float>>>> */
+    /**
+     * @param PolyhedralSurfaceInterface $value spatial value to validate
+     *
+     * @return list<list<list<list<float>>>>
+     */
     private function positions(PolyhedralSurfaceInterface $value): array
     {
         $patches = [];

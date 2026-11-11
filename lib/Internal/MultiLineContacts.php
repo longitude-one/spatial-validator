@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,13 +20,16 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class MultiLineContacts
 {
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
      */
     public static function permitted(array $first, array $second): bool
     {
-        $leftCount = count($first) - 1;
-        $rightCount = count($second) - 1;
+        $leftCount = \count($first) - 1;
+        $rightCount = \count($second) - 1;
         for ($left = 0; $left < $leftCount; ++$left) {
             for ($right = 0; $right < $rightCount; ++$right) {
                 $kind = SegmentIntersections::kind(
@@ -48,21 +51,26 @@ final class MultiLineContacts
     }
 
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param int   $left   left
+     * @param int   $right  right
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
      */
     private static function boundaryContact(array $first, array $second, int $left, int $right): bool
     {
-        $firstEnds = [$first[0], $first[count($first) - 1]];
-        $secondEnds = [$second[0], $second[count($second) - 1]];
+        $firstEnds = [$first[0], $first[\count($first) - 1]];
+        $secondEnds = [$second[0], $second[\count($second) - 1]];
         if (PointCoordinates::same(...$firstEnds) || PointCoordinates::same(...$secondEnds)) {
             return false;
         }
         foreach ($firstEnds as $endpoint) {
             if (
-                in_array($endpoint, $secondEnds, true)
-                && in_array($endpoint, [$first[$left], $first[$left + 1]], true)
-                && in_array($endpoint, [$second[$right], $second[$right + 1]], true)
+                \in_array($endpoint, $secondEnds, true)
+                && \in_array($endpoint, [$first[$left], $first[$left + 1]], true)
+                && \in_array($endpoint, [$second[$right], $second[$right + 1]], true)
             ) {
                 return true;
             }

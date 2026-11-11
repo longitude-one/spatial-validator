@@ -5,8 +5,8 @@
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -26,6 +26,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicit aggregate property, independent from ordinary validity. */
 final class ClosedMultiLineStringValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof ClosedMultiLineString) {
@@ -37,13 +43,13 @@ final class ClosedMultiLineStringValidator extends ConstraintValidator
         if (!$value instanceof MultiLineStringInterface || GeometryTypeEnum::MULTILINESTRING !== $value->getType()) {
             throw new UnexpectedValueException($value, MultiLineStringInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new MultiLineString(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations())) {
+        if ($before !== \count($this->context->getViolations())) {
             return;
         }
         $members = array_values($value->getElements());
@@ -59,7 +65,7 @@ final class ClosedMultiLineStringValidator extends ConstraintValidator
             return;
         }
         foreach ($members as $index => $line) {
-            $this->context->getValidator()->inContext($this->context)->atPath('lineStrings[' . $index . ']')
+            $this->context->getValidator()->inContext($this->context)->atPath('lineStrings['.$index.']')
                 ->validate(
                     $line,
                     new FirstPointEqualsLastPoint(groups: $constraint->groups, payload: $constraint->payload),
