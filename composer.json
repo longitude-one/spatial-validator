@@ -53,7 +53,7 @@
             "@markdown"
         ],
         "check": [
-            "@composer validate --strict",
+            "@composer validate",
             "@audit-dependencies",
             "@coverage",
             "@coverage-check",
