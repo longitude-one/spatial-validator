@@ -22,7 +22,7 @@ use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\CompoundCurveInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Polygon;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Polygon;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -67,7 +67,6 @@ final class CompoundCurveValidationTest extends TestCase
         $value->method('getFamily')->willReturn($family);
         $value->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
         $value->method('getCurves')->willReturn($curves);
-        $value->method('isEmpty')->willReturn([] === $curves);
 
         return $value;
     }

@@ -20,6 +20,7 @@ use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
+use LongitudeOne\SpatialTypes\Value\Coordinates;
 use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -232,7 +233,13 @@ final class PointValidationTest extends TestCase
         $point->method('getType')->willReturn(GeometryTypeEnum::POINT);
         $point->method('getDimension')->willReturn($dimension);
         $point->method('getFamily')->willReturn($family);
-        $point->method('isEmpty')->willReturn($empty);
+        $point->method('getCoordinates')->willReturn($empty ? null : new Coordinates(
+            $dimension,
+            $values[0],
+            $values[1],
+            $dimension->hasZ() ? $values[2] : null,
+            $dimension->hasM() ? $values[3] : null
+        ));
         foreach (['X', 'Y', 'Z', 'M'] as $index => $axis) {
             $point->method('get'.$axis)->willReturn($values[$index]);
         }

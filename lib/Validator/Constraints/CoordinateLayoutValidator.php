@@ -46,7 +46,7 @@ final class CoordinateLayoutValidator extends ConstraintValidator
         $ordinates = PointCoordinates::ordinates($value);
         $nulls = \count(array_filter($ordinates, static fn ($ordinate): bool => null === $ordinate));
         $empty = \count($ordinates) === $nulls;
-        if ((0 !== $nulls && !$empty) || $empty !== $value->isEmpty()) {
+        if ((0 !== $nulls && !$empty) || $empty !== (null === $value->getCoordinates())) {
             $this->context->buildViolation('The declared coordinate layout and EMPTY state must be consistent.')
                 ->setCode(CoordinateLayout::INVALID_ERROR)->addViolation()
             ;

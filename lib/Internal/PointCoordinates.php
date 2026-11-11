@@ -41,7 +41,7 @@ final class PointCoordinates
      */
     public static function isEmptyPoint(mixed $point): bool
     {
-        return $point instanceof PointInterface && $point->isEmpty();
+        return $point instanceof PointInterface && null === $point->getCoordinates();
     }
 
     /**
@@ -72,7 +72,7 @@ final class PointCoordinates
         if (!$point instanceof PointInterface || GeometryTypeEnum::POINT !== $point->getType()) {
             return null;
         }
-        if ($point->isEmpty()) {
+        if (null === $point->getCoordinates()) {
             return null;
         }
         foreach (self::ordinates($point) as $ordinate) {

@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialValidator\Tests\Functional;
 
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use LongitudeOne\SpatialValidator\Validator\Constraints\SpatialValidator;
 use PHPUnit\Framework\Attributes\DataProvider;

@@ -102,7 +102,7 @@ spatial reference (authority and identifier). No CRS lookup, axis verification o
 
 Direct and indirect cycles produce an error at the cyclic reference and stop that branch; other branches
 continue. A shared object reached along independent paths is validated at each path.
-Members are visited even when the parent reports EMPTY. Valid EMPTY members in GeometryCollection, MultiPoint
+All supplied members are visited. Valid EMPTY members in GeometryCollection, MultiPoint
 and MultiLineString are retained; this does not approve EMPTY Points inside lines or establish unrelated
 parent geometry rules. General collections may mix geometry types and topological dimensions.
 
@@ -284,9 +284,9 @@ Sources: ISO/IEC CD 13249-3:201x(E), Committee Draft dated 2009-01-16, clauses 4
 The internal `PolygonStructure` constraint composes complete `Ring` validation at `rings[index]` and
 shared parent/member metadata checks. Ring delegates Point rules once, preserving root, property path,
 active group and elementary constraint identity. Explicit payload propagates to boundary rules;
-Point diagnostics retain their own payload. Genuine EMPTY means no rings and an EMPTY flag; inconsistent
-flags never hide stored boundaries. A non-empty value without a shell, an EMPTY shell with holes, and
-EMPTY holes fail. All strings, including the empty string, follow the current unsupported-input contract.
+Point diagnostics retain their own payload. A Polygon without rings is EMPTY. Stored boundaries are always validated;
+an EMPTY shell, an EMPTY shell with holes, and EMPTY holes fail. All strings, including the empty string, follow
+the current unsupported-input contract.
 
 A non-empty Geometry exterior must supply three non-collinear spatial positions. The supporting plane
 uses existing exact binary orientation and coplanarity predicates, without determinant epsilon or
@@ -297,7 +297,6 @@ while independent ring diagnostics continue.
 
 | Internal diagnostic | Code | Path |
 | --- | --- | --- |
-| Missing shell or inconsistent EMPTY state | `polygonstructure-empty` | Polygon |
 | Collinear exterior | `polygonstructure-degenerate` | `rings[0]` |
 | Position outside the common supporting plane | `polygonstructure-plane` | `rings[i].points[j]` |
 | Geography planarity/topology unavailable | `polygonstructure-unavailable` | Polygon |
@@ -345,7 +344,7 @@ $closure = $validator->validate($multiLine, new SpatialAssert\ClosedMultiLineStr
 
 EMPTY members are retained and validated for strict family, exact XY/XYZ/XYM/XYZM and reference authority/identifier.
 An aggregate represents EMPTY when it has no members or every member represents the empty set. Validation never
-skips members because of the parent EMPTY flag. No model objects are normalized or modified.
+skips supplied members. No model objects are normalized or modified.
 
 Simplicity skips EMPTY members' absent positions. Repeated non-consecutive Points fail only explicit simplicity.
 Geometry position equality uses the approved scaled finite-coordinate comparison, including Z and ignoring M.
@@ -563,7 +562,7 @@ whose cloned constraint uses `['severity' => 'warning']` unless the consumer sup
 
 Every patch receives complete Polygon or Triangle validation, preserving `patches[index].rings[index].points[index]`
 paths, root and active group. EMPTY patches in a non-empty surface fail. A memberless XYZ/XYZM surface is valid
-under the general contract and fails explicit closure, regardless of its reported EMPTY flag.
+under the general contract and fails explicit closure, based on its stored patches.
 
 Geometry validity checks every pair of filled patch surfaces, with holes, in actual XYZ space. Interiors cannot
 intersect other faces. Coplanar adjacent patches and common boundary intervals are permitted. Boundary segments

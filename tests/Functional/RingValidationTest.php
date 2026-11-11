@@ -21,7 +21,7 @@ use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularString as ModelCircle;
+use LongitudeOne\SpatialTypes\Types\Dimension2\CircularString as ModelCircle;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

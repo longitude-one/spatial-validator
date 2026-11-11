@@ -46,16 +46,8 @@ final class PolygonStructureValidator extends ConstraintValidator
         if (!$value instanceof PolygonInterface || !PolygonStructure::acceptsType($value)) {
             throw new UnexpectedValueException($value, PolygonInterface::class);
         }
-        $rings = array_values($value->getRings());
-        if ([] === $rings) {
-            if (!$value->isEmpty()) {
-                $this->error('A non-empty Polygon requires an exterior ring.', PolygonStructure::EMPTY_ERROR);
-            }
-
+        if ([] === $value->getRings()) {
             return;
-        }
-        if ($value->isEmpty()) {
-            $this->error('An EMPTY Polygon must not contain boundary rings.', PolygonStructure::EMPTY_ERROR);
         }
         $positions = $this->boundaries($value, $constraint);
         if (SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {

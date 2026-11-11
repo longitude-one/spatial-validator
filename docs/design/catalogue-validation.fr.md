@@ -115,7 +115,7 @@ spécialisée ; `Components` valide désormais récursivement les composants (C0
 ### Règles communes et Point
 
 - **V01** — Un objet réellement EMPTY peut être valide ; ISO-CD 5.1.10(2a). Vérifier cohérence et composants
-  autorisés, pas seulement isEmpty().
+  autorisés, pas seulement un résumé EMPTY.
 
   **Scénarios de référence:** Ligne sans point : EMPTY ; un seul point : invalide ; Point EMPTY dans LineString :
   invalide.

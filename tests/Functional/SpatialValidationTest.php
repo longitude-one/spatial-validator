@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialValidator\Tests\Functional;
 
+use LongitudeOne\Core\Enum\SpatialModelEnum;
+use LongitudeOne\SpatialTypes\Interfaces\MutablePointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -37,17 +39,26 @@ final class SpatialValidationTest extends TestCase
     {
         foreach (['Dimension2', 'Dimension3z', 'Dimension3m', 'Dimension4zm'] as $dimension) {
             foreach (['Geometry', 'Geography'] as $family) {
-                $class = 'LongitudeOne\SpatialTypes\Types\\'.$dimension.'\\'.$family.'\Point';
+                $model = SpatialModelEnum::from($family);
+                $mutable = 'LongitudeOne\\SpatialTypes\\Types\\'.$dimension.'\\Point';
+                $immutable = 'LongitudeOne\\SpatialTypes\\Types\\'.$dimension.'\\'.$family.'\\PointImmutable';
+                foreach ([$mutable, $immutable] as $class) {
+                    $point = $class === $mutable ? new $class(family: $model) : new $class();
 
-                yield $dimension.' '.$family.' EMPTY' => [new $class()];
+                    yield $class.' '.$family.' EMPTY' => [$point];
 
-                $ordinates = array_fill(0, match ($dimension) {
-                    'Dimension2' => 2,
-                    'Dimension4zm' => 4,
-                    default => 3,
-                }, 0);
+                    $ordinates = array_fill(0, match ($dimension) {
+                        'Dimension2' => 2,
+                        'Dimension4zm' => 4,
+                        default => 3,
+                    }, 0);
+                    $point = new $class(...$ordinates);
+                    if ($point instanceof MutablePointInterface) {
+                        $point->setFamily($model);
+                    }
 
-                yield $dimension.' '.$family.' zero' => [new $class(...$ordinates)];
+                    yield $class.' '.$family.' zero' => [$point];
+                }
             }
         }
 

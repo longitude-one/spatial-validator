@@ -23,8 +23,7 @@ use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geography\Point as GeographyPoint;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints as Rules;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -67,7 +66,6 @@ final class CollectionValidationTest extends TestCase
         $value->method('getDimension')->willReturn($dimension);
         $value->method('getFamily')->willReturn($family);
         $value->method('getSpatialReference')->willReturn($reference ?? SpatialReference::fromSrid(0));
-        $value->method('isEmpty')->willReturn(true);
         $value->method('getElements')->willReturn($members);
         if ('MultiPoint' === $type) {
             $value->method('getPoints')->willReturn($members);
@@ -200,7 +198,7 @@ final class CollectionValidationTest extends TestCase
      */
     public function testGeographyOptionalChecksWarnAndPreserveExplicitPayload(): void
     {
-        $point = new GeographyPoint(1, 2);
+        $point = new Point(1, 2, family: SpatialModelEnum::GEOGRAPHY);
         $line = LineStringValidationTest::line(
             [[0, 0], [1, 1]],
             CoordinateDimensionEnum::XY,
@@ -252,7 +250,7 @@ final class CollectionValidationTest extends TestCase
         $polygon->method('getFamily')->willReturn(SpatialModelEnum::GEOMETRY);
         $polygon->method('getDimension')->willReturn(CoordinateDimensionEnum::XY);
         $polygon->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-        $polygon->method('getRings')->willReturn([]);
+        $polygon->method('getRings')->willReturn([LineStringValidationTest::line([])]);
         $value = self::aggregate(
             'GeometryCollection',
             [new Point(0, 0), self::aggregate('GeometryCollection', [$polygon])]
@@ -267,12 +265,12 @@ final class CollectionValidationTest extends TestCase
             ['custom']
         );
         self::assertCount(1, $violations);
-        self::assertSame('[shape].geometries[1].geometries[0]', $violations->get(0)->getPropertyPath());
+        self::assertSame('[shape].geometries[1].geometries[0].rings[0]', $violations->get(0)->getPropertyPath());
         self::assertSame($root, $violations->get(0)->getRoot());
         self::assertNotNull($violations->get(0)->getConstraint());
         self::assertSame(['custom'], $violations->get(0)->getConstraint()->groups);
         self::assertNull($violations->get(0)->getConstraint()->payload);
-        self::assertSame('A non-empty Polygon requires an exterior ring.', $violations->get(0)->getMessage());
+        self::assertSame('An EMPTY LineString is not a linear ring.', $violations->get(0)->getMessage());
     }
 
     #[DataProvider('optionalRules')]

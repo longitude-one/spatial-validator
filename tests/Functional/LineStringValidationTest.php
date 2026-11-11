@@ -23,6 +23,8 @@ use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
+use LongitudeOne\SpatialTypes\Value\Coordinates;
+use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -72,8 +74,6 @@ final class LineStringValidationTest extends TestCase
             $point->method('getDimension')->willReturn($dimension);
             $point->method('getFamily')->willReturn($family);
             $point->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-            $present = array_filter($ordinates, static fn ($value): bool => null !== $value);
-            $point->method('isEmpty')->willReturn([] === $present);
             foreach (['X', 'Y', 'Z', 'M'] as $index => $axis) {
                 $ordinate = $ordinates[$index] ?? null;
                 if ('M' === $axis && CoordinateDimensionEnum::XYM === $dimension) {
@@ -81,6 +81,18 @@ final class LineStringValidationTest extends TestCase
                 }
                 $point->method('get'.$axis)->willReturn($ordinate);
             }
+            $point->method('getCoordinates')->willReturnCallback(static function () use ($point) {
+                $values = PointCoordinates::ordinates($point);
+
+                return [] === array_filter($values, static fn ($value): bool => null !== $value)
+                    ? null : new Coordinates(
+                        $point->getDimension(),
+                        $point->getX(),
+                        $point->getY(),
+                        $point->getDimension()->hasZ() ? $point->getZ() : null,
+                        $point->getDimension()->hasM() ? $point->getM() : null
+                    );
+            });
             $points[] = $point;
         }
         $line = self::createStub(LineStringInterface::class);
@@ -89,7 +101,6 @@ final class LineStringValidationTest extends TestCase
         $line->method('getFamily')->willReturn($family);
         $line->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
         $line->method('getPoints')->willReturn($points);
-        $line->method('isEmpty')->willReturn([] === $points);
 
         return $line;
     }
@@ -240,7 +251,7 @@ final class LineStringValidationTest extends TestCase
         $value = self::line($coordinates);
         $violations = Validation::createValidator()->validate($value, new SpatialAssert\LineString());
         self::assertSame($valid, 0 === \count($violations));
-        self::assertSame([] === $coordinates, $value->isEmpty());
+        self::assertCount(\count($coordinates), $value->getPoints());
     }
 
     /**

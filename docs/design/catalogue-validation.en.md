@@ -111,7 +111,7 @@ Other geometric rules below await specialized implementation;
 ### Common and point rules
 
 - **V01** — Genuine EMPTY objects may be valid; ISO-CD 5.1.10(2a). Check consistency and permitted components, not
-  only isEmpty().
+  only an EMPTY summary.
 
   **Reference scenarios:** Zero-point line: EMPTY; one-point line: invalid; EMPTY Point inside LineString: invalid.
 
