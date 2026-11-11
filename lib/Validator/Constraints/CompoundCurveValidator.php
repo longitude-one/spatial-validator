@@ -114,7 +114,7 @@ final class CompoundCurveValidator extends ConstraintValidator
         foreach (array_values($value->getCurves()) as $index => $curve) {
             $points = $this->positions($curve);
             $path = 'curves['.$index.']';
-            if ([] === $points || $curve->isEmpty()) {
+            if ([] === $points) {
                 $this->context->buildViolation('A contributing curve must not be EMPTY.')
                     ->atPath($path)->setCode(CompoundCurve::EMPTY_ERROR)->addViolation()
                 ;

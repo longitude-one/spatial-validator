@@ -147,16 +147,14 @@ final class TriangleValidationTest extends TestCase
     }
 
     /**
-     * Verify empty flags and geography warnings.
+     * Verify empty boundaries and geography warnings.
      */
-    public function testEmptyFlagsAndGeographyWarnings(): void
+    public function testEmptyBoundariesAndGeographyWarnings(): void
     {
         $service = Validation::createValidator();
-        $missing = $service->validate(PolygonStructureTest::triangle([], empty: false), new Rules\Triangle());
-        self::assertSame(PolygonStructure::EMPTY_ERROR, $missing->get(0)->getCode());
+        self::assertCount(0, $service->validate(PolygonStructureTest::triangle([]), new Rules\Triangle()));
         $rings = [[[0, 0], [1, 0], [0, 1], [0, 0]]];
-        $hidden = $service->validate(PolygonStructureTest::triangle($rings, empty: true), new Rules\Triangle());
-        self::assertSame(PolygonStructure::EMPTY_ERROR, $hidden->get(0)->getCode());
+        self::assertCount(0, $service->validate(PolygonStructureTest::triangle($rings), new Rules\Triangle()));
         $empty = PolygonStructureTest::triangle([], family: Family::GEOGRAPHY);
         self::assertCount(0, $service->validate($empty, new Rules\Triangle()));
         $rings[] = [];

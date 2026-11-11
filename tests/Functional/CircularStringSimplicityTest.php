@@ -18,7 +18,7 @@ namespace LongitudeOne\SpatialValidator\Tests\Functional;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularString;
+use LongitudeOne\SpatialTypes\Types\Dimension2\CircularString;
 use LongitudeOne\SpatialValidator\Internal\ArcIntersections;
 use LongitudeOne\SpatialValidator\Internal\CircularArcs;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
@@ -200,7 +200,11 @@ final class CircularStringSimplicityTest extends TestCase
         ];
         foreach ($examples as [$positions, $closed, $simple]) {
             $curve = new CircularString($positions);
-            self::assertSame($closed, $curve->isClosed());
+            $start = $curve->getStartPoint();
+            $end = $curve->getEndPoint();
+            self::assertNotNull($start);
+            self::assertNotNull($end);
+            self::assertSame($closed, $start->equalsTo($end));
             self::assertCount(0, $service->validate($curve, new SpatialAssert\CircularString()));
             self::assertSame($simple, 0 === \count($service->validate(
                 $curve,

@@ -46,7 +46,6 @@ final class PolygonStructureTest extends TestCase
      * @param array     $coordinates coordinates
      * @param Dimension $dimension   dimension
      * @param Family    $family      family
-     * @param bool|null $empty       empty
      *
      * @phpstan-param list<list<list<float|int|null>>> $coordinates
      */
@@ -54,14 +53,12 @@ final class PolygonStructureTest extends TestCase
         array $coordinates,
         Dimension $dimension = Dimension::XY,
         Family $family = Family::GEOMETRY,
-        ?bool $empty = null,
     ): PolygonInterface {
         $polygon = self::createStub(PolygonInterface::class);
         $polygon->method('getType')->willReturn(GeometryTypeEnum::POLYGON);
         $polygon->method('getFamily')->willReturn($family);
         $polygon->method('getDimension')->willReturn($dimension);
         $polygon->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-        $polygon->method('isEmpty')->willReturn($empty ?? [] === $coordinates);
         $rings = array_map(
             static fn (array $ring) => LineStringValidationTest::line($ring, $dimension, $family),
             $coordinates
@@ -168,7 +165,6 @@ final class PolygonStructureTest extends TestCase
      * @param array     $coordinates coordinates
      * @param Dimension $dimension   dimension
      * @param Family    $family      family
-     * @param bool|null $empty       empty
      *
      * @phpstan-param list<list<list<float|int|null>>> $coordinates
      */
@@ -176,14 +172,12 @@ final class PolygonStructureTest extends TestCase
         array $coordinates,
         Dimension $dimension = Dimension::XY,
         Family $family = Family::GEOMETRY,
-        ?bool $empty = null,
     ): TriangleInterface {
         $triangle = self::createStub(TriangleInterface::class);
         $triangle->method('getType')->willReturn(GeometryTypeEnum::TRIANGLE);
         $triangle->method('getFamily')->willReturn($family);
         $triangle->method('getDimension')->willReturn($dimension);
         $triangle->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
-        $triangle->method('isEmpty')->willReturn($empty ?? [] === $coordinates);
         $triangle->method('getRings')->willReturn(array_map(
             static fn (array $ring) => LineStringValidationTest::line($ring, $dimension, $family),
             $coordinates
@@ -224,19 +218,6 @@ final class PolygonStructureTest extends TestCase
     }
 
     /**
-     * Verify empty flags never hide members.
-     */
-    public function testEmptyFlagsNeverHideMembers(): void
-    {
-        $service = Validation::createValidator();
-        $missing = $service->validate(self::polygon([], empty: false), new PolygonStructure());
-        self::assertSame(PolygonStructure::EMPTY_ERROR, $missing->get(0)->getCode());
-        $hidden = self::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]]], empty: true);
-        $violations = $service->validate($hidden, new PolygonStructure());
-        self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
-    }
-
-    /**
      * Verify geography warns and retains explicit payload.
      */
     public function testGeographyWarnsAndRetainsExplicitPayload(): void
@@ -269,6 +250,18 @@ final class PolygonStructureTest extends TestCase
             self::assertCount(0, $service->validate(self::polygon([]), $constraint));
         }
         self::assertNull(PolygonPlane::basis([]));
+    }
+
+    /**
+     * Verify memberless polygons and empty boundaries remain distinct.
+     */
+    public function testMemberlessPolygonsAndEmptyBoundariesRemainDistinct(): void
+    {
+        $service = Validation::createValidator();
+        self::assertCount(0, $service->validate(self::polygon([]), new PolygonStructure()));
+        $violations = $service->validate(self::polygon([[]]), new PolygonStructure());
+        self::assertSame(SpatialAssert\Ring::EMPTY_ERROR, $violations->get(0)->getCode());
+        self::assertSame('rings[0]', $violations->get(0)->getPropertyPath());
     }
 
     /**

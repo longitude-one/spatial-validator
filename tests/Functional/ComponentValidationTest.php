@@ -20,11 +20,12 @@ use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
+use LongitudeOne\SpatialTypes\Interfaces\MutablePointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point;
-use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
+use LongitudeOne\SpatialTypes\Value\Coordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
@@ -265,13 +266,11 @@ final class ComponentValidationTest extends TestCase
         $empty = new Point();
         $members = [$empty, $empty];
         $value = $this->aggregate('GeometryCollection', $members);
-        $value->method('isEmpty')->willReturn(true);
         $service = Validation::createValidator();
         self::assertCount(0, $service->validate($value, new SpatialAssert\Components()));
         self::assertInstanceOf(CollectionInterface::class, $value);
         self::assertSame($members, $value->getElements());
         $invalid = $this->aggregate('GeometryCollection', [$this->invalidPoint()]);
-        $invalid->method('isEmpty')->willReturn(true);
         $violations = $service->validate($invalid, new SpatialAssert\Components());
         self::assertCount(1, $violations);
         self::assertSame('geometries[0]', $violations->get(0)->getPropertyPath());
@@ -289,7 +288,7 @@ final class ComponentValidationTest extends TestCase
      */
     public function testMatchingFamilyAndCoordinateVariantAreAccepted(string $dimensionName, string $familyName): void
     {
-        $class = 'LongitudeOne\SpatialTypes\Types\\'.$dimensionName.'\\'.$familyName.'\Point';
+        $class = 'LongitudeOne\SpatialTypes\Types\\'.$dimensionName.'\Point';
         $dimension = match ($dimensionName) {
             'Dimension2' => CoordinateDimensionEnum::XY,
             'Dimension3z' => CoordinateDimensionEnum::XYZ,
@@ -297,8 +296,9 @@ final class ComponentValidationTest extends TestCase
             default => CoordinateDimensionEnum::XYZM,
         };
 
-        /** @var PointInterface $member */
+        /** @var MutablePointInterface $member */
         $member = new $class(...array_fill(0, $dimension->coordinateDimension(), 0));
+        $member->setFamily(SpatialModelEnum::from($familyName));
         $parent = $this->aggregate(
             'MultiPoint',
             [$member],
@@ -395,14 +395,14 @@ final class ComponentValidationTest extends TestCase
 
             return;
         }
-        $member = $this->aggregate($memberType);
+        $member = $this->aggregate($memberType, [LineStringValidationTest::line([])]);
         $parent = $this->aggregate($parentType, [$member]);
         $violations = Validation::createValidator()->validate($parent, new SpatialAssert\Components());
-        self::assertCount(1, $violations);
+        self::assertCount('Triangle' === $memberType ? 2 : 1, $violations);
         if (\in_array($memberType, ['Polygon', 'Triangle'], true)) {
-            self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
+            self::assertSame(SpatialAssert\Ring::EMPTY_ERROR, $violations->get(0)->getCode());
             self::assertNull($violations->get(0)->getConstraint()?->payload);
-            self::assertSame($path, $violations->get(0)->getPropertyPath());
+            self::assertSame($path.'.rings[0]', $violations->get(0)->getPropertyPath());
 
             return;
         }
@@ -562,7 +562,7 @@ final class ComponentValidationTest extends TestCase
         $point->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
         $point->method('getX')->willReturn(\INF);
         $point->method('getY')->willReturn(0.0);
-        $point->method('isEmpty')->willReturn(false);
+        $point->method('getCoordinates')->willReturn(Coordinates::xy(\INF, 0.0));
 
         return $point;
     }

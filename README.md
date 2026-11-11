@@ -60,12 +60,23 @@ Read `build/coverage.txt`, `build/clover.xml`, or `build/coverage/index.html` af
 Markdown checks use `markdownlint-cli`. Transitive overrides select patched KaTeX, TOML and YAML
 versions until the CLI updates its own requirements; keep `npm audit` clean when updating these tools.
 
+## Spatial types compatibility
+
+This library targets `longitude-one/spatial-types` `^1.0.0-RC`.
+Mutable classes live in `Types\Dimension2`, `Types\Dimension3z`, `Types\Dimension3m` and
+`Types\Dimension4zm`; immutable classes retain `Types\<dimension>\Geometry\<Type>Immutable` and
+`Types\<dimension>\Geography\<Type>Immutable`.
+Mutable Geometry and Geography share these classes: pass `family: SpatialModelEnum::GEOGRAPHY` for Geography.
+Validation uses interfaces for both mutable and immutable values. Point EMPTY state comes from
+`getCoordinates() === null`; sequence and surface structure comes from their points, curves and rings.
+Apply explicit constraints for closure and simplicity.
+
 ## Explicit validation
 
 Use the `Spatial` constraint with Symfony Validator to dispatch by geometry type:
 
 ```php
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString;
+use LongitudeOne\SpatialTypes\Types\Dimension2\LineString;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
 use Symfony\Component\Validator\Validation;
 
@@ -174,7 +185,8 @@ Aggregate validators compose `Components` to check member types, parent/member f
 and complete spatial-reference identity, then delegate through `Spatial` in the active Symfony context.
 Nested failures retain their original constraint, code and payload, for example at
 `geometries[2].rings[1].points[3]`. Cycles yield an error at the cyclic reference; independent branches continue.
-EMPTY parent flags never hide members. Type-specific rules not yet implemented still emit their warning,
+Every aggregate member is validated, including EMPTY members.
+Type-specific rules not yet implemented still emit their warning,
 so recursive component checks do not establish complete parent validity.
 See the [component reference](docs/validators.md#component-rules) for paths, member types and error codes.
 
@@ -310,8 +322,8 @@ cross-member disjointness. All members retain the exact coordinate variant, fami
 A member validator whose geometric rules are unavailable still contributes its warning.
 
 Typed multis accept valid EMPTY Points or LineStrings and preserve every member in order. A memberless aggregate
-or one containing only EMPTY members represents the empty set. Every member is checked even if the parent reports
-EMPTY. This does not permit EMPTY Points inside a non-empty LineString.
+or one containing only EMPTY members represents the empty set. Every member is checked, including EMPTY members.
+This does not permit EMPTY Points inside a non-empty LineString.
 
 Use `SimpleMultiPoint` for distinct positions, `SimpleMultiLineString` for simple members and contacts only at both
 members' boundaries, and `ClosedMultiLineString` for a non-empty aggregate with every member closed. Ordinary

@@ -25,7 +25,6 @@ use Symfony\Component\Validator\Constraint;
 final class PolygonStructure extends Constraint
 {
     public const string DEGENERATE_ERROR = 'polygonstructure-degenerate';
-    public const string EMPTY_ERROR = 'polygonstructure-empty';
     public const string PLANE_ERROR = 'polygonstructure-plane';
     public const string UNAVAILABLE_ERROR = 'polygonstructure-unavailable';
 

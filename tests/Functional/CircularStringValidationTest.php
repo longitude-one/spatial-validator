@@ -101,7 +101,6 @@ final class CircularStringValidationTest extends TestCase
         $curve->method('getFamily')->willReturn($family);
         $curve->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
         $curve->method('getPoints')->willReturn($points);
-        $curve->method('isEmpty')->willReturn([] === $points);
 
         return $curve;
     }

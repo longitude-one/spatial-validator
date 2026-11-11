@@ -142,8 +142,7 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         $value->method('getSpatialReference')->willReturn(SpatialReference::fromSrid(0));
         $value->method('getPatches')->willReturn($patches);
         $value->method('getElements')->willReturn($patches);
-        // Deliberately inconsistent EMPTY flag must never hide patches.
-        $value->method('isEmpty')->willReturn(true);
+        // Every stored patch must be validated.
 
         return $value;
     }
