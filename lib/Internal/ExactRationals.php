@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -101,7 +100,7 @@ final class ExactRationals
      */
     private static function divide(array $value, array $divisor): array
     {
-        $shift = max(0, (count($value) - count($divisor)) * 15 + 15);
+        $shift = max(0, (\count($value) - \count($divisor)) * 15 + 15);
         $result = array_fill(0, intdiv($shift, 15) + 1, 0);
         for ($bit = $shift; 0 <= $bit; --$bit) {
             $candidate = RobustPredicates::shift($divisor, $bit);
@@ -157,7 +156,7 @@ final class ExactRationals
             ++$shift;
         }
         $carry = 0;
-        for ($index = count($digits) - 1; 0 <= $index; --$index) {
+        for ($index = \count($digits) - 1; 0 <= $index; --$index) {
             $total = $digits[$index] + $carry * RobustPredicates::BASE;
             $digits[$index] = $total >> $shift;
             $carry = $total % (1 << $shift);

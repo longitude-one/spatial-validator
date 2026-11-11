@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -46,7 +45,7 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
         if (!$value instanceof CompoundCurveInterface || GeometryTypeEnum::COMPOUNDCURVE !== $value->getType()) {
             throw new UnexpectedValueException($value, CompoundCurveInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new CompoundCurve(groups: $constraint->groups, payload: $constraint->payload),
@@ -71,7 +70,7 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
     private function arcs(array $arcs, array $paths, SimpleCompoundCurve $constraint): void
     {
         $this->repeatedEndpoints($arcs, $paths);
-        $count = count($arcs);
+        $count = \count($arcs);
         for ($first = 0; $first < $count; ++$first) {
             for ($second = $first + 1; $second < $count; ++$second) {
                 $permitted = $this->permitted($arcs, $first, $second);
@@ -111,7 +110,7 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
             $permitted[] = $arcs[$first]['end'];
         }
         if (
-            0 === $first && $second === count($arcs) - 1
+            0 === $first && $second === \count($arcs) - 1
             && $arcs[$first]['start'] === $arcs[$second]['end']
         ) {
             $permitted[] = $arcs[$first]['start'];
@@ -130,7 +129,7 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
         foreach ($arcs as $arc) {
             $vertices[] = $arc['end'];
         }
-        $last = count($vertices) - 1;
+        $last = \count($vertices) - 1;
         foreach ($vertices as $second => $vertex) {
             for ($first = 0; $first < $second; ++$first) {
                 if ($vertices[$first] !== $vertex || (0 === $first && $second === $last)) {

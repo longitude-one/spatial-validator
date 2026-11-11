@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -65,7 +64,7 @@ final class PolygonStructureValidator extends ConstraintValidator
     {
         $positions = [];
         foreach (array_values($polygon->getRings()) as $index => $ring) {
-            $path = 'rings[' . $index . ']';
+            $path = 'rings['.$index.']';
             foreach (ComponentMetadata::errors($polygon, $ring) as $code => $message) {
                 $this->error($message, $code, $path);
             }
@@ -113,7 +112,7 @@ final class PolygonStructureValidator extends ConstraintValidator
                     $this->error(
                         'Every boundary position must lie in the exterior supporting plane.',
                         PolygonStructure::PLANE_ERROR,
-                        'rings[' . $index . '].points[' . $point . ']'
+                        'rings['.$index.'].points['.$point.']'
                     );
                 }
             }

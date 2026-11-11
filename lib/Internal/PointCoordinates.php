@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -26,7 +25,7 @@ final class PointCoordinates
     public static function equal(float $first, float $second): bool
     {
         return is_finite($first) && is_finite($second)
-            && abs($first - $second) <= PHP_FLOAT_EPSILON * max(1.0, abs($first), abs($second));
+            && abs($first - $second) <= \PHP_FLOAT_EPSILON * max(1.0, abs($first), abs($second));
     }
 
     public static function isEmptyPoint(mixed $point): bool
@@ -34,7 +33,7 @@ final class PointCoordinates
         return $point instanceof PointInterface && $point->isEmpty();
     }
 
-    /** @return array<string, null|float|int> */
+    /** @return array<string, float|int|null> */
     public static function ordinates(PointInterface $point): array
     {
         $ordinates = ['X' => $point->getX(), 'Y' => $point->getY()];
@@ -48,7 +47,7 @@ final class PointCoordinates
         return $ordinates;
     }
 
-    /** @return null|list<float> */
+    /** @return list<float>|null */
     public static function position(mixed $point): ?array
     {
         if (!$point instanceof PointInterface || GeometryTypeEnum::POINT !== $point->getType()) {
@@ -76,7 +75,7 @@ final class PointCoordinates
      */
     public static function same(array $first, array $second): bool
     {
-        if (count($first) !== count($second)) {
+        if (\count($first) !== \count($second)) {
             return false;
         }
         foreach ($first as $index => $ordinate) {

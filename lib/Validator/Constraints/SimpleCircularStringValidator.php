@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -46,13 +45,13 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         if (!$value instanceof CircularStringInterface || GeometryTypeEnum::CIRCULARSTRING !== $value->getType()) {
             throw new UnexpectedValueException($value, CircularStringInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new CircularString(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations()) || [] === $value->getPoints()) {
+        if ($before !== \count($this->context->getViolations()) || [] === $value->getPoints()) {
             return;
         }
         if (SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
@@ -68,7 +67,7 @@ final class SimpleCircularStringValidator extends ConstraintValidator
     private function arcs(array $arcs, SimpleCircularString $constraint): void
     {
         $this->repeatedEndpoints($arcs);
-        $count = count($arcs);
+        $count = \count($arcs);
         for ($first = 0; $first < $count; ++$first) {
             for ($second = $first + 1; $second < $count; ++$second) {
                 $permitted = $this->permitted($arcs, $first, $second);
@@ -77,7 +76,7 @@ final class SimpleCircularStringValidator extends ConstraintValidator
                     $this->unavailable($constraint);
                 } elseif ($conflict) {
                     $this->context->buildViolation('Circular arcs have a forbidden intersection or overlap.')
-                        ->atPath('arcs[' . $second . ']')->setParameter('{{ first }}', (string) $first)
+                        ->atPath('arcs['.$second.']')->setParameter('{{ first }}', (string) $first)
                         ->setCode(SimpleCircularString::INVALID_ERROR)->addViolation()
                     ;
                 }
@@ -97,7 +96,7 @@ final class SimpleCircularStringValidator extends ConstraintValidator
             $permitted[] = $arcs[$first]['end'];
         }
         if (
-            0 === $first && $second === count($arcs) - 1
+            0 === $first && $second === \count($arcs) - 1
             && $arcs[$first]['start'] === $arcs[$second]['end']
         ) {
             $permitted[] = $arcs[$first]['start'];
@@ -113,14 +112,14 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         foreach ($arcs as $arc) {
             $vertices[] = $arc['end'];
         }
-        $last = count($vertices) - 1;
+        $last = \count($vertices) - 1;
         foreach ($vertices as $second => $vertex) {
             for ($first = 0; $first < $second; ++$first) {
                 if ($vertices[$first] !== $vertex || (0 === $first && $second === $last)) {
                     continue;
                 }
                 $this->context->buildViolation('A curve position is repeated outside its permitted global closure.')
-                    ->atPath('arcs[' . ($second - 1) . ']')
+                    ->atPath('arcs['.($second - 1).']')
                     ->setCode(SimpleCircularString::INVALID_ERROR)->addViolation()
                 ;
             }

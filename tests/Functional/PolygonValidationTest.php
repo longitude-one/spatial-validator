@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -33,45 +32,6 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolygonValidationTest extends TestCase
 {
-    /**
-     * @param list<list<list<float|int>>> $rings
-     *
-     * @return list<list<list<float|int>>>
-     */
-    private static function oppositeHoles(array $rings): array
-    {
-        foreach ($rings as $index => $ring) {
-            if (0 < $index) {
-                $rings[$index] = array_reverse($ring);
-            }
-        }
-
-        return $rings;
-    }
-
-    /**
-     * @param list<list<list<float|int>>> $rings
-     */
-    #[DataProvider('topologies')]
-    public function testExplicitAndGenericTopology(array $rings, ?string $error): void
-    {
-        foreach ([new Rules\Polygon(), new Rules\Spatial()] as $constraint) {
-            $polygon = PolygonStructureTest::polygon(self::oppositeHoles($rings));
-            $violations = Validation::createValidator()->validate($polygon, $constraint);
-            $codes = [];
-            foreach ($violations as $violation) {
-                $codes[] = $violation->getCode();
-                self::assertNull($violation->getConstraint()?->payload);
-            }
-            if (null === $error) {
-                self::assertSame([], $codes, (string) $violations);
-
-                continue;
-            }
-            self::assertContains($error, $codes, (string) $violations);
-        }
-    }
-
     /** @return iterable<string, array{list<list<list<int>>>, ?string}> */
     public static function topologies(): iterable
     {
@@ -154,6 +114,45 @@ final class PolygonValidationTest extends TestCase
         ], Rules\Polygon::INTERSECTION_ERROR];
     }
 
+    /**
+     * @param list<list<list<float|int>>> $rings
+     *
+     * @return list<list<list<float|int>>>
+     */
+    private static function oppositeHoles(array $rings): array
+    {
+        foreach ($rings as $index => $ring) {
+            if (0 < $index) {
+                $rings[$index] = array_reverse($ring);
+            }
+        }
+
+        return $rings;
+    }
+
+    /**
+     * @param list<list<list<float|int>>> $rings
+     */
+    #[DataProvider('topologies')]
+    public function testExplicitAndGenericTopology(array $rings, ?string $error): void
+    {
+        foreach ([new Rules\Polygon(), new Rules\Spatial()] as $constraint) {
+            $polygon = PolygonStructureTest::polygon(self::oppositeHoles($rings));
+            $violations = Validation::createValidator()->validate($polygon, $constraint);
+            $codes = [];
+            foreach ($violations as $violation) {
+                $codes[] = $violation->getCode();
+                self::assertNull($violation->getConstraint()?->payload);
+            }
+            if (null === $error) {
+                self::assertSame([], $codes, (string) $violations);
+
+                continue;
+            }
+            self::assertContains($error, $codes, (string) $violations);
+        }
+    }
+
     public function testGeographyKeepsStructuralErrorsAndUnavailableWarnings(): void
     {
         $polygon = PolygonStructureTest::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]], []], family: Family::GEOGRAPHY);
@@ -165,8 +164,8 @@ final class PolygonValidationTest extends TestCase
         }
         self::assertContains(Rules\Ring::EMPTY_ERROR, $codes);
         self::assertContains(PolygonStructure::UNAVAILABLE_ERROR, $codes);
-        self::assertSame(Rules\Polygon::UNAVAILABLE_ERROR, $violations->get(count($violations) - 1)->getCode());
-        $last = $violations->get(count($violations) - 1);
+        self::assertSame(Rules\Polygon::UNAVAILABLE_ERROR, $violations->get(\count($violations) - 1)->getCode());
+        $last = $violations->get(\count($violations) - 1);
         self::assertSame(['severity' => 'warning'], $last->getConstraint()?->payload);
         self::assertNull($constraint->payload);
     }
@@ -175,7 +174,7 @@ final class PolygonValidationTest extends TestCase
     {
         foreach ([Dimension::XY, Dimension::XYM, Dimension::XYZM] as $dimension) {
             $rings = [[[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]],
-                [[PHP_FLOAT_EPSILON, 1], [PHP_FLOAT_EPSILON, 2], [1, 2], [1, 1], [PHP_FLOAT_EPSILON, 1]]];
+                [[\PHP_FLOAT_EPSILON, 1], [\PHP_FLOAT_EPSILON, 2], [1, 2], [1, 1], [\PHP_FLOAT_EPSILON, 1]]];
             if (Dimension::XY !== $dimension) {
                 $rings = array_map(static fn (array $ring): array => array_map(
                     static fn (array $point, int $index): array => Dimension::XYM === $dimension
@@ -229,11 +228,11 @@ final class PolygonValidationTest extends TestCase
     public function testOutsideNearBoundaryAndNearDegenerateHoleUseExactPredicates(): void
     {
         $shell = [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]];
-        $outside = [[-PHP_FLOAT_EPSILON, 1], [1, 1], [1, 2], [-PHP_FLOAT_EPSILON, 2], [-PHP_FLOAT_EPSILON, 1]];
+        $outside = [[-\PHP_FLOAT_EPSILON, 1], [1, 1], [1, 2], [-\PHP_FLOAT_EPSILON, 2], [-\PHP_FLOAT_EPSILON, 1]];
         $polygon = PolygonStructureTest::polygon([$shell, array_reverse($outside)]);
         $violations = Validation::createValidator()->validate($polygon, new Rules\Polygon());
         self::assertSame(Rules\Polygon::INTERSECTION_ERROR, $violations->get(0)->getCode());
-        $skinny = [[1, 1], [2, 2], [3, 3 + 4 * PHP_FLOAT_EPSILON], [1, 1]];
+        $skinny = [[1, 1], [2, 2], [3, 3 + 4 * \PHP_FLOAT_EPSILON], [1, 1]];
         $polygon = PolygonStructureTest::polygon([$shell, array_reverse($skinny)]);
         self::assertCount(0, Validation::createValidator()->validate($polygon, new Rules\Polygon()));
     }
@@ -241,7 +240,7 @@ final class PolygonValidationTest extends TestCase
     public function testProjectionDefensivelyDeclinesMissingOrInvalidPlaneData(): void
     {
         self::assertSame([], PolygonTopology::project(PolygonStructureTest::polygon([])));
-        $polygon = PolygonStructureTest::polygon([[[0, 0], [INF, 0], [0, 2], [0, 0]]]);
+        $polygon = PolygonStructureTest::polygon([[[0, 0], [\INF, 0], [0, 2], [0, 0]]]);
         self::assertSame([], PolygonTopology::project($polygon));
     }
 
@@ -300,7 +299,7 @@ final class PolygonValidationTest extends TestCase
             foreach ([new Rules\Polygon(), new Rules\Spatial()] as $constraint) {
                 $polygon = PolygonStructureTest::polygon([$shell, $hole]);
                 $violations = Validation::createValidator()->validate($polygon, $constraint);
-                self::assertGreaterThan(0, count($violations));
+                self::assertGreaterThan(0, \count($violations));
                 foreach ($violations as $violation) {
                     self::assertStringStartsWith('rings[1]', $violation->getPropertyPath());
                     self::assertNotSame(Rules\Polygon::ORIENTATION_ERROR, $violation->getCode());

@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -34,7 +33,7 @@ final class PolygonTopology
             return $errors;
         }
         $contacts = new PolygonContacts();
-        $count = count($rings);
+        $count = \count($rings);
         for ($second = 1; $second < $count; ++$second) {
             if (PlanarRing::direction($rings[0]) === PlanarRing::direction($rings[$second])) {
                 $errors[] = [$second, Polygon::ORIENTATION_ERROR];
@@ -100,7 +99,7 @@ final class PolygonTopology
     {
         $errors = [];
         foreach ($rings as $index => $ring) {
-            if ($ring[0] === $ring[count($ring) - 1]) {
+            if ($ring[0] === $ring[\count($ring) - 1]) {
                 continue;
             }
             $ring[] = $ring[0];

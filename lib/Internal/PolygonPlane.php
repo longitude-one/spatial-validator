@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,17 +21,17 @@ final class PolygonPlane
     /**
      * @param list<list<float>> $positions
      *
-     * @return null|array{list<float>, list<float>, list<float>}
+     * @return array{list<float>, list<float>, list<float>}|null
      */
     public static function basis(array $positions): ?array
     {
-        if (3 > count($positions)) {
+        if (3 > \count($positions)) {
             return null;
         }
         $origin = $positions[0];
-        foreach (array_slice($positions, 1) as $second) {
-            foreach (array_slice($positions, 2) as $third) {
-                foreach (self::axes(count($origin)) as $axes) {
+        foreach (\array_slice($positions, 1) as $second) {
+            foreach (\array_slice($positions, 2) as $third) {
+                foreach (self::axes(\count($origin)) as $axes) {
                     if (0 !== RobustPredicates::orientation($origin, $second, $third, $axes)) {
                         return [$origin, $second, $third];
                     }
@@ -49,7 +48,7 @@ final class PolygonPlane
      */
     public static function contains(array $basis, array $position): bool
     {
-        return 2 === count($position) || RobustPredicates::coplanar($basis[0], $basis[1], $basis[2], $position);
+        return 2 === \count($position) || RobustPredicates::coplanar($basis[0], $basis[1], $basis[2], $position);
     }
 
     /** @return list<array{int, int}> */

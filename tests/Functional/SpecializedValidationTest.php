@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -43,7 +42,7 @@ final class SpecializedValidationTest extends TestCase
 {
     public static function constraint(GeometryTypeEnum $type): Constraint
     {
-        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\' . $type->value;
+        $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$type->value;
         $constraint = new $class();
         self::assertInstanceOf(Constraint::class, $constraint);
 
@@ -55,6 +54,48 @@ final class SpecializedValidationTest extends TestCase
     {
         foreach (GeometryTypeEnum::cases() as $type) {
             yield $type->value => [$type];
+        }
+    }
+
+    /** @return iterable<string, array{GeometryTypeEnum, class-string<SpatialInterface>}> */
+    public static function types(): iterable
+    {
+        $interfaces = [
+            'BRepSolid' => 'SpatialInterface',
+            'Circle' => 'SpatialInterface',
+            'CircularString' => 'CircularStringInterface',
+            'Clothoid' => 'SpatialInterface',
+            'CompoundCurve' => 'CompoundCurveInterface',
+            'CompoundSurface' => 'SpatialInterface',
+            'Curve' => 'CurveInterface',
+            'CurvePolygon' => 'SpatialInterface',
+            'EllipticalCurve' => 'SpatialInterface',
+            'GeodesicString' => 'SpatialInterface',
+            'Geometry' => 'SpatialInterface',
+            'GeometryCollection' => 'CollectionInterface',
+            'LineString' => 'LineStringInterface',
+            'MultiCurve' => 'SpatialInterface',
+            'MultiLineString' => 'MultiLineStringInterface',
+            'MultiPoint' => 'MultiPointInterface',
+            'MultiPolygon' => 'MultiPolygonInterface',
+            'MultiSurface' => 'SpatialInterface',
+            'NURBSCurve' => 'SpatialInterface',
+            'Point' => 'PointInterface',
+            'Polygon' => 'PolygonInterface',
+            'PolyhedralSurface' => 'PolyhedralSurfaceInterface',
+            'Solid' => 'SpatialInterface',
+            'SpiralCurve' => 'SpatialInterface',
+            'Surface' => 'SpatialInterface',
+            'TIN' => 'SpatialInterface',
+            'Triangle' => 'TriangleInterface',
+        ];
+        foreach ($interfaces as $name => $interface) {
+            $type = GeometryTypeEnum::from($name);
+
+            /** @var class-string<SpatialInterface> $interface */
+            $interface = 'LongitudeOne\SpatialTypes\Interfaces\\'.$interface;
+
+            yield $name => [$type, $interface];
         }
     }
 
@@ -76,7 +117,7 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
-        if (in_array($type, $implemented, true)) {
+        if (\in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
@@ -100,7 +141,7 @@ final class SpecializedValidationTest extends TestCase
         $builder->expects(self::once())->method('addViolation');
         $context = $this->createMock(ExecutionContextInterface::class);
         $context->expects(self::once())->method('buildViolation')
-            ->with($type->value . ' validation is not implemented yet.')->willReturn($builder)
+            ->with($type->value.' validation is not implemented yet.')->willReturn($builder)
         ;
         $context->expects(self::never())->method('getValidator');
         $validator = self::validator(self::constraint($type));
@@ -126,7 +167,7 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
-        if (in_array($type, $implemented, true)) {
+        if (\in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
@@ -196,7 +237,7 @@ final class SpecializedValidationTest extends TestCase
             GeometryTypeEnum::TRIANGLE,
             GeometryTypeEnum::GEOMETRYCOLLECTION, GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::POLYHEDRALSURFACE];
-        if (in_array($type, $implemented, true)) {
+        if (\in_array($type, $implemented, true)) {
             $value = match ($type) {
                 GeometryTypeEnum::POLYHEDRALSURFACE => PolyhedralSurfaceValidationTest::surface([]),
                 GeometryTypeEnum::POINT => new Point(),
@@ -220,54 +261,12 @@ final class SpecializedValidationTest extends TestCase
         $violations = Validation::createValidator()->validate($value, $constraint);
 
         self::assertCount(1, $violations);
-        self::assertSame($type->value . ' validation is not implemented yet.', $violations->get(0)->getMessage());
+        self::assertSame($type->value.' validation is not implemented yet.', $violations->get(0)->getMessage());
         self::assertSame(['severity' => 'warning'], $constraint->payload);
         self::assertSame($constraint, $violations->get(0)->getConstraint());
         self::assertSame($value, $violations->get(0)->getRoot());
         self::assertSame($value, $violations->get(0)->getInvalidValue());
         self::assertInstanceOf(ConstraintValidator::class, self::validator($constraint));
-    }
-
-    /** @return iterable<string, array{GeometryTypeEnum, class-string<SpatialInterface>}> */
-    public static function types(): iterable
-    {
-        $interfaces = [
-            'BRepSolid' => 'SpatialInterface',
-            'Circle' => 'SpatialInterface',
-            'CircularString' => 'CircularStringInterface',
-            'Clothoid' => 'SpatialInterface',
-            'CompoundCurve' => 'CompoundCurveInterface',
-            'CompoundSurface' => 'SpatialInterface',
-            'Curve' => 'CurveInterface',
-            'CurvePolygon' => 'SpatialInterface',
-            'EllipticalCurve' => 'SpatialInterface',
-            'GeodesicString' => 'SpatialInterface',
-            'Geometry' => 'SpatialInterface',
-            'GeometryCollection' => 'CollectionInterface',
-            'LineString' => 'LineStringInterface',
-            'MultiCurve' => 'SpatialInterface',
-            'MultiLineString' => 'MultiLineStringInterface',
-            'MultiPoint' => 'MultiPointInterface',
-            'MultiPolygon' => 'MultiPolygonInterface',
-            'MultiSurface' => 'SpatialInterface',
-            'NURBSCurve' => 'SpatialInterface',
-            'Point' => 'PointInterface',
-            'Polygon' => 'PolygonInterface',
-            'PolyhedralSurface' => 'PolyhedralSurfaceInterface',
-            'Solid' => 'SpatialInterface',
-            'SpiralCurve' => 'SpatialInterface',
-            'Surface' => 'SpatialInterface',
-            'TIN' => 'SpatialInterface',
-            'Triangle' => 'TriangleInterface',
-        ];
-        foreach ($interfaces as $name => $interface) {
-            $type = GeometryTypeEnum::from($name);
-
-            /** @var class-string<SpatialInterface> $interface */
-            $interface = 'LongitudeOne\SpatialTypes\Interfaces\\' . $interface;
-
-            yield $name => [$type, $interface];
-        }
     }
 
     public function testTriangleDoesNotAcceptAPolygonDeclaringTriangleType(): void

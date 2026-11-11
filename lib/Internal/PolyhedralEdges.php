@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,7 +39,7 @@ final class PolyhedralEdges
                 foreach (PlanarRing::edges($ring) as [$start, $end]) {
                     $edges[] = [$face, $start, $end, $factor];
                     foreach ([$start, $end] as $point) {
-                        if (!in_array($point, $vertices, true)) {
+                        if (!\in_array($point, $vertices, true)) {
                             $vertices[] = $point;
                         }
                     }
@@ -58,10 +57,10 @@ final class PolyhedralEdges
             }
             usort($split, static fn (int $left, int $right): int => $vertices[$left] <=> $vertices[$right]);
             $direction = ($start <=> $end) * $factor;
-            $count = count($split);
+            $count = \count($split);
             for ($index = 1; $index < $count; ++$index) {
                 [$first, $second] = [$split[$index - 1], $split[$index]];
-                $key = min($first, $second) . ':' . max($first, $second);
+                $key = min($first, $second).':'.max($first, $second);
                 $segments[$key][] = [$face, $first, $second, $direction];
             }
         }

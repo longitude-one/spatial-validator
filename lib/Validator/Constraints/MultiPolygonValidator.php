@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -53,7 +52,7 @@ final class MultiPolygonValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, GeometryTypeEnum::MULTIPOLYGON->value);
         }
 
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)
             ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
         ;
@@ -78,7 +77,7 @@ final class MultiPolygonValidator extends ConstraintValidator
     {
         $associated = $constraint;
         $message = 'Polygon members {{ first }} and {{ second }} must have disjoint interiors'
-            . ' and only isolated boundary contacts.';
+            .' and only isolated boundary contacts.';
         if (MultiPolygon::UNAVAILABLE_ERROR === $code) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
@@ -89,7 +88,7 @@ final class MultiPolygonValidator extends ConstraintValidator
         try {
             $this->context->buildViolation($message)->setCode($code)
                 ->setParameter('{{ first }}', (string) $first)->setParameter('{{ second }}', (string) $second)
-                ->atPath('polygons[' . $second . ']')->addViolation()
+                ->atPath('polygons['.$second.']')->addViolation()
             ;
         } finally {
             $this->context->setConstraint($constraint);
@@ -111,7 +110,7 @@ final class MultiPolygonValidator extends ConstraintValidator
             foreach ($ring->getPoints() as $point) {
                 $position = PointCoordinates::position($point);
                 if (null !== $position) {
-                    $points[] = 2 === count($position) ? [...$position, 0.0] : $position;
+                    $points[] = 2 === \count($position) ? [...$position, 0.0] : $position;
                 }
             }
             $rings[] = $points;
@@ -146,9 +145,9 @@ final class MultiPolygonValidator extends ConstraintValidator
             if ($offset < $before || Polygon::ORIENTATION_ERROR === $violation->getCode()) {
                 continue;
             }
-            $path = $this->context->getPropertyPath('polygons[' . $index . ']');
+            $path = $this->context->getPropertyPath('polygons['.$index.']');
             $memberPath = $violation->getPropertyPath();
-            if ($path === $memberPath || str_starts_with($memberPath, $path . '.')) {
+            if ($path === $memberPath || str_starts_with($memberPath, $path.'.')) {
                 return false;
             }
         }

@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -90,7 +89,7 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         $eligible = [];
         foreach ($members as $index => $member) {
             if ($this->isPolygon($member) && [] === $member->getRings()) {
-                $this->diagnostic($constraint, PolyhedralSurface::EMPTY_PATCH_ERROR, 'patches[' . $index . ']');
+                $this->diagnostic($constraint, PolyhedralSurface::EMPTY_PATCH_ERROR, 'patches['.$index.']');
             }
             if ($this->isPolygon($member) && [] !== $member->getRings() && $this->usable($index, $before)) {
                 $eligible[] = $this->positions($member);
@@ -120,7 +119,7 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
 
     private function surface(PolyhedralSurfaceInterface $value, PolyhedralSurface $constraint): void
     {
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)
             ->validate($value, new Components(groups: $constraint->groups), $this->context->getGroup())
         ;
@@ -142,11 +141,11 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
 
             return;
         }
-        if (count($eligible) !== count($members)) {
+        if (\count($eligible) !== \count($members)) {
             return;
         }
         foreach (PolyhedralTopology::errors($eligible) as $error) {
-            $this->diagnostic($constraint, 'polyhedralsurface-' . $error);
+            $this->diagnostic($constraint, 'polyhedralsurface-'.$error);
         }
     }
 
@@ -156,9 +155,9 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
             if ($offset < $before || Polygon::ORIENTATION_ERROR === $violation->getCode()) {
                 continue;
             }
-            $path = $this->context->getPropertyPath('patches[' . $index . ']');
+            $path = $this->context->getPropertyPath('patches['.$index.']');
             $memberPath = $violation->getPropertyPath();
-            if ($path === $memberPath || str_starts_with($memberPath, $path . '.')) {
+            if ($path === $memberPath || str_starts_with($memberPath, $path.'.')) {
                 return false;
             }
         }

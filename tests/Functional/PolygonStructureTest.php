@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -42,7 +41,7 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolygonStructureTest extends TestCase
 {
-    /** @param list<list<list<null|float|int>>> $coordinates */
+    /** @param list<list<list<float|int|null>>> $coordinates */
     public static function polygon(
         array $coordinates,
         Dimension $dimension = Dimension::XY,
@@ -64,7 +63,98 @@ final class PolygonStructureTest extends TestCase
         return $polygon;
     }
 
-    /** @param list<list<list<null|float|int>>> $coordinates */
+    /** @return iterable<string, array{list<list<list<float|int|null>>>, Dimension, bool}> */
+    public static function structures(): iterable
+    {
+        $triangle = [[0, 0], [4, 0], [0, 4], [0, 0]];
+
+        yield 'EMPTY' => [[], Dimension::XY, true];
+
+        yield 'triangle' => [[$triangle], Dimension::XY, true];
+
+        yield 'hole' => [[$triangle, [[1, 1], [2, 1], [1, 2], [1, 1]]], Dimension::XY, true];
+
+        yield 'outside hole left for K' => [[$triangle, [[10, 10], [11, 10], [10, 11], [10, 10]]], Dimension::XY, true];
+
+        yield 'empty exterior with hole' => [[[], $triangle], Dimension::XY, false];
+
+        yield 'empty hole' => [[$triangle, []], Dimension::XY, false];
+
+        yield 'open hole' => [[$triangle, [[1, 1], [2, 1], [1, 2], [2, 2]]], Dimension::XY, false];
+
+        yield 'crossed hole' => [[$triangle, [[1, 1], [2, 2], [1, 2], [2, 1], [1, 1]]], Dimension::XY, false];
+
+        yield 'collinear exterior' => [[[[0, 0], [1, 1], [2, 2], [0, 0]]], Dimension::XY, false];
+
+        yield 'duplicate before plane' => [[[[0, 0], [0, 0], [2, 0], [0, 2], [0, 0]]], Dimension::XY, false];
+
+        yield 'invalid point' => [[[[0, 0], [\INF, 0], [0, 2], [0, 0]]], Dimension::XY, false];
+
+        yield 'empty point' => [[[[0, 0], [null, null], [0, 2], [0, 0]]], Dimension::XY, false];
+
+        yield 'M is not a plane coordinate' => [
+            [[[0, 0, 8], [2, 0, 100], [0, 2, -50], [0, 0, 9]]],
+            Dimension::XYM,
+            true,
+        ];
+
+        yield 'XYZM ignores M' => [
+            [[[0, 0, 0, 8], [2, 0, 2, 100], [0, 2, 2, -50], [0, 0, 0, 9]]],
+            Dimension::XYZM,
+            true,
+        ];
+
+        yield 'nonfinite M' => [[[[0, 0, 8], [2, 0, \INF], [0, 2, -50], [0, 0, 9]]], Dimension::XYM, false];
+        foreach ([1.0e-10, 1.0, 1.0e150, 1.0e308] as $scale) {
+            foreach ([[0, 1, 2], [2, 0, 1], [1, 2, 0]] as $permutation) {
+                foreach ([false, true] as $vertical) {
+                    $ring = [[0, 0, 0], [$scale, 0, $scale], [$scale, $scale, $scale], [0, $scale, 0], [0, 0, 0]];
+                    if ($vertical) {
+                        $ring = [[0, 0, 0], [0, $scale, 0], [0, $scale, $scale], [0, 0, $scale], [0, 0, 0]];
+                    }
+                    $ring = array_map(
+                        static fn (array $point): array => array_map(
+                            static fn (int $axis) => $point[$axis],
+                            $permutation
+                        ),
+                        $ring
+                    );
+
+                    yield 'plane '.$scale.implode('', $permutation).(int) $vertical => [
+                        [$ring],
+                        Dimension::XYZ,
+                        true,
+                    ];
+                }
+            }
+        }
+
+        yield 'noncoplanar fourth vertex' => [
+            [[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 1], [0, 0, 0]]],
+            Dimension::XYZ,
+            false,
+        ];
+
+        yield 'near plane is not in plane' => [
+            [[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, \PHP_FLOAT_EPSILON], [0, 0, 0]]],
+            Dimension::XYZ,
+            false,
+        ];
+
+        yield 'near degenerate but nonzero' => [
+            [[[0, 0], [1, 1], [2, 2 + 2 * \PHP_FLOAT_EPSILON], [0, 0]]],
+            Dimension::XY,
+            true,
+        ];
+
+        yield 'off plane hole' => [
+            [[[0, 0, 0], [4, 0, 0], [0, 4, 0], [0, 0, 0]], [[1, 1, 1], [2, 1, 1], [1, 2, 1], [1, 1, 1]]],
+            Dimension::XYZ,
+            false,
+        ];
+    }
+
+    /** @param list<list<list<float|int|null>>> $coordinates */
     public static function triangle(
         array $coordinates,
         Dimension $dimension = Dimension::XY,
@@ -107,7 +197,7 @@ final class PolygonStructureTest extends TestCase
     public function testDirectUnsupportedInput(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        (new PolygonStructureValidator())->validate('', new PolygonStructure());
+        new PolygonStructureValidator()->validate('', new PolygonStructure());
     }
 
     public function testEmptyFlagsNeverHideMembers(): void
@@ -178,7 +268,7 @@ final class PolygonStructureTest extends TestCase
 
     public function testPointErrorsAreReportedOnceInTheActiveContext(): void
     {
-        $polygon = self::polygon([[[0, 0], [INF, 0], [0, 2], [0, 0]]]);
+        $polygon = self::polygon([[[0, 0], [\INF, 0], [0, 2], [0, 0]]]);
         $root = ['polygon' => $polygon];
         $constraint = new PolygonStructure(groups: ['custom'], payload: ['consumer' => true]);
         $service = Validation::createValidator();
@@ -198,109 +288,18 @@ final class PolygonStructureTest extends TestCase
         }
     }
 
-    /** @param list<list<list<null|float|int>>> $coordinates */
+    /** @param list<list<list<float|int|null>>> $coordinates */
     #[DataProvider('structures')]
     public function testStructures(array $coordinates, Dimension $dimension, bool $valid): void
     {
         $polygon = self::polygon($coordinates, $dimension);
         $violations = Validation::createValidator()->validate($polygon, new PolygonStructure());
-        self::assertSame($valid, 0 === count($violations), (string) $violations);
-    }
-
-    /** @return iterable<string, array{list<list<list<null|float|int>>>, Dimension, bool}> */
-    public static function structures(): iterable
-    {
-        $triangle = [[0, 0], [4, 0], [0, 4], [0, 0]];
-
-        yield 'EMPTY' => [[], Dimension::XY, true];
-
-        yield 'triangle' => [[$triangle], Dimension::XY, true];
-
-        yield 'hole' => [[$triangle, [[1, 1], [2, 1], [1, 2], [1, 1]]], Dimension::XY, true];
-
-        yield 'outside hole left for K' => [[$triangle, [[10, 10], [11, 10], [10, 11], [10, 10]]], Dimension::XY, true];
-
-        yield 'empty exterior with hole' => [[[], $triangle], Dimension::XY, false];
-
-        yield 'empty hole' => [[$triangle, []], Dimension::XY, false];
-
-        yield 'open hole' => [[$triangle, [[1, 1], [2, 1], [1, 2], [2, 2]]], Dimension::XY, false];
-
-        yield 'crossed hole' => [[$triangle, [[1, 1], [2, 2], [1, 2], [2, 1], [1, 1]]], Dimension::XY, false];
-
-        yield 'collinear exterior' => [[[[0, 0], [1, 1], [2, 2], [0, 0]]], Dimension::XY, false];
-
-        yield 'duplicate before plane' => [[[[0, 0], [0, 0], [2, 0], [0, 2], [0, 0]]], Dimension::XY, false];
-
-        yield 'invalid point' => [[[[0, 0], [INF, 0], [0, 2], [0, 0]]], Dimension::XY, false];
-
-        yield 'empty point' => [[[[0, 0], [null, null], [0, 2], [0, 0]]], Dimension::XY, false];
-
-        yield 'M is not a plane coordinate' => [
-            [[[0, 0, 8], [2, 0, 100], [0, 2, -50], [0, 0, 9]]],
-            Dimension::XYM,
-            true,
-        ];
-
-        yield 'XYZM ignores M' => [
-            [[[0, 0, 0, 8], [2, 0, 2, 100], [0, 2, 2, -50], [0, 0, 0, 9]]],
-            Dimension::XYZM,
-            true,
-        ];
-
-        yield 'nonfinite M' => [[[[0, 0, 8], [2, 0, INF], [0, 2, -50], [0, 0, 9]]], Dimension::XYM, false];
-        foreach ([1.0e-10, 1.0, 1.0e150, 1.0e308] as $scale) {
-            foreach ([[0, 1, 2], [2, 0, 1], [1, 2, 0]] as $permutation) {
-                foreach ([false, true] as $vertical) {
-                    $ring = [[0, 0, 0], [$scale, 0, $scale], [$scale, $scale, $scale], [0, $scale, 0], [0, 0, 0]];
-                    if ($vertical) {
-                        $ring = [[0, 0, 0], [0, $scale, 0], [0, $scale, $scale], [0, 0, $scale], [0, 0, 0]];
-                    }
-                    $ring = array_map(
-                        static fn (array $point): array => array_map(
-                            static fn (int $axis) => $point[$axis],
-                            $permutation
-                        ),
-                        $ring
-                    );
-
-                    yield 'plane ' . $scale . implode('', $permutation) . (int) $vertical => [
-                        [$ring],
-                        Dimension::XYZ,
-                        true,
-                    ];
-                }
-            }
-        }
-
-        yield 'noncoplanar fourth vertex' => [
-            [[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 1], [0, 0, 0]]],
-            Dimension::XYZ,
-            false,
-        ];
-
-        yield 'near plane is not in plane' => [
-            [[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, PHP_FLOAT_EPSILON], [0, 0, 0]]],
-            Dimension::XYZ,
-            false,
-        ];
-
-        yield 'near degenerate but nonzero' => [
-            [[[0, 0], [1, 1], [2, 2 + 2 * PHP_FLOAT_EPSILON], [0, 0]]],
-            Dimension::XY,
-            true,
-        ];
-
-        yield 'off plane hole' => [
-            [[[0, 0, 0], [4, 0, 0], [0, 4, 0], [0, 0, 0]], [[1, 1, 1], [2, 1, 1], [1, 2, 1], [1, 1, 1]]],
-            Dimension::XYZ,
-            false,
-        ];
+        self::assertSame($valid, 0 === \count($violations), (string) $violations);
     }
 
     public function testWrongConstraintPrecedesNull(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        (new PolygonStructureValidator())->validate(null, new Assert\NotNull());
+        new PolygonStructureValidator()->validate(null, new Assert\NotNull());
     }
 }

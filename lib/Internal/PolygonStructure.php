@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,7 +28,7 @@ final class PolygonStructure extends Constraint
     public const string PLANE_ERROR = 'polygonstructure-plane';
     public const string UNAVAILABLE_ERROR = 'polygonstructure-unavailable';
 
-    /** @param null|string[] $groups Validation groups */
+    /** @param string[]|null $groups Validation groups */
     public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);

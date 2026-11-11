@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -47,7 +46,7 @@ final class PlanarRing
     public static function edges(array $ring): array
     {
         $edges = [];
-        $previous = $ring[count($ring) - 1];
+        $previous = $ring[\count($ring) - 1];
         foreach ($ring as $point) {
             if ($previous !== $point) {
                 $edges[] = [$previous, $point];

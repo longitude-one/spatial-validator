@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -41,7 +40,7 @@ final class NonEmptyPointsValidator extends ConstraintValidator
         foreach (array_values($value->getPoints()) as $index => $point) {
             if (PointCoordinates::isEmptyPoint($point)) {
                 $this->context->buildViolation('A line must not contain an EMPTY Point.')
-                    ->atPath('points[' . $index . ']')->setInvalidValue($point)
+                    ->atPath('points['.$index.']')->setInvalidValue($point)
                     ->setCode(NonEmptyPoints::INVALID_ERROR)->addViolation()
                 ;
             }

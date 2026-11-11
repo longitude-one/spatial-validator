@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -34,6 +33,33 @@ use Symfony\Component\Validator\Validation;
  */
 final class TriangleValidationTest extends TestCase
 {
+    /** @return iterable<string, array{list<list<list<float|int|null>>>, ?string}> */
+    public static function candidates(): iterable
+    {
+        $valid = [[0, 0], [1, 0], [0, 1], [0, 0]];
+
+        yield 'EMPTY' => [[], null];
+
+        yield 'valid XY' => [[$valid], null];
+
+        yield 'collinear' => [[[[0, 0], [1, 1], [2, 2], [0, 0]]], PolygonStructure::DEGENERATE_ERROR];
+
+        yield 'repeated' => [[[[0, 0], [1, 1], [0, 0], [0, 0]]], Rules\Triangle::DISTINCT_ERROR];
+
+        yield 'four distinct vertices' => [[[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            Rules\Triangle::POSITION_COUNT_ERROR];
+
+        yield 'open' => [[[[0, 0], [1, 0], [0, 1], [2, 2]]], Rules\FirstPointEqualsLastPoint::INVALID_ERROR];
+
+        yield 'EMPTY ring' => [[[]], Rules\Ring::EMPTY_ERROR];
+
+        yield 'EMPTY point' => [[[[null, null], [1, 0], [0, 1], [0, 0]]], Rules\NonEmptyPoints::INVALID_ERROR];
+
+        yield 'non finite point' => [[[[0, 0], [\INF, 0], [0, 1], [0, 0]]], Rules\FiniteCoordinates::INVALID_ERROR];
+
+        yield 'hole' => [[$valid, [[0.1, 0.1], [0.2, 0.1], [0.1, 0.2], [0.1, 0.1]]], Rules\Triangle::INTERIOR_ERROR];
+    }
+
     public function testAllVariantsScalesAndAxisPermutations(): void
     {
         foreach (Dimension::cases() as $dimension) {
@@ -62,7 +88,7 @@ final class TriangleValidationTest extends TestCase
                 }
             }
         }
-        $skinny = [[1, 1], [2, 2], [3, 3 + 4 * PHP_FLOAT_EPSILON], [1, 1]];
+        $skinny = [[1, 1], [2, 2], [3, 3 + 4 * \PHP_FLOAT_EPSILON], [1, 1]];
         $triangle = PolygonStructureTest::triangle([$skinny]);
         self::assertCount(0, Validation::createValidator()->validate($triangle, new Rules\Triangle()));
     }
@@ -71,10 +97,10 @@ final class TriangleValidationTest extends TestCase
     {
         foreach (Dimension::cases() as $dimension) {
             foreach ([[0, 1, 2], [2, 0, 1], [1, 2, 0]] as $axes) {
-                $points = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [0, PHP_FLOAT_EPSILON / 2, 0]];
+                $points = [[0, 0, 0], [1, 0, 0], [2, 0, 0], [0, \PHP_FLOAT_EPSILON / 2, 0]];
                 $points = array_map(static fn (array $point): array => $dimension->hasZ()
                     ? array_map(static fn (int $axis) => $point[$axis], $axes)
-                    : array_slice($point, 0, 2), $points);
+                    : \array_slice($point, 0, 2), $points);
                 if ($dimension->hasM()) {
                     $points = array_map(
                         static fn (array $point, int $index): array => [...$point, $index * 17],
@@ -124,7 +150,7 @@ final class TriangleValidationTest extends TestCase
         $codes = [];
         foreach ($violations as $violation) {
             $codes[] = $violation->getCode();
-            $warning = in_array($violation->getCode(), [Rules\FirstPointEqualsLastPoint::UNAVAILABLE_ERROR,
+            $warning = \in_array($violation->getCode(), [Rules\FirstPointEqualsLastPoint::UNAVAILABLE_ERROR,
                 Rules\SimpleLineString::UNAVAILABLE_ERROR, PolygonStructure::UNAVAILABLE_ERROR], true);
             self::assertSame($warning ? ['severity' => 'warning'] : null, $violation->getConstraint()?->payload);
         }
@@ -133,7 +159,7 @@ final class TriangleValidationTest extends TestCase
         self::assertContains(PolygonStructure::UNAVAILABLE_ERROR, $codes);
     }
 
-    /** @param list<list<list<null|float|int>>> $rings */
+    /** @param list<list<list<float|int|null>>> $rings */
     #[DataProvider('candidates')]
     public function testExplicitAndGenericRules(array $rings, ?string $code): void
     {
@@ -151,33 +177,6 @@ final class TriangleValidationTest extends TestCase
             }
             self::assertContains($code, $codes, (string) $violations);
         }
-    }
-
-    /** @return iterable<string, array{list<list<list<null|float|int>>>, ?string}> */
-    public static function candidates(): iterable
-    {
-        $valid = [[0, 0], [1, 0], [0, 1], [0, 0]];
-
-        yield 'EMPTY' => [[], null];
-
-        yield 'valid XY' => [[$valid], null];
-
-        yield 'collinear' => [[[[0, 0], [1, 1], [2, 2], [0, 0]]], PolygonStructure::DEGENERATE_ERROR];
-
-        yield 'repeated' => [[[[0, 0], [1, 1], [0, 0], [0, 0]]], Rules\Triangle::DISTINCT_ERROR];
-
-        yield 'four distinct vertices' => [[[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
-            Rules\Triangle::POSITION_COUNT_ERROR];
-
-        yield 'open' => [[[[0, 0], [1, 0], [0, 1], [2, 2]]], Rules\FirstPointEqualsLastPoint::INVALID_ERROR];
-
-        yield 'EMPTY ring' => [[[]], Rules\Ring::EMPTY_ERROR];
-
-        yield 'EMPTY point' => [[[[null, null], [1, 0], [0, 1], [0, 0]]], Rules\NonEmptyPoints::INVALID_ERROR];
-
-        yield 'non finite point' => [[[[0, 0], [INF, 0], [0, 1], [0, 0]]], Rules\FiniteCoordinates::INVALID_ERROR];
-
-        yield 'hole' => [[$valid, [[0.1, 0.1], [0.2, 0.1], [0.1, 0.2], [0.1, 0.1]]], Rules\Triangle::INTERIOR_ERROR];
     }
 
     public function testGroupsPayloadAndLocalizedContext(): void
@@ -209,6 +208,6 @@ final class TriangleValidationTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame(TriangleInterface::class, $violations->get(0)->getParameters()['{{ type }}']);
         $this->expectException(UnexpectedValueException::class);
-        (new Rules\TriangleValidator())->validate($polygon, new Rules\Triangle());
+        new Rules\TriangleValidator()->validate($polygon, new Rules\Triangle());
     }
 }

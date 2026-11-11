@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -61,10 +60,10 @@ final class TriangleValidator extends ConstraintValidator
     {
         $rings = array_values($triangle->getRings());
         $points = array_values($rings[0]->getPoints());
-        if (4 !== count($points)) {
+        if (4 !== \count($points)) {
             return;
         }
-        $positions = array_map(PointCoordinates::position(...), array_slice($points, 0, 3));
+        $positions = array_map(PointCoordinates::position(...), \array_slice($points, 0, 3));
         for ($second = 1; $second < 3; ++$second) {
             for ($first = 0; $first < $second; ++$first) {
                 if (null === $positions[$first] || null === $positions[$second]) {
@@ -74,7 +73,7 @@ final class TriangleValidator extends ConstraintValidator
                     $this->error(
                         'A Triangle requires three distinct spatial vertices.',
                         Triangle::DISTINCT_ERROR,
-                        'rings[0].points[' . $second . ']'
+                        'rings[0].points['.$second.']'
                     );
                 }
             }
@@ -88,7 +87,7 @@ final class TriangleValidator extends ConstraintValidator
 
     private function triangle(TriangleInterface $value, Triangle $constraint): void
     {
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new PolygonStructure(groups: $constraint->groups, payload: $constraint->payload),
@@ -98,10 +97,10 @@ final class TriangleValidator extends ConstraintValidator
         if ([] === $rings) {
             return;
         }
-        if (1 < count($rings)) {
+        if (1 < \count($rings)) {
             $this->error('A Triangle must not have interior rings.', Triangle::INTERIOR_ERROR, 'rings[1]');
         }
-        if (4 !== count($rings[0]->getPoints())) {
+        if (4 !== \count($rings[0]->getPoints())) {
             $this->error(
                 'A non-empty Triangle requires exactly four exterior positions.',
                 Triangle::POSITION_COUNT_ERROR,
@@ -109,10 +108,10 @@ final class TriangleValidator extends ConstraintValidator
             );
         }
         $this->distinct($value);
-        if ($before !== count($this->context->getViolations()) || SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
+        if ($before !== \count($this->context->getViolations()) || SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {
             return;
         }
-        $vertices = array_slice(array_values($rings[0]->getPoints()), 0, 3);
+        $vertices = \array_slice(array_values($rings[0]->getPoints()), 0, 3);
         $positions = array_values(array_filter(array_map(PointCoordinates::position(...), $vertices)));
         if (null === PolygonPlane::basis($positions)) {
             $this->error(
@@ -128,7 +127,7 @@ final class TriangleValidator extends ConstraintValidator
             $this->error(
                 'Triangle boundaries must not cross or share an interval.',
                 Triangle::TOPOLOGY_ERROR,
-                'rings[' . $index . ']'
+                'rings['.$index.']'
             );
         }
     }

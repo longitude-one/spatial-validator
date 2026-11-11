@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -45,13 +44,13 @@ final class CompoundCurveValidator extends ConstraintValidator
         if (GeometryTypeEnum::COMPOUNDCURVE !== $value->getType()) {
             throw new UnexpectedValueException($value, GeometryTypeEnum::COMPOUNDCURVE->value);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new Components(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations())) {
+        if ($before !== \count($this->context->getViolations())) {
             return;
         }
         $this->joins($value, $constraint);
@@ -95,7 +94,7 @@ final class CompoundCurveValidator extends ConstraintValidator
         $previous = null;
         foreach (array_values($value->getCurves()) as $index => $curve) {
             $points = $this->positions($curve);
-            $path = 'curves[' . $index . ']';
+            $path = 'curves['.$index.']';
             if ([] === $points || $curve->isEmpty()) {
                 $this->context->buildViolation('A contributing curve must not be EMPTY.')
                     ->atPath($path)->setCode(CompoundCurve::EMPTY_ERROR)->addViolation()
@@ -107,7 +106,7 @@ final class CompoundCurveValidator extends ConstraintValidator
             if (null !== $previous) {
                 $this->join($previous, $points[0], $value, $constraint, $path);
             }
-            $previous = $points[count($points) - 1];
+            $previous = $points[\count($points) - 1];
         }
     }
 

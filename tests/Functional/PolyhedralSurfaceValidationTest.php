@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -55,6 +54,70 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         ]);
     }
 
+    /** @return iterable<string, array{list<list<list<list<float|int>>>>, string}> */
+    public static function invalidSurfaces(): iterable
+    {
+        $tetra = self::tetrahedron();
+        $wrong = $tetra;
+        $wrong[1][0] = array_reverse($wrong[1][0]);
+
+        yield 'same direction shared edge' => [$wrong, Rules\PolyhedralSurface::ORIENTATION_ERROR];
+
+        yield 'three incident faces' => [[...$tetra, $tetra[0]], Rules\PolyhedralSurface::INCIDENCE_ERROR];
+
+        yield 'coincident opposite faces' => [
+            [$tetra[0], [array_reverse($tetra[0][0])]],
+            Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+
+        yield 'vertex only' => [
+            [$tetra[0], self::face([[0, 0, 0], [-2, 0, 0], [0, -2, 0]])], Rules\PolyhedralSurface::CONNECTED_ERROR,
+        ];
+
+        yield 'disjoint' => [
+            [$tetra[0], self::face([[5, 5, 0], [7, 5, 0], [5, 7, 0]])], Rules\PolyhedralSurface::CONNECTED_ERROR,
+        ];
+        $square = self::face([[0, 0, 0], [8, 0, 0], [8, 8, 0], [0, 8, 0]]);
+
+        yield 'crossing filled face interiors' => [
+            [$square, self::face([[4, 2, -1], [4, 6, -1], [4, 6, 1], [4, 2, 1]])],
+            Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+
+        yield 'interior interval with only shared boundary endpoints' => [[
+            self::face([[-2, 0, 0], [0, -2, 0], [2, 0, 0], [0, 2, 0]]),
+            self::face([[0, -2, 0], [0, 0, -2], [0, 2, 0], [0, 0, 2]]),
+        ], Rules\PolyhedralSurface::INTERSECTION_ERROR];
+
+        yield 'boundary in another interior' => [
+            [$square, self::face([[4, 2, 0], [4, 6, 0], [4, 6, 2], [4, 2, 2]])],
+            Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+
+        yield 'isolated point in face interior' => [
+            [$square, self::face([[4, 4, 0], [4, 2, 1], [4, 6, 1]])], Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+
+        yield 'coplanar crossing boundaries' => [
+            [$square, self::face([[6, -1, 0], [9, -1, 0], [9, 2, 0], [6, 2, 0]])],
+            Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+
+        yield 'coplanar containment' => [
+            [$square, self::face([[2, 2, 0], [4, 2, 0], [4, 4, 0], [2, 4, 0]])],
+            Rules\PolyhedralSurface::INTERSECTION_ERROR,
+        ];
+        $other = array_map(static fn (array $rings): array => array_map(
+            static fn (array $ring): array => array_map(
+                static fn (array $point): array => [-$point[0], -$point[1], -$point[2]],
+                $ring
+            ),
+            $rings
+        ), $tetra);
+
+        yield 'pinched vertex closed fans' => [[...$tetra, ...$other], Rules\PolyhedralSurface::MANIFOLD_ERROR];
+    }
+
     /** @param array<mixed> $patches */
     public static function surface(
         array $patches,
@@ -84,6 +147,26 @@ final class PolyhedralSurfaceValidationTest extends TestCase
 
         return [self::face([$origin, $north, $east]), self::face([$origin, $east, $top]),
             self::face([$origin, $top, $north]), self::face([$east, $north, $top])];
+    }
+
+    /** @return iterable<string, array{list<list<list<list<float|int>>>>, bool}> */
+    public static function validSurfaces(): iterable
+    {
+        yield 'empty' => [[], false];
+
+        yield 'single face' => [[self::tetrahedron()[0]], false];
+
+        yield 'open book' => [\array_slice(self::tetrahedron(), 0, 2), false];
+
+        yield 'tetrahedron' => [self::tetrahedron(), true];
+
+        yield 'cube' => [self::cube(), true];
+        $cube = self::cube();
+        array_splice($cube[0][0], 2, 0, [[2, 1, 0]]);
+
+        yield 'subdivided cube edge' => [$cube, true];
+
+        yield 'open cube' => [\array_slice(self::cube(), 0, 5), false];
     }
 
     /** @param list<list<list<list<float|int>>>> $faces */
@@ -151,7 +234,7 @@ final class PolyhedralSurfaceValidationTest extends TestCase
                 self::surface([$member], family: Family::GEOGRAPHY),
                 $constraint
             );
-            $last = $violations->get(count($violations) - 1);
+            $last = $violations->get(\count($violations) - 1);
             self::assertSame(Rules\PolyhedralSurface::UNAVAILABLE_ERROR, $last->getCode());
             self::assertSame($payload ?? ['severity' => 'warning'], $last->getConstraint()?->payload);
             self::assertSame($payload, $constraint->payload);
@@ -185,26 +268,6 @@ final class PolyhedralSurfaceValidationTest extends TestCase
             self::assertSame(Rules\ClosedPolyhedralSurface::INVALID_ERROR, $violations->get(0)->getCode());
             self::assertNull($violations->get(0)->getConstraint()?->payload);
         }
-    }
-
-    /** @return iterable<string, array{list<list<list<list<float|int>>>>, bool}> */
-    public static function validSurfaces(): iterable
-    {
-        yield 'empty' => [[], false];
-
-        yield 'single face' => [[self::tetrahedron()[0]], false];
-
-        yield 'open book' => [array_slice(self::tetrahedron(), 0, 2), false];
-
-        yield 'tetrahedron' => [self::tetrahedron(), true];
-
-        yield 'cube' => [self::cube(), true];
-        $cube = self::cube();
-        array_splice($cube[0][0], 2, 0, [[2, 1, 0]]);
-
-        yield 'subdivided cube edge' => [$cube, true];
-
-        yield 'open cube' => [array_slice(self::cube(), 0, 5), false];
     }
 
     public function testHoledFacesAndOrientationWarningsRemainIndependent(): void
@@ -256,70 +319,6 @@ final class PolyhedralSurfaceValidationTest extends TestCase
             $codes = array_map(static fn ($violation) => $violation->getCode(), iterator_to_array($violations));
             self::assertContains($code, $codes, (string) $violations);
         }
-    }
-
-    /** @return iterable<string, array{list<list<list<list<float|int>>>>, string}> */
-    public static function invalidSurfaces(): iterable
-    {
-        $tetra = self::tetrahedron();
-        $wrong = $tetra;
-        $wrong[1][0] = array_reverse($wrong[1][0]);
-
-        yield 'same direction shared edge' => [$wrong, Rules\PolyhedralSurface::ORIENTATION_ERROR];
-
-        yield 'three incident faces' => [[...$tetra, $tetra[0]], Rules\PolyhedralSurface::INCIDENCE_ERROR];
-
-        yield 'coincident opposite faces' => [
-            [$tetra[0], [array_reverse($tetra[0][0])]],
-            Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-
-        yield 'vertex only' => [
-            [$tetra[0], self::face([[0, 0, 0], [-2, 0, 0], [0, -2, 0]])], Rules\PolyhedralSurface::CONNECTED_ERROR,
-        ];
-
-        yield 'disjoint' => [
-            [$tetra[0], self::face([[5, 5, 0], [7, 5, 0], [5, 7, 0]])], Rules\PolyhedralSurface::CONNECTED_ERROR,
-        ];
-        $square = self::face([[0, 0, 0], [8, 0, 0], [8, 8, 0], [0, 8, 0]]);
-
-        yield 'crossing filled face interiors' => [
-            [$square, self::face([[4, 2, -1], [4, 6, -1], [4, 6, 1], [4, 2, 1]])],
-            Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-
-        yield 'interior interval with only shared boundary endpoints' => [[
-            self::face([[-2, 0, 0], [0, -2, 0], [2, 0, 0], [0, 2, 0]]),
-            self::face([[0, -2, 0], [0, 0, -2], [0, 2, 0], [0, 0, 2]]),
-        ], Rules\PolyhedralSurface::INTERSECTION_ERROR];
-
-        yield 'boundary in another interior' => [
-            [$square, self::face([[4, 2, 0], [4, 6, 0], [4, 6, 2], [4, 2, 2]])],
-            Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-
-        yield 'isolated point in face interior' => [
-            [$square, self::face([[4, 4, 0], [4, 2, 1], [4, 6, 1]])], Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-
-        yield 'coplanar crossing boundaries' => [
-            [$square, self::face([[6, -1, 0], [9, -1, 0], [9, 2, 0], [6, 2, 0]])],
-            Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-
-        yield 'coplanar containment' => [
-            [$square, self::face([[2, 2, 0], [4, 2, 0], [4, 4, 0], [2, 4, 0]])],
-            Rules\PolyhedralSurface::INTERSECTION_ERROR,
-        ];
-        $other = array_map(static fn (array $rings): array => array_map(
-            static fn (array $ring): array => array_map(
-                static fn (array $point): array => [-$point[0], -$point[1], -$point[2]],
-                $ring
-            ),
-            $rings
-        ), $tetra);
-
-        yield 'pinched vertex closed fans' => [[...$tetra, ...$other], Rules\PolyhedralSurface::MANIFOLD_ERROR];
     }
 
     public function testMeasuresAndSignedZero(): void
@@ -422,7 +421,7 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         );
         $flat = self::face([[0, 0, 0], [2, 0, 0], [0, 2, 0]]);
         $near = array_map(static fn (array $ring): array => array_map(
-            static fn (array $point): array => [$point[0], $point[1], PHP_FLOAT_EPSILON],
+            static fn (array $point): array => [$point[0], $point[1], \PHP_FLOAT_EPSILON],
             $ring
         ), $flat);
         $violations = Validation::createValidator()->validate(

@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,7 +39,7 @@ final class CircularArcs
     public static function build(array $points): array
     {
         $arcs = [];
-        $count = count($points);
+        $count = \count($points);
         for ($index = 0; $index + 2 < $count; $index += 2) {
             $arcs[] = self::arc($points[$index], $points[$index + 1], $points[$index + 2]);
         }
@@ -228,7 +227,7 @@ final class CircularArcs
         $segment = !$full && 0 === self::dot($normal, $normal)[0][0];
         if ($full) {
             $center = self::scale(self::sum($start, $intermediate), Exact::number(0.5));
-            $normal = 2 === count($first) ? self::vector([0.0, 0.0, 1.0]) : null;
+            $normal = 2 === \count($first) ? self::vector([0.0, 0.0, 1.0]) : null;
         } elseif (!$segment) {
             $numerator = self::sum(
                 self::scale(self::cross($right, $normal), self::dot($left, $left)),

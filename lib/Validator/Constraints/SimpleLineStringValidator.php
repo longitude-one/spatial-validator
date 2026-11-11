@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,13 +39,13 @@ final class SimpleLineStringValidator extends ConstraintValidator
         if (!$value instanceof LineStringInterface || GeometryTypeEnum::LINESTRING !== $value->getType()) {
             throw new UnexpectedValueException($value, LineStringInterface::class);
         }
-        $before = count($this->context->getViolations());
+        $before = \count($this->context->getViolations());
         $this->context->getValidator()->inContext($this->context)->validate(
             $value,
             new LineString(groups: $constraint->groups, payload: $constraint->payload),
             $this->context->getGroup()
         );
-        if ($before !== count($this->context->getViolations()) || [] === $value->getPoints()) {
+        if ($before !== \count($this->context->getViolations()) || [] === $value->getPoints()) {
             return;
         }
         if (SpatialModelEnum::GEOGRAPHY === $value->getFamily()) {

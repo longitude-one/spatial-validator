@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -72,12 +71,12 @@ final class ComponentsValidator extends ConstraintValidator
             return true;
         }
         $type = $member->getType()->value;
-        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\' . $type . 'Interface';
+        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\'.$type.'Interface';
 
-        return in_array($type, $types, true) && $member instanceof $interface;
+        return \in_array($type, $types, true) && $member instanceof $interface;
     }
 
-    /** @return null|array{string, string, list<string>} */
+    /** @return array{string, string, list<string>}|null */
     private function plan(string $type): ?array
     {
         return match ($type) {
@@ -115,7 +114,7 @@ final class ComponentsValidator extends ConstraintValidator
         }
         [$method, $segment, $types] = $plan;
         $type = 'GeometryCollection' === $parent->getType()->value ? 'Collection' : $parent->getType()->value;
-        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\' . $type . 'Interface';
+        $interface = 'LongitudeOne\SpatialTypes\Interfaces\\'.$type.'Interface';
         if (!$parent instanceof $interface) {
             throw new UnexpectedValueException($parent, $interface);
         }
@@ -124,7 +123,7 @@ final class ComponentsValidator extends ConstraintValidator
         $getter = [$parent, $method];
         $members = $getter();
         foreach (array_values($members) as $index => $member) {
-            $path = $segment . '[' . $index . ']';
+            $path = $segment.'['.$index.']';
             if ($member instanceof SpatialInterface) {
                 $this->compatibility($parent, $member, $path);
             }

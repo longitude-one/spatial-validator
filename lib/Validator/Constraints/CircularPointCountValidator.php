@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -37,7 +36,7 @@ final class CircularPointCountValidator extends ConstraintValidator
         if (!$value instanceof CircularStringInterface || GeometryTypeEnum::CIRCULARSTRING !== $value->getType()) {
             throw new UnexpectedValueException($value, CircularStringInterface::class);
         }
-        $count = count($value->getPoints());
+        $count = \count($value->getPoints());
         if (0 !== $count && (3 > $count || 0 === $count % 2)) {
             $this->context->buildViolation('A non-empty CircularString needs an odd number of at least three points.')
                 ->setCode(CircularPointCount::INVALID_ERROR)->addViolation()

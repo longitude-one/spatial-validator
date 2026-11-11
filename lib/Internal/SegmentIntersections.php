@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,7 +26,7 @@ final class SegmentIntersections
      */
     public static function kind(array $first, array $second, array $third, array $fourth): int
     {
-        if (2 === count($first)) {
+        if (2 === \count($first)) {
             return self::planar($first, $second, $third, $fourth);
         }
         if (!RobustPredicates::coplanar($first, $second, $third, $fourth)) {
@@ -57,7 +56,7 @@ final class SegmentIntersections
     /** @param list<list<float>> $positions */
     public static function simple(array $positions): bool
     {
-        $segments = count($positions) - 1;
+        $segments = \count($positions) - 1;
         for ($first = 0; $first < $segments; ++$first) {
             for ($second = $first + 1; $second < $segments; ++$second) {
                 $kind = self::kind(
@@ -94,9 +93,9 @@ final class SegmentIntersections
         }
 
         // Q02 endpoint equality does not move the actual contact onto those endpoints.
-        $last = $positions[count($positions) - 1];
+        $last = $positions[\count($positions) - 1];
 
-        return 0 === $first && $second === count($positions) - 2
+        return 0 === $first && $second === \count($positions) - 2
             && PointCoordinates::same($positions[0], $last)
             && $positions[0] === $last;
     }

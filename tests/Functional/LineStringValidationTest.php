@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -39,7 +38,19 @@ use Symfony\Component\Validator\Validation;
  */
 final class LineStringValidationTest extends TestCase
 {
-    /** @param list<list<null|float|int>> $coordinates */
+    /** @return iterable<string, array{Constraint}> */
+    public static function constraints(): iterable
+    {
+        yield 'cardinality' => [new SpatialAssert\MinimumPointCount()];
+
+        yield 'EMPTY members' => [new SpatialAssert\NonEmptyPoints()];
+
+        yield 'consecutive duplicates' => [new SpatialAssert\NoConsecutiveDuplicatePoints()];
+
+        yield 'simplicity' => [new SpatialAssert\SimpleLineString()];
+    }
+
+    /** @param list<list<float|int|null>> $coordinates */
     public static function line(
         array $coordinates,
         CoordinateDimensionEnum $dimension = CoordinateDimensionEnum::XY,
@@ -59,7 +70,7 @@ final class LineStringValidationTest extends TestCase
                 if ('M' === $axis && CoordinateDimensionEnum::XYM === $dimension) {
                     $ordinate = $ordinates[2] ?? null;
                 }
-                $point->method('get' . $axis)->willReturn($ordinate);
+                $point->method('get'.$axis)->willReturn($ordinate);
             }
             $points[] = $point;
         }
@@ -74,6 +85,52 @@ final class LineStringValidationTest extends TestCase
         return $line;
     }
 
+    /** @return iterable<string, array{list<list<float|int|null>>, bool}> */
+    public static function validityCases(): iterable
+    {
+        yield 'EMPTY' => [[], true];
+
+        yield 'single point' => [[[0, 0]], false];
+
+        yield 'two distinct' => [[[0, 0], [1, 1]], true];
+
+        yield 'adjacent duplicate' => [[[0, 0], [0, 0], [1, 1]], false];
+
+        yield 'backtracking remains valid' => [[[0, 0], [1, 1], [0, 0]], true];
+
+        yield 'crossing remains valid' => [[[0, 0], [2, 2], [0, 2], [2, 0]], true];
+
+        yield 'EMPTY member' => [[[null, null], [1, 1]], false];
+
+        yield 'two EMPTY members are not an EMPTY line' => [[[null, null], [null, null]], false];
+
+        yield 'partial null' => [[[0, null], [1, 1]], false];
+
+        yield 'infinite' => [[[\INF, 0], [1, 1]], false];
+
+        yield 'NaN' => [[[\NAN, 0], [1, 1]], false];
+    }
+
+    /** @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}> */
+    public static function variants(): iterable
+    {
+        yield 'M does not separate' => [[[0, 0, 1], [0, 0, 2]], CoordinateDimensionEnum::XYM, false];
+
+        yield 'Z separates' => [[[0, 0, 1], [0, 0, 2]], CoordinateDimensionEnum::XYZ, true];
+
+        yield 'XYZM ignores M' => [[[0, 0, 1, 2], [0, 0, 1, 3]], CoordinateDimensionEnum::XYZM, false];
+
+        yield 'nonfinite M' => [[[0, 0, 1, \INF], [1, 1, 2, 3]], CoordinateDimensionEnum::XYZM, false];
+
+        yield 'nonfinite Z' => [[[0, 0, \INF], [1, 1, 2]], CoordinateDimensionEnum::XYZ, false];
+
+        yield 'relative equality' => [[[700000.1 + 0.2, 1], [700000.3, 1]], CoordinateDimensionEnum::XY, false];
+
+        yield 'absolute equality' => [[[0.1 + 0.2, 1], [0.3, 1]], CoordinateDimensionEnum::XY, false];
+
+        yield 'distinct' => [[[3, 1], [3.000001, 1]], CoordinateDimensionEnum::XY, true];
+    }
+
     public function testCustomMinimumAndEmptyAllowance(): void
     {
         $service = Validation::createValidator();
@@ -85,7 +142,7 @@ final class LineStringValidationTest extends TestCase
 
     public function testGroupsPayloadPathsAndRoot(): void
     {
-        $value = LineStringValidationTest::line([[0, 0], [0, 0], [200, 91]], family: SpatialModelEnum::GEOGRAPHY);
+        $value = self::line([[0, 0], [0, 0], [200, 91]], family: SpatialModelEnum::GEOGRAPHY);
         $constraint = new SpatialAssert\LineString(groups: ['custom'], payload: ['source' => 'consumer']);
         $root = ['shape' => $value];
         $service = Validation::createValidator();
@@ -139,71 +196,25 @@ final class LineStringValidationTest extends TestCase
         $validator->validate('', $constraint);
     }
 
-    /** @param list<list<null|float|int>> $coordinates */
+    /** @param list<list<float|int|null>> $coordinates */
     #[DataProvider('validityCases')]
     public function testValidity(array $coordinates, bool $valid): void
     {
         $value = self::line($coordinates);
         $violations = Validation::createValidator()->validate($value, new SpatialAssert\LineString());
-        self::assertSame($valid, 0 === count($violations));
+        self::assertSame($valid, 0 === \count($violations));
         self::assertSame([] === $coordinates, $value->isEmpty());
     }
 
-    /** @return iterable<string, array{list<list<null|float|int>>, bool}> */
-    public static function validityCases(): iterable
-    {
-        yield 'EMPTY' => [[], true];
-
-        yield 'single point' => [[[0, 0]], false];
-
-        yield 'two distinct' => [[[0, 0], [1, 1]], true];
-
-        yield 'adjacent duplicate' => [[[0, 0], [0, 0], [1, 1]], false];
-
-        yield 'backtracking remains valid' => [[[0, 0], [1, 1], [0, 0]], true];
-
-        yield 'crossing remains valid' => [[[0, 0], [2, 2], [0, 2], [2, 0]], true];
-
-        yield 'EMPTY member' => [[[null, null], [1, 1]], false];
-
-        yield 'two EMPTY members are not an EMPTY line' => [[[null, null], [null, null]], false];
-
-        yield 'partial null' => [[[0, null], [1, 1]], false];
-
-        yield 'infinite' => [[[INF, 0], [1, 1]], false];
-
-        yield 'NaN' => [[[NAN, 0], [1, 1]], false];
-    }
-
-    /** @param list<list<null|float|int>> $coordinates */
+    /** @param list<list<float|int|null>> $coordinates */
     #[DataProvider('variants')]
     public function testVariantEquality(array $coordinates, CoordinateDimensionEnum $dimension, bool $valid): void
     {
         foreach (SpatialModelEnum::cases() as $family) {
             $value = self::line($coordinates, $dimension, $family);
             $violations = Validation::createValidator()->validate($value, new SpatialAssert\Spatial());
-            self::assertSame($valid, 0 === count($violations));
+            self::assertSame($valid, 0 === \count($violations));
         }
-    }
-
-    /** @return iterable<string, array{list<list<null|float|int>>, CoordinateDimensionEnum, bool}> */
-    public static function variants(): iterable
-    {
-        yield 'M does not separate' => [[[0, 0, 1], [0, 0, 2]], CoordinateDimensionEnum::XYM, false];
-
-        yield 'Z separates' => [[[0, 0, 1], [0, 0, 2]], CoordinateDimensionEnum::XYZ, true];
-
-        yield 'XYZM ignores M' => [[[0, 0, 1, 2], [0, 0, 1, 3]], CoordinateDimensionEnum::XYZM, false];
-
-        yield 'nonfinite M' => [[[0, 0, 1, INF], [1, 1, 2, 3]], CoordinateDimensionEnum::XYZM, false];
-
-        yield 'nonfinite Z' => [[[0, 0, INF], [1, 1, 2]], CoordinateDimensionEnum::XYZ, false];
-
-        yield 'relative equality' => [[[700000.1 + 0.2, 1], [700000.3, 1]], CoordinateDimensionEnum::XY, false];
-
-        yield 'absolute equality' => [[[0.1 + 0.2, 1], [0.3, 1]], CoordinateDimensionEnum::XY, false];
-
-        yield 'distinct' => [[[3, 1], [3.000001, 1]], CoordinateDimensionEnum::XY, true];
     }
 
     #[DataProvider('constraints')]
@@ -212,17 +223,5 @@ final class LineStringValidationTest extends TestCase
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
         $validator->validate(null, new Assert\NotNull());
-    }
-
-    /** @return iterable<string, array{Constraint}> */
-    public static function constraints(): iterable
-    {
-        yield 'cardinality' => [new SpatialAssert\MinimumPointCount()];
-
-        yield 'EMPTY members' => [new SpatialAssert\NonEmptyPoints()];
-
-        yield 'consecutive duplicates' => [new SpatialAssert\NoConsecutiveDuplicatePoints()];
-
-        yield 'simplicity' => [new SpatialAssert\SimpleLineString()];
     }
 }

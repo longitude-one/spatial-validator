@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -35,14 +34,14 @@ final class PolyhedralSurfaceContractTest extends TestCase
 {
     public function testClosedNullAndUnsupportedValues(): void
     {
-        (new Rules\ClosedPolyhedralSurfaceValidator())->validate(null, new Rules\ClosedPolyhedralSurface());
+        new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\ClosedPolyhedralSurface());
         $validator = Validation::createValidator();
         self::assertCount(0, $validator->validate(null, new Rules\ClosedPolyhedralSurface()));
         foreach (['', 'POLYHEDRALSURFACE EMPTY', 42, new GenericObject()] as $value) {
             self::assertCount(1, $validator->validate($value, new Rules\ClosedPolyhedralSurface()));
         }
         $this->expectException(UnexpectedValueException::class);
-        (new Rules\ClosedPolyhedralSurfaceValidator())->validate('', new Rules\ClosedPolyhedralSurface());
+        new Rules\ClosedPolyhedralSurfaceValidator()->validate('', new Rules\ClosedPolyhedralSurface());
     }
 
     public function testClosedRejectsWrongDeclaredType(): void
@@ -50,13 +49,13 @@ final class PolyhedralSurfaceContractTest extends TestCase
         $candidate = self::createStub(PolyhedralSurfaceInterface::class);
         $candidate->method('getType')->willReturn(GeometryTypeEnum::POLYGON);
         $this->expectException(UnexpectedValueException::class);
-        (new Rules\ClosedPolyhedralSurfaceValidator())->validate($candidate, new Rules\ClosedPolyhedralSurface());
+        new Rules\ClosedPolyhedralSurfaceValidator()->validate($candidate, new Rules\ClosedPolyhedralSurface());
     }
 
     public function testClosedWrongConstraintPrecedesNullHandling(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        (new Rules\ClosedPolyhedralSurfaceValidator())->validate(null, new Rules\Spatial());
+        new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\Spatial());
     }
 
     public function testClosurePreservesGroupsPayloadRootAndPreviousUnrelatedViolation(): void

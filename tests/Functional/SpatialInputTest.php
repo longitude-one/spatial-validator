@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,12 +35,40 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpatialInputTest extends TestCase
 {
+    /** @return iterable<string, array{mixed}> */
+    public static function constraintCheckValues(): iterable
+    {
+        yield 'null' => [null];
+
+        yield 'empty string' => [''];
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function unsupportedValues(): iterable
+    {
+        yield 'integer' => [42];
+
+        yield 'false' => [false];
+
+        yield 'string' => ['POINT EMPTY'];
+
+        yield 'empty string' => [''];
+
+        yield 'whitespace string' => [" \t\n"];
+
+        yield 'numeric string' => ['0'];
+
+        yield 'array' => [[]];
+
+        yield 'object' => [(object) []];
+    }
+
     #[DataProvider('unsupportedValues')]
     public function testDirectInvocationRejectsUnsupportedValues(mixed $value): void
     {
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessageIsOrContains(SpatialInterface::class);
-        (new SpatialValidator())->validate($value, new Spatial());
+        new SpatialValidator()->validate($value, new Spatial());
     }
 
     public function testNotNullDoesNotAllowEmptyStrings(): void
@@ -62,7 +89,7 @@ final class SpatialInputTest extends TestCase
 
     public function testNullIsIgnored(): void
     {
-        (new SpatialValidator())->validate(null, new Spatial());
+        new SpatialValidator()->validate(null, new Spatial());
         self::assertCount(0, Validation::createValidator()->validate(null, new Spatial()));
     }
 
@@ -89,39 +116,11 @@ final class SpatialInputTest extends TestCase
         self::assertSame($value, $violations->get(0)->getInvalidValue());
     }
 
-    /** @return iterable<string, array{mixed}> */
-    public static function unsupportedValues(): iterable
-    {
-        yield 'integer' => [42];
-
-        yield 'false' => [false];
-
-        yield 'string' => ['POINT EMPTY'];
-
-        yield 'empty string' => [''];
-
-        yield 'whitespace string' => [" \t\n"];
-
-        yield 'numeric string' => ['0'];
-
-        yield 'array' => [[]];
-
-        yield 'object' => [(object) []];
-    }
-
     #[DataProvider('constraintCheckValues')]
     public function testWrongConstraintIsRejectedBeforeValueHandling(mixed $value): void
     {
         $this->expectException(UnexpectedTypeException::class);
         $this->expectExceptionMessageIsOrContains(Spatial::class);
-        (new SpatialValidator())->validate($value, new NotNull());
-    }
-
-    /** @return iterable<string, array{mixed}> */
-    public static function constraintCheckValues(): iterable
-    {
-        yield 'null' => [null];
-
-        yield 'empty string' => [''];
+        new SpatialValidator()->validate($value, new NotNull());
     }
 }

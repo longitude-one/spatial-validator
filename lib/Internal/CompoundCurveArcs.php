@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -40,8 +39,8 @@ final class CompoundCurveArcs
                 ? CircularArcs::build($positions) : self::segments($positions);
             foreach ($parts as $part => $arc) {
                 $arcs[] = $arc;
-                $paths[] = 'curves[' . $index . '].' . ($curve instanceof CircularStringInterface ? 'arcs' : 'segments')
-                    . '[' . $part . ']';
+                $paths[] = 'curves['.$index.'].'.($curve instanceof CircularStringInterface ? 'arcs' : 'segments')
+                    .'['.$part.']';
             }
         }
 
@@ -56,7 +55,7 @@ final class CompoundCurveArcs
     private static function segments(array $positions): array
     {
         $parts = [];
-        $count = count($positions);
+        $count = \count($positions);
         for ($index = 1; $index < $count; ++$index) {
             $parts[] = CircularArcs::build([$positions[$index - 1], $positions[$index - 1], $positions[$index]])[0];
         }

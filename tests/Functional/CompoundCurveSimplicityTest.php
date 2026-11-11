@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,26 +29,6 @@ use Symfony\Component\Validator\Validation;
  */
 final class CompoundCurveSimplicityTest extends TestCase
 {
-    /** @param list<array{bool, list<list<float|int>>}> $parts */
-    #[DataProvider('cases')]
-    public function testGlobalTopology(array $parts, bool $simple): void
-    {
-        $members = [];
-        foreach ($parts as [$circular, $coordinates]) {
-            $members[] = $circular
-                ? CircularStringValidationTest::curve($coordinates) : LineStringValidationTest::line($coordinates);
-        }
-        $value = CompoundCurveValidationTest::curve($members);
-        $service = Validation::createValidator();
-        self::assertCount(0, $service->validate($value, new SpatialAssert\CompoundCurve()));
-        $violations = $service->validate($value, new SpatialAssert\SimpleCompoundCurve());
-        self::assertSame($simple, 0 === count($violations));
-        foreach ($violations as $violation) {
-            self::assertSame(SpatialAssert\SimpleCompoundCurve::INVALID_ERROR, $violation->getCode());
-            self::assertStringStartsWith('curves[', $violation->getPropertyPath());
-        }
-    }
-
     /** @return iterable<string, array{list<array{bool, list<list<float|int>>}>, bool}> */
     public static function cases(): iterable
     {
@@ -94,6 +73,26 @@ final class CompoundCurveSimplicityTest extends TestCase
         yield 'boundary repeated internally' => [[[false, [[0, 0], [1, 0], [0, 0], [0, 1]]]], false];
     }
 
+    /** @param list<array{bool, list<list<float|int>>}> $parts */
+    #[DataProvider('cases')]
+    public function testGlobalTopology(array $parts, bool $simple): void
+    {
+        $members = [];
+        foreach ($parts as [$circular, $coordinates]) {
+            $members[] = $circular
+                ? CircularStringValidationTest::curve($coordinates) : LineStringValidationTest::line($coordinates);
+        }
+        $value = CompoundCurveValidationTest::curve($members);
+        $service = Validation::createValidator();
+        self::assertCount(0, $service->validate($value, new SpatialAssert\CompoundCurve()));
+        $violations = $service->validate($value, new SpatialAssert\SimpleCompoundCurve());
+        self::assertSame($simple, 0 === \count($violations));
+        foreach ($violations as $violation) {
+            self::assertSame(SpatialAssert\SimpleCompoundCurve::INVALID_ERROR, $violation->getCode());
+            self::assertStringStartsWith('curves[', $violation->getPropertyPath());
+        }
+    }
+
     public function testLocalizedGroupAndPayload(): void
     {
         $value = CompoundCurveValidationTest::curve([LineStringValidationTest::line([[0, 0], [2, 0]]),
@@ -115,7 +114,7 @@ final class CompoundCurveSimplicityTest extends TestCase
 
     public function testNearlyTangentArcIsNotSnapped(): void
     {
-        $height = 1.0 + PHP_FLOAT_EPSILON;
+        $height = 1.0 + \PHP_FLOAT_EPSILON;
         $value = CompoundCurveValidationTest::curve([
             CircularStringValidationTest::curve([[-1, 0], [0, 1], [1, 0]]),
             LineStringValidationTest::line([[1, 0], [2, 0], [2, $height], [-2, $height]]),
@@ -134,11 +133,11 @@ final class CompoundCurveSimplicityTest extends TestCase
                     $coordinates[] = [$point[$axis], $point[($axis + 1) % 3], $point[($axis + 2) % 3]];
                 }
                 $value = CompoundCurveValidationTest::curve([
-                    CircularStringValidationTest::curve(array_slice($coordinates, 0, 3), CoordinateDimensionEnum::XYZ),
-                    LineStringValidationTest::line(array_slice($coordinates, 2), CoordinateDimensionEnum::XYZ),
+                    CircularStringValidationTest::curve(\array_slice($coordinates, 0, 3), CoordinateDimensionEnum::XYZ),
+                    LineStringValidationTest::line(\array_slice($coordinates, 2), CoordinateDimensionEnum::XYZ),
                 ], CoordinateDimensionEnum::XYZ);
                 self::assertCount(0, $service->validate($value, new SpatialAssert\CompoundCurve()));
-                self::assertGreaterThan(0, count($service->validate($value, new SpatialAssert\SimpleCompoundCurve())));
+                self::assertGreaterThan(0, \count($service->validate($value, new SpatialAssert\SimpleCompoundCurve())));
             }
         }
     }
@@ -152,7 +151,7 @@ final class CompoundCurveSimplicityTest extends TestCase
         ], $dimension);
         $constraint = new SpatialAssert\SimpleCompoundCurve();
         $violations = Validation::createValidator()->validate($value, $constraint);
-        self::assertGreaterThan(0, count($violations));
+        self::assertGreaterThan(0, \count($violations));
         $warnings = [];
         foreach ($violations as $violation) {
             if (SpatialAssert\SimpleCompoundCurve::UNAVAILABLE_ERROR === $violation->getCode()) {

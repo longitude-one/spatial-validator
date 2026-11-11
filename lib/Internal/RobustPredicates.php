@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -62,11 +61,11 @@ final class RobustPredicates
      */
     public static function compare(array $first, array $second): int
     {
-        $comparison = count($first) <=> count($second);
+        $comparison = \count($first) <=> \count($second);
         if (0 !== $comparison) {
             return $comparison;
         }
-        for ($index = count($first) - 1; 0 <= $index; --$index) {
+        for ($index = \count($first) - 1; 0 <= $index; --$index) {
             if ($first[$index] !== $second[$index]) {
                 return $first[$index] <=> $second[$index];
             }
@@ -134,7 +133,7 @@ final class RobustPredicates
         $exponent = (($bytes[1] & 127) << 4) | ($bytes[2] >> 4);
         $leading = ($bytes[2] & 15) + (0 === $exponent ? 0 : 16);
         $digits = [$leading];
-        foreach (array_slice($bytes, 2) as $byte) {
+        foreach (\array_slice($bytes, 2) as $byte) {
             $carry = $byte;
             foreach ($digits as $index => $digit) {
                 $total = $digit * 256 + $carry;
@@ -157,7 +156,7 @@ final class RobustPredicates
      */
     public static function multiply(array $first, array $second): array
     {
-        $result = array_fill(0, count($first[1]) + count($second[1]), 0);
+        $result = array_fill(0, \count($first[1]) + \count($second[1]), 0);
         foreach ($first[1] as $left => $digit) {
             if (0 === $digit) {
                 continue;
@@ -169,7 +168,7 @@ final class RobustPredicates
                 $result[$offset] = $product % self::BASE;
                 $carry = intdiv($product, self::BASE);
             }
-            $result[$left + count($second[1])] = $carry;
+            $result[$left + \count($second[1])] = $carry;
         }
 
         return self::signed($first[0] * $second[0], array_values($result));
@@ -252,7 +251,7 @@ final class RobustPredicates
     {
         $result = [];
         $carry = 0;
-        $length = max(count($first), count($second));
+        $length = max(\count($first), \count($second));
         for ($index = 0; $index < $length; ++$index) {
             $total = ($first[$index] ?? 0) + ($second[$index] ?? 0) + $carry;
             $result[] = $total % self::BASE;

@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,6 +29,14 @@ use Symfony\Component\Validator\Validation;
  */
 final class MultiPolygonValidationTest extends TestCase
 {
+    /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
+    public static function pairs(): iterable
+    {
+        yield from self::planarPairs();
+
+        yield from self::spatialPairs();
+    }
+
     /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
     public static function planarPairs(): iterable
     {
@@ -64,7 +71,7 @@ final class MultiPolygonValidationTest extends TestCase
             Dimension::XY,
         ];
 
-        $near = 8 + 16 * PHP_FLOAT_EPSILON;
+        $near = 8 + 16 * \PHP_FLOAT_EPSILON;
 
         yield 'near but disjoint' => [
             [$square],
@@ -243,14 +250,6 @@ final class MultiPolygonValidationTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{list<list<list<float|int>>>, list<list<list<float|int>>>, bool, Dimension}> */
-    public static function pairs(): iterable
-    {
-        yield from self::planarPairs();
-
-        yield from self::spatialPairs();
-    }
-
     public function testGeographyReportsDistinctAggregateWarning(): void
     {
         $member = PolygonStructureTest::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]]], family: Family::GEOGRAPHY);
@@ -258,7 +257,7 @@ final class MultiPolygonValidationTest extends TestCase
             $constraint = new Rules\MultiPolygon(payload: $payload);
             $value = CollectionValidationTest::aggregate('MultiPolygon', [$member, $member], family: Family::GEOGRAPHY);
             $violations = Validation::createValidator()->validate($value, $constraint);
-            $last = $violations->get(count($violations) - 1);
+            $last = $violations->get(\count($violations) - 1);
             self::assertSame(Rules\MultiPolygon::UNAVAILABLE_ERROR, $last->getCode());
             self::assertSame($payload ?? ['severity' => 'warning'], $last->getConstraint()?->payload);
             self::assertSame($payload, $constraint->payload);

@@ -1,12 +1,11 @@
 <?php
-
 /**
  * This file is part of the spatial project.
  *
  * PHP 8.4 | 8.5
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2024-2026
- * Copyright Longitude One 2024-2026
+ * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
+ * Copyright Longitude One 2026
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,7 +24,7 @@ final class PolygonRingRelations
      * @param list<list<float>> $first
      * @param list<list<float>> $second
      *
-     * @return null|list<list<float>>
+     * @return list<list<float>>|null
      */
     public static function contacts(array $first, array $second): ?array
     {
@@ -41,7 +40,7 @@ final class PolygonRingRelations
                     return null;
                 }
                 foreach ($endpoints as $point) {
-                    if (!in_array($point, $contacts, true)) {
+                    if (!\in_array($point, $contacts, true)) {
                         $contacts[] = $point;
                     }
                 }
@@ -65,12 +64,12 @@ final class PolygonRingRelations
         foreach (PlanarRing::edges($ring) as [$start, $end]) {
             $split = [$start, $end];
             foreach ($contacts as $point) {
-                if (PlanarRing::onSegment($point, $start, $end) && !in_array($point, $split, true)) {
+                if (PlanarRing::onSegment($point, $start, $end) && !\in_array($point, $split, true)) {
                     $split[] = $point;
                 }
             }
             usort($split, static fn (array $left, array $right): int => $left <=> $right);
-            $count = count($split);
+            $count = \count($split);
             for ($index = 1; $index < $count; ++$index) {
                 $locations |= PlanarRing::midpointLocation($split[$index - 1], $split[$index], $other);
             }
