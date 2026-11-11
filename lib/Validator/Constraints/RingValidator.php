@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -25,6 +26,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Compose line validity, minimum cardinality, closure and simplicity for a linear ring. */
 final class RingValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Ring) {

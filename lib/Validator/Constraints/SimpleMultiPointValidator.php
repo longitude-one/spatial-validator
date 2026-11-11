@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -27,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicit aggregate property, independent from ordinary validity. */
 final class SimpleMultiPointValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleMultiPoint) {
@@ -59,7 +66,12 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         $this->compare($value, $positions);
     }
 
-    /** @param array<int, list<float>> $positions */
+    /**
+     * @param MultiPointInterface $value     spatial value to validate
+     * @param array               $positions positions
+     *
+     * @phpstan-param array<int, list<float>> $positions
+     */
     private function compare(MultiPointInterface $value, array $positions): void
     {
         foreach ($positions as $index => $position) {
@@ -75,7 +87,11 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         }
     }
 
-    /** @return array<int, list<float>> */
+    /**
+     * @param MultiPointInterface $value spatial value to validate
+     *
+     * @return array<int, list<float>>
+     */
     private function positions(MultiPointInterface $value): array
     {
         $positions = [];
@@ -89,6 +105,11 @@ final class SimpleMultiPointValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleMultiPoint $constraint applied validation constraint
+     */
     private function unavailable(SimpleMultiPoint $constraint): void
     {
         $warning = clone $constraint;

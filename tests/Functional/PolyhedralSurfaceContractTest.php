@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -32,6 +33,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolyhedralSurfaceContractTest extends TestCase
 {
+    /**
+     * Verify closed null and unsupported values.
+     */
     public function testClosedNullAndUnsupportedValues(): void
     {
         new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\ClosedPolyhedralSurface());
@@ -44,6 +48,9 @@ final class PolyhedralSurfaceContractTest extends TestCase
         new Rules\ClosedPolyhedralSurfaceValidator()->validate('', new Rules\ClosedPolyhedralSurface());
     }
 
+    /**
+     * Verify closed rejects wrong declared type.
+     */
     public function testClosedRejectsWrongDeclaredType(): void
     {
         $candidate = self::createStub(PolyhedralSurfaceInterface::class);
@@ -52,12 +59,18 @@ final class PolyhedralSurfaceContractTest extends TestCase
         new Rules\ClosedPolyhedralSurfaceValidator()->validate($candidate, new Rules\ClosedPolyhedralSurface());
     }
 
+    /**
+     * Verify closed wrong constraint precedes null handling.
+     */
     public function testClosedWrongConstraintPrecedesNullHandling(): void
     {
         $this->expectException(UnexpectedTypeException::class);
         new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\Spatial());
     }
 
+    /**
+     * Verify closure preserves groups payload root and previous unrelated violation.
+     */
     public function testClosurePreservesGroupsPayloadRootAndPreviousUnrelatedViolation(): void
     {
         $surface = PolyhedralSurfaceValidationTest::surface([]);
@@ -75,6 +88,9 @@ final class PolyhedralSurfaceContractTest extends TestCase
         self::assertSame($root, $last->getRoot());
     }
 
+    /**
+     * Verify parallel and degenerate patch planes and zero volume envelope.
+     */
     public function testParallelAndDegeneratePatchPlanesAndZeroVolumeEnvelope(): void
     {
         $face = [[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 0.0]]];

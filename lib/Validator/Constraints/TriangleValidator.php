@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -56,6 +57,11 @@ final class TriangleValidator extends ConstraintValidator
         $this->triangle($value, $constraint);
     }
 
+    /**
+     * Distinct.
+     *
+     * @param TriangleInterface $triangle triangle
+     */
     private function distinct(TriangleInterface $triangle): void
     {
         $rings = array_values($triangle->getRings());
@@ -80,11 +86,24 @@ final class TriangleValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Error.
+     *
+     * @param string $message message
+     * @param string $code    violation code
+     * @param string $path    property path for the diagnostic
+     */
     private function error(string $message, string $code, string $path): void
     {
         $this->context->buildViolation($message)->setCode($code)->atPath($path)->addViolation();
     }
 
+    /**
+     * Triangle.
+     *
+     * @param TriangleInterface $value      spatial value to validate
+     * @param Triangle          $constraint applied validation constraint
+     */
     private function triangle(TriangleInterface $value, Triangle $constraint): void
     {
         $before = \count($this->context->getViolations());

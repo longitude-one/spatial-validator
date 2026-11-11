@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -23,8 +24,10 @@ final class ClosedPolyhedralSurface extends Constraint
     public const string INVALID_ERROR = 'closedpolyhedralsurface-invalid';
 
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; unavailable interactions default to warning
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata; unavailable interactions default to warning
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = null)
     {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,6 +29,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** @internal Compose complete linear boundaries and one supporting plane, leaving inter-ring topology to K. */
 final class PolygonStructureValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof PolygonStructure) {
@@ -59,7 +66,12 @@ final class PolygonStructureValidator extends ConstraintValidator
         $this->plane($positions);
     }
 
-    /** @return array<int, list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon    polygon whose ring positions are extracted
+     * @param PolygonStructure $constraint applied validation constraint
+     *
+     * @return array<int, list<list<float>>>
+     */
     private function boundaries(PolygonInterface $polygon, PolygonStructure $constraint): array
     {
         $positions = [];
@@ -84,12 +96,23 @@ final class PolygonStructureValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Error.
+     *
+     * @param string $message message
+     * @param string $code    violation code
+     * @param string $path    property path for the diagnostic
+     */
     private function error(string $message, string $code, string $path = ''): void
     {
         $this->context->buildViolation($message)->setCode($code)->atPath($path)->addViolation();
     }
 
-    /** @param array<int, list<list<float>>> $rings */
+    /**
+     * @param array $rings rings
+     *
+     * @phpstan-param array<int, list<list<float>>> $rings
+     */
     private function plane(array $rings): void
     {
         $exterior = $rings[0] ?? [];
@@ -119,7 +142,12 @@ final class PolygonStructureValidator extends ConstraintValidator
         }
     }
 
-    /** @return list<list<float>> */
+    /**
+     * @param PolygonInterface    $polygon polygon whose ring positions are extracted
+     * @param LineStringInterface $ring    ring
+     *
+     * @return list<list<float>>
+     */
     private function positions(PolygonInterface $polygon, LineStringInterface $ring): array
     {
         if ([] !== ComponentMetadata::errors($polygon, $ring)) {
@@ -137,6 +165,11 @@ final class PolygonStructureValidator extends ConstraintValidator
         return $positions;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param PolygonStructure $constraint applied validation constraint
+     */
     private function unavailable(PolygonStructure $constraint): void
     {
         $warning = clone $constraint;

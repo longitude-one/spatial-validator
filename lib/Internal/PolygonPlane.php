@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -19,7 +20,9 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class PolygonPlane
 {
     /**
-     * @param list<list<float>> $positions
+     * @param array $positions positions
+     *
+     * @phpstan-param list<list<float>> $positions
      *
      * @return array{list<float>, list<float>, list<float>}|null
      */
@@ -43,15 +46,22 @@ final class PolygonPlane
     }
 
     /**
-     * @param array{list<float>, list<float>, list<float>} $basis
-     * @param list<float>                                  $position
+     * @param array $basis    basis
+     * @param array $position position
+     *
+     * @phpstan-param array{list<float>, list<float>, list<float>} $basis
+     * @phpstan-param list<float> $position
      */
     public static function contains(array $basis, array $position): bool
     {
         return 2 === \count($position) || RobustPredicates::coplanar($basis[0], $basis[1], $basis[2], $position);
     }
 
-    /** @return list<array{int, int}> */
+    /**
+     * @param int $dimension dimension
+     *
+     * @return list<array{int, int}>
+     */
     private static function axes(int $dimension): array
     {
         return 2 === $dimension ? [[0, 1]] : [[0, 1], [0, 2], [1, 2]];

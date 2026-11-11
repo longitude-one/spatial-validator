@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -21,8 +22,10 @@ use Symfony\Component\Validator\Constraint;
 final class TIN extends Constraint
 {
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata; warnings are the default severity
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata; warnings are the default severity
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = ['severity' => 'warning'])
     {

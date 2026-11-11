@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -33,7 +34,11 @@ final class PolygonContacts
     private array $points = [];
 
     /**
-     * @param list<list<float>> $points
+     * @param int   $first  first operand
+     * @param int   $second second operand
+     * @param array $points coordinate positions to inspect
+     *
+     * @phpstan-param list<list<float>> $points
      */
     public function add(int $first, int $second, array $points): bool
     {
@@ -52,6 +57,12 @@ final class PolygonContacts
         return $connected;
     }
 
+    /**
+     * Join.
+     *
+     * @param string $ring  ring
+     * @param string $point point
+     */
     private function join(string $ring, string $point): bool
     {
         $edge = $ring.':'.$point;
@@ -69,6 +80,11 @@ final class PolygonContacts
         return true;
     }
 
+    /**
+     * Root.
+     *
+     * @param string $node node
+     */
     private function root(string $node): string
     {
         while (isset($this->parents[$node])) {

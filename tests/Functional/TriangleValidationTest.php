@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -33,7 +34,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class TriangleValidationTest extends TestCase
 {
-    /** @return iterable<string, array{list<list<list<float|int|null>>>, ?string}> */
+    /**
+     * @return iterable<string, array{list<list<list<float|int|null>>>, ?string}>
+     */
     public static function candidates(): iterable
     {
         $valid = [[0, 0], [1, 0], [0, 1], [0, 0]];
@@ -60,6 +63,9 @@ final class TriangleValidationTest extends TestCase
         yield 'hole' => [[$valid, [[0.1, 0.1], [0.2, 0.1], [0.1, 0.2], [0.1, 0.1]]], Rules\Triangle::INTERIOR_ERROR];
     }
 
+    /**
+     * Verify all variants scales and axis permutations.
+     */
     public function testAllVariantsScalesAndAxisPermutations(): void
     {
         foreach (Dimension::cases() as $dimension) {
@@ -93,6 +99,9 @@ final class TriangleValidationTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($triangle, new Rules\Triangle()));
     }
 
+    /**
+     * Verify approximate closure cannot make collinear vertices non degenerate.
+     */
     public function testApproximateClosureCannotMakeCollinearVerticesNonDegenerate(): void
     {
         foreach (Dimension::cases() as $dimension) {
@@ -120,6 +129,9 @@ final class TriangleValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify approximate closure never hides an exact crossing.
+     */
     public function testApproximateClosureNeverHidesAnExactCrossing(): void
     {
         $origin = 1.0e18;
@@ -134,6 +146,9 @@ final class TriangleValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify empty flags and geography warnings.
+     */
     public function testEmptyFlagsAndGeographyWarnings(): void
     {
         $service = Validation::createValidator();
@@ -159,7 +174,12 @@ final class TriangleValidationTest extends TestCase
         self::assertContains(PolygonStructure::UNAVAILABLE_ERROR, $codes);
     }
 
-    /** @param list<list<list<float|int|null>>> $rings */
+    /**
+     * @param array       $rings rings
+     * @param string|null $code  violation code
+     *
+     * @phpstan-param list<list<list<float|int|null>>> $rings
+     */
     #[DataProvider('candidates')]
     public function testExplicitAndGenericRules(array $rings, ?string $code): void
     {
@@ -179,6 +199,9 @@ final class TriangleValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify groups payload and localized context.
+     */
     public function testGroupsPayloadAndLocalizedContext(): void
     {
         $triangle = PolygonStructureTest::triangle([[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]);
@@ -199,6 +222,9 @@ final class TriangleValidationTest extends TestCase
         self::assertSame($payload, $violations->get(0)->getConstraint()->payload);
     }
 
+    /**
+     * Verify polygon coordinates never broaden triangle input.
+     */
     public function testPolygonCoordinatesNeverBroadenTriangleInput(): void
     {
         $polygon = PolygonStructureTest::polygon([[[0, 0], [1, 0], [0, 1], [0, 0]]]);

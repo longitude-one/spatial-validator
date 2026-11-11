@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,6 +29,12 @@ final class ComponentsValidator extends ConstraintValidator
     /** @var array<int, true> */
     private array $ancestors = [];
 
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof Components) {
@@ -50,6 +57,13 @@ final class ComponentsValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Compatibility.
+     *
+     * @param SpatialInterface $parent parent
+     * @param SpatialInterface $member member
+     * @param string           $path   property path for the diagnostic
+     */
     private function compatibility(SpatialInterface $parent, SpatialInterface $member, string $path): void
     {
         foreach (ComponentMetadata::errors($parent, $member) as $code => $message) {
@@ -58,9 +72,12 @@ final class ComponentsValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<string> $types
+     * @param mixed $member member
+     * @param array $types  types
      *
      * @phpstan-assert-if-true SpatialInterface $member
+     *
+     * @phpstan-param list<string> $types
      */
     private function isPermitted(mixed $member, array $types): bool
     {
@@ -76,7 +93,11 @@ final class ComponentsValidator extends ConstraintValidator
         return \in_array($type, $types, true) && $member instanceof $interface;
     }
 
-    /** @return array{string, string, list<string>}|null */
+    /**
+     * @param string $type type
+     *
+     * @return array{string, string, list<string>}|null
+     */
     private function plan(string $type): ?array
     {
         return match ($type) {
@@ -91,6 +112,12 @@ final class ComponentsValidator extends ConstraintValidator
         };
     }
 
+    /**
+     * Report cycle.
+     *
+     * @param mixed  $member member
+     * @param string $path   property path for the diagnostic
+     */
     private function reportCycle(mixed $member, string $path): bool
     {
         if (!$member instanceof SpatialInterface || !isset($this->ancestors[spl_object_id($member)])) {
@@ -106,6 +133,12 @@ final class ComponentsValidator extends ConstraintValidator
         return true;
     }
 
+    /**
+     * Traverse.
+     *
+     * @param SpatialInterface $parent     parent
+     * @param Components       $constraint applied validation constraint
+     */
     private function traverse(SpatialInterface $parent, Components $constraint): void
     {
         $plan = $this->plan($parent->getType()->value);
@@ -147,6 +180,14 @@ final class ComponentsValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Violation.
+     *
+     * @param string $message message
+     * @param string $code    violation code
+     * @param string $path    property path for the diagnostic
+     * @param mixed  $value   spatial value to validate
+     */
     private function violation(string $message, string $code, string $path, mixed $value): void
     {
         $this->context->buildViolation($message)->atPath($path)->setInvalidValue($value)

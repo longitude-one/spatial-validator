@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,12 +29,22 @@ final class PolygonStructure extends Constraint
     public const string PLANE_ERROR = 'polygonstructure-plane';
     public const string UNAVAILABLE_ERROR = 'polygonstructure-unavailable';
 
-    /** @param string[]|null $groups Validation groups */
+    /**
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload application-specific constraint metadata
+     *
+     * @phpstan-param string[]|null $groups
+     */
     public function __construct(?array $groups = null, mixed $payload = null)
     {
         parent::__construct(null, $groups, $payload);
     }
 
+    /**
+     * Accepts type.
+     *
+     * @param PolygonInterface $value spatial value to validate
+     */
     public static function acceptsType(PolygonInterface $value): bool
     {
         return $value instanceof TriangleInterface

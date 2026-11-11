@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -26,6 +27,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Reject spatially equal consecutive positions, ignoring M. */
 final class NoConsecutiveDuplicatePointsValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof NoConsecutiveDuplicatePoints) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -21,19 +22,33 @@ use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 /** @internal Shared coordinate access and finite spatial comparison. */
 final class PointCoordinates
 {
-    /** Compare finite coordinates without changing input or applying a proximity tolerance. */
+    /**
+     * Compare finite coordinates without changing input or applying a proximity tolerance.
+     *
+     * @param float $first  first operand
+     * @param float $second second operand
+     */
     public static function equal(float $first, float $second): bool
     {
         return is_finite($first) && is_finite($second)
             && abs($first - $second) <= \PHP_FLOAT_EPSILON * max(1.0, abs($first), abs($second));
     }
 
+    /**
+     * Is empty point.
+     *
+     * @param mixed $point point
+     */
     public static function isEmptyPoint(mixed $point): bool
     {
         return $point instanceof PointInterface && $point->isEmpty();
     }
 
-    /** @return array<string, float|int|null> */
+    /**
+     * @param PointInterface $point point
+     *
+     * @return array<string, float|int|null>
+     */
     public static function ordinates(PointInterface $point): array
     {
         $ordinates = ['X' => $point->getX(), 'Y' => $point->getY()];
@@ -47,7 +62,11 @@ final class PointCoordinates
         return $ordinates;
     }
 
-    /** @return list<float>|null */
+    /**
+     * @param mixed $point point
+     *
+     * @return list<float>|null
+     */
     public static function position(mixed $point): ?array
     {
         if (!$point instanceof PointInterface || GeometryTypeEnum::POINT !== $point->getType()) {
@@ -70,8 +89,11 @@ final class PointCoordinates
     }
 
     /**
-     * @param list<float> $first
-     * @param list<float> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
      */
     public static function same(array $first, array $second): bool
     {

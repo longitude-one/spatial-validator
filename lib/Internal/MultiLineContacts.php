@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -19,8 +20,11 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class MultiLineContacts
 {
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
      */
     public static function permitted(array $first, array $second): bool
     {
@@ -47,8 +51,13 @@ final class MultiLineContacts
     }
 
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param int   $left   left
+     * @param int   $right  right
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
      */
     private static function boundaryContact(array $first, array $second, int $left, int $right): bool
     {

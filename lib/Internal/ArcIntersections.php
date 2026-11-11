@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,9 +29,13 @@ use LongitudeOne\SpatialValidator\Internal\ExactRationals as Exact;
 final class ArcIntersections
 {
     /**
-     * @param Arc          $first
-     * @param Arc          $second
-     * @param list<Vector> $permitted
+     * @param array $first     first operand
+     * @param array $second    second operand
+     * @param array $permitted permitted
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
+     * @phpstan-param list<Vector> $permitted
      */
     public static function conflict(array $first, array $second, array $permitted): ?bool
     {
@@ -42,8 +47,11 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc $first
-     * @param Arc $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
      *
      * @return list<Algebraic>
      */
@@ -68,8 +76,11 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc $first
-     * @param Arc $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
      *
      * @return list<Algebraic>|null
      */
@@ -111,10 +122,15 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc             $first
-     * @param Arc             $second
-     * @param list<Algebraic> $points
-     * @param list<Vector>    $permitted
+     * @param array $first     first operand
+     * @param array $second    second operand
+     * @param array $points    coordinate positions to inspect
+     * @param array $permitted permitted
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
+     * @phpstan-param list<Algebraic> $points
+     * @phpstan-param list<Vector> $permitted
      */
     private static function contacts(array $first, array $second, array $points, array $permitted): bool
     {
@@ -135,9 +151,13 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc          $first
-     * @param Arc          $second
-     * @param list<Vector> $permitted
+     * @param array $first     first operand
+     * @param array $second    second operand
+     * @param array $permitted permitted
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
+     * @phpstan-param list<Vector> $permitted
      */
     private static function knownConflict(array $first, array $second, array $permitted): bool
     {
@@ -160,9 +180,13 @@ final class ArcIntersections
     }
 
     /**
-     * @param Vector $position
-     * @param Vector $direction
-     * @param Arc    $circle
+     * @param array $position  position
+     * @param array $direction direction
+     * @param array $circle    circle
+     *
+     * @phpstan-param Vector $position
+     * @phpstan-param Vector $direction
+     * @phpstan-param Arc $circle
      *
      * @return list<Algebraic>
      */
@@ -194,8 +218,11 @@ final class ArcIntersections
     }
 
     /**
-     * @param Algebraic $point
-     * @param Arc       $circle
+     * @param array $point  point
+     * @param array $circle circle
+     *
+     * @phpstan-param Algebraic $point
+     * @phpstan-param Arc $circle
      */
     private static function onCircle(array $point, array $circle): bool
     {
@@ -211,8 +238,11 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc $first
-     * @param Arc $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Arc $first
+     * @phpstan-param Arc $second
      */
     private static function overlap(array $first, array $second): bool
     {
@@ -231,8 +261,11 @@ final class ArcIntersections
     }
 
     /**
-     * @param Arc $segment
-     * @param Arc $circle
+     * @param array $segment segment
+     * @param array $circle  circle
+     *
+     * @phpstan-param Arc $segment
+     * @phpstan-param Arc $circle
      *
      * @return list<Algebraic>
      */

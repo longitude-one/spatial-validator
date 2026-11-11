@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -27,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Compare Geometry endpoints without interpreting coordinates as a geodetic calculation. */
 final class FirstPointEqualsLastPointValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof FirstPointEqualsLastPoint) {
@@ -56,6 +63,9 @@ final class FirstPointEqualsLastPointValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Not closed.
+     */
     private function notClosed(): void
     {
         $this->context->buildViolation('A closed line requires finite non-empty endpoints at the same position.')
@@ -63,6 +73,11 @@ final class FirstPointEqualsLastPointValidator extends ConstraintValidator
         ;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param FirstPointEqualsLastPoint $constraint applied validation constraint
+     */
     private function unavailable(FirstPointEqualsLastPoint $constraint): void
     {
         $warning = clone $constraint;

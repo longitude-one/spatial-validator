@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,6 +29,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicitly check line simplicity in XY or XYZ according to the declared variant. */
 final class SimpleLineStringValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleLineString) {
@@ -61,6 +68,11 @@ final class SimpleLineStringValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleLineString $constraint applied validation constraint
+     */
     private function unavailable(SimpleLineString $constraint): void
     {
         $warning = clone $constraint;

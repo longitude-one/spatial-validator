@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -50,6 +51,13 @@ final class PolygonValidator extends ConstraintValidator
         $this->polygon($value, $constraint);
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param string  $code       violation code
+     * @param Polygon $constraint applied validation constraint
+     * @param string  $path       property path for the diagnostic
+     */
     private function diagnostic(string $code, Polygon $constraint, string $path = ''): void
     {
         $messages = [
@@ -74,6 +82,12 @@ final class PolygonValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Polygon.
+     *
+     * @param PolygonInterface $value      spatial value to validate
+     * @param Polygon          $constraint applied validation constraint
+     */
     private function polygon(PolygonInterface $value, Polygon $constraint): void
     {
         if (GeometryTypeEnum::POLYGON !== $value->getType()) {

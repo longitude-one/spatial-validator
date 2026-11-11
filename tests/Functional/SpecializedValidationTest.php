@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -40,6 +41,11 @@ use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
  */
 final class SpecializedValidationTest extends TestCase
 {
+    /**
+     * Constraint.
+     *
+     * @param GeometryTypeEnum $type type
+     */
     public static function constraint(GeometryTypeEnum $type): Constraint
     {
         $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$type->value;
@@ -49,7 +55,9 @@ final class SpecializedValidationTest extends TestCase
         return $constraint;
     }
 
-    /** @return iterable<string, array{GeometryTypeEnum}> */
+    /**
+     * @return iterable<string, array{GeometryTypeEnum}>
+     */
     public static function enumTypes(): iterable
     {
         foreach (GeometryTypeEnum::cases() as $type) {
@@ -57,7 +65,9 @@ final class SpecializedValidationTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{GeometryTypeEnum, class-string<SpatialInterface>}> */
+    /**
+     * @return iterable<string, array{GeometryTypeEnum, class-string<SpatialInterface>}>
+     */
     public static function types(): iterable
     {
         $interfaces = [
@@ -99,6 +109,11 @@ final class SpecializedValidationTest extends TestCase
         }
     }
 
+    /**
+     * Validator.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public static function validator(Constraint $constraint): ConstraintValidator
     {
         $class = $constraint->validatedBy();
@@ -108,7 +123,12 @@ final class SpecializedValidationTest extends TestCase
         return $validator;
     }
 
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProvider('types')]
     public function testDirectInvocationReportsUnavailableValidation(GeometryTypeEnum $type, string $interface): void
     {
@@ -149,6 +169,9 @@ final class SpecializedValidationTest extends TestCase
         $validator->validate($value, self::constraint($type));
     }
 
+    /**
+     * Verify every enum case has an explicit tested pair.
+     */
     public function testEveryEnumCaseHasAnExplicitTestedPair(): void
     {
         $tested = [];
@@ -158,7 +181,12 @@ final class SpecializedValidationTest extends TestCase
         self::assertSame(GeometryTypeEnum::cases(), $tested);
     }
 
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProvider('types')]
     public function testGroupsPayloadAndNestedPath(GeometryTypeEnum $type, string $interface): void
     {
@@ -203,6 +231,9 @@ final class SpecializedValidationTest extends TestCase
         self::assertSame($payload, $constraint->payload);
     }
 
+    /**
+     * Verify ring direct composition uses original context.
+     */
     public function testRingDirectCompositionUsesOriginalContext(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]]);
@@ -228,7 +259,12 @@ final class SpecializedValidationTest extends TestCase
         $validator->validate($value, $constraint);
     }
 
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProvider('types')]
     public function testServiceReportsWarningAndPreservesContext(GeometryTypeEnum $type, string $interface): void
     {
@@ -269,7 +305,10 @@ final class SpecializedValidationTest extends TestCase
         self::assertInstanceOf(ConstraintValidator::class, self::validator($constraint));
     }
 
-    public function testTriangleDoesNotAcceptAPolygonDeclaringTriangleType(): void
+    /**
+     * Verify triangle does not accept a polygon declaring triangle type.
+     */
+    public function testTriangleDoesNotAcceptPolygonDeclaringTriangleType(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
         $polygon->method('getType')->willReturn(GeometryTypeEnum::TRIANGLE);

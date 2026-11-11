@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -24,8 +25,11 @@ final class MinimumPointCount extends Constraint
     public const string INVALID_ERROR = 'minimumpointcount-invalid';
 
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param int        $limit   minimum required number of positions
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(public int $limit = 2, ?array $groups = null, mixed $payload = null)
     {

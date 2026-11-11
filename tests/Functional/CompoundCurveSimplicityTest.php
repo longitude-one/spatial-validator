@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -29,7 +30,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class CompoundCurveSimplicityTest extends TestCase
 {
-    /** @return iterable<string, array{list<array{bool, list<list<float|int>>}>, bool}> */
+    /**
+     * @return iterable<string, array{list<array{bool, list<list<float|int>>}>, bool}>
+     */
     public static function cases(): iterable
     {
         yield 'EMPTY' => [[], true];
@@ -73,7 +76,12 @@ final class CompoundCurveSimplicityTest extends TestCase
         yield 'boundary repeated internally' => [[[false, [[0, 0], [1, 0], [0, 0], [0, 1]]]], false];
     }
 
-    /** @param list<array{bool, list<list<float|int>>}> $parts */
+    /**
+     * @param array $parts  parts
+     * @param bool  $simple simple
+     *
+     * @phpstan-param list<array{bool, list<list<float|int>>}> $parts
+     */
     #[DataProvider('cases')]
     public function testGlobalTopology(array $parts, bool $simple): void
     {
@@ -93,6 +101,9 @@ final class CompoundCurveSimplicityTest extends TestCase
         }
     }
 
+    /**
+     * Verify localized group and payload.
+     */
     public function testLocalizedGroupAndPayload(): void
     {
         $value = CompoundCurveValidationTest::curve([LineStringValidationTest::line([[0, 0], [2, 0]]),
@@ -112,6 +123,9 @@ final class CompoundCurveSimplicityTest extends TestCase
         self::assertSame($constraint->payload, $violations->get(0)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify nearly tangent arc is not snapped.
+     */
     public function testNearlyTangentArcIsNotSnapped(): void
     {
         $height = 1.0 + \PHP_FLOAT_EPSILON;
@@ -122,6 +136,9 @@ final class CompoundCurveSimplicityTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($value, new SpatialAssert\SimpleCompoundCurve()));
     }
 
+    /**
+     * Verify numerical scale and axis permutations.
+     */
     public function testNumericalScaleAndAxisPermutations(): void
     {
         $service = Validation::createValidator();
@@ -142,6 +159,9 @@ final class CompoundCurveSimplicityTest extends TestCase
         }
     }
 
+    /**
+     * Verify unknown full circle plane is explicit.
+     */
     public function testUnknownFullCirclePlaneIsExplicit(): void
     {
         $dimension = CoordinateDimensionEnum::XYZ;
@@ -163,6 +183,9 @@ final class CompoundCurveSimplicityTest extends TestCase
         self::assertNull($constraint->payload);
     }
 
+    /**
+     * Verify xyz does not use projected crossing.
+     */
     public function testXyzDoesNotUseProjectedCrossing(): void
     {
         $dimension = CoordinateDimensionEnum::XYZ;

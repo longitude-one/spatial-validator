@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -35,7 +36,12 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpatialDispatchTest extends TestCase
 {
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testEveryTypeDelegatesInTheOriginalContext(GeometryTypeEnum $type, string $interface): void
     {
@@ -86,6 +92,9 @@ final class SpatialDispatchTest extends TestCase
         self::assertSame($value, $violation->getInvalidValue());
     }
 
+    /**
+     * Verify triangle dispatch retains its interface precondition.
+     */
     public function testTriangleDispatchRetainsItsInterfacePrecondition(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
@@ -100,6 +109,9 @@ final class SpatialDispatchTest extends TestCase
         );
     }
 
+    /**
+     * Verify unknown type name has an explicit defensive failure.
+     */
     public function testUnknownTypeNameHasAnExplicitDefensiveFailure(): void
     {
         // SpatialInterface currently returns a closed enum: exercise the future-proof mapping fallback directly.

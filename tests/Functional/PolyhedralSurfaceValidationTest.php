@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -32,7 +33,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolyhedralSurfaceValidationTest extends TestCase
 {
-    /** @return list<list<list<list<float|int>>>> */
+    /**
+     * @return list<list<list<list<float|int>>>>
+     */
     public static function cube(): array
     {
         $vertexA = [0, 0, 0];
@@ -54,7 +57,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         ]);
     }
 
-    /** @return iterable<string, array{list<list<list<list<float|int>>>>, string}> */
+    /**
+     * @return iterable<string, array{list<list<list<list<float|int>>>>, string}>
+     */
     public static function invalidSurfaces(): iterable
     {
         $tetra = self::tetrahedron();
@@ -118,7 +123,13 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         yield 'pinched vertex closed fans' => [[...$tetra, ...$other], Rules\PolyhedralSurface::MANIFOLD_ERROR];
     }
 
-    /** @param array<mixed> $patches */
+    /**
+     * @param array     $patches   patches
+     * @param Dimension $dimension dimension
+     * @param Family    $family    family
+     *
+     * @phpstan-param array<mixed> $patches
+     */
     public static function surface(
         array $patches,
         Dimension $dimension = Dimension::XYZ,
@@ -137,7 +148,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         return $value;
     }
 
-    /** @return list<list<list<list<float|int>>>> */
+    /**
+     * @return list<list<list<list<float|int>>>>
+     */
     public static function tetrahedron(): array
     {
         $origin = [0, 0, 0];
@@ -149,7 +162,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
             self::face([$origin, $top, $north]), self::face([$east, $north, $top])];
     }
 
-    /** @return iterable<string, array{list<list<list<list<float|int>>>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<list<list<float|int>>>>, bool}>
+     */
     public static function validSurfaces(): iterable
     {
         yield 'empty' => [[], false];
@@ -169,7 +184,12 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         yield 'open cube' => [\array_slice(self::cube(), 0, 5), false];
     }
 
-    /** @param list<list<list<list<float|int>>>> $faces */
+    /**
+     * @param array     $faces     faces
+     * @param Dimension $dimension dimension
+     *
+     * @phpstan-param list<list<list<list<float|int>>>> $faces
+     */
     private static function candidate(array $faces, Dimension $dimension = Dimension::XYZ): PolyhedralSurfaceInterface
     {
         return self::surface(array_map(
@@ -178,7 +198,11 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         ), $dimension);
     }
 
-    /** @param list<list<float|int>> $vertices
+    /**
+     * @param array $vertices vertices
+     *
+     * @phpstan-param list<list<float|int>> $vertices
+     *
      * @return list<list<list<float|int>>>
      */
     private static function face(array $vertices): array
@@ -186,6 +210,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         return [[...$vertices, $vertices[0]]];
     }
 
+    /**
+     * Verify closed envelope with holed patch separates orientation warning from volume.
+     */
     public function testClosedEnvelopeWithHoledPatchSeparatesOrientationWarningFromVolume(): void
     {
         $cube = self::cube();
@@ -205,6 +232,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify connected surface still rejects non adjacent face crossing.
+     */
     public function testConnectedSurfaceStillRejectsNonAdjacentFaceCrossing(): void
     {
         $faces = [self::face([[0, 0, 0], [8, 0, 0], [8, 8, 0], [0, 8, 0]]),
@@ -218,6 +248,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertNotContains(Rules\PolyhedralSurface::INCIDENCE_ERROR, $codes);
     }
 
+    /**
+     * Verify dimensions and geography warning.
+     */
     public function testDimensionsAndGeographyWarning(): void
     {
         foreach ([Dimension::XY, Dimension::XYM] as $dimension) {
@@ -241,6 +274,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify edge connected patches cannot have pinched boundary vertex.
+     */
     public function testEdgeConnectedPatchesCannotHavePinchedBoundaryVertex(): void
     {
         $faces = [];
@@ -253,7 +289,12 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertSame(Rules\PolyhedralSurface::MANIFOLD_ERROR, $violations->get(0)->getCode());
     }
 
-    /** @param list<list<list<list<float|int>>>> $faces */
+    /**
+     * @param array $faces  faces
+     * @param bool  $closed closed
+     *
+     * @phpstan-param list<list<list<list<float|int>>>> $faces
+     */
     #[DataProvider('validSurfaces')]
     public function testGeneralAndClosedContracts(array $faces, bool $closed): void
     {
@@ -270,6 +311,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify holed faces and orientation warnings remain independent.
+     */
     public function testHoledFacesAndOrientationWarningsRemainIndependent(): void
     {
         $outer = [[0, 0, 0], [8, 0, 0], [8, 8, 0], [0, 8, 0], [0, 0, 0]];
@@ -293,6 +337,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertContains(Rules\PolyhedralSurface::CONNECTED_ERROR, $codes);
     }
 
+    /**
+     * Verify invalid patches retain ring and point paths.
+     */
     public function testInvalidPatchesRetainRingAndPointPaths(): void
     {
         $faces = self::cube();
@@ -308,7 +355,12 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertSame(Rules\Components::DIMENSION_ERROR, $violations->get(0)->getCode());
     }
 
-    /** @param list<list<list<list<float|int>>>> $faces */
+    /**
+     * @param array  $faces faces
+     * @param string $code  violation code
+     *
+     * @phpstan-param list<list<list<list<float|int>>>> $faces
+     */
     #[DataProvider('invalidSurfaces')]
     public function testInvalidTopology(array $faces, string $code): void
     {
@@ -321,6 +373,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify measures and signed zero.
+     */
     public function testMeasuresAndSignedZero(): void
     {
         foreach ([Dimension::XYZ, Dimension::XYZM] as $dimension) {
@@ -343,6 +398,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify partial edge and coplanar adjacent patches.
+     */
     public function testPartialEdgeAndCoplanarAdjacentPatches(): void
     {
         $first = self::face([[0, 0, 0], [4, 0, 0], [4, 4, 0], [0, 4, 0]]);
@@ -356,6 +414,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         );
     }
 
+    /**
+     * Verify scales axes measures and reversed orientation.
+     */
     public function testScalesAxesMeasuresAndReversedOrientation(): void
     {
         foreach ([1.0e-10, 1.0, 1.0e150, 1.0e307] as $scale) {
@@ -376,6 +437,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify structural failures and localized context.
+     */
     public function testStructuralFailuresAndLocalizedContext(): void
     {
         $outside = PolygonStructureTest::polygon([
@@ -402,6 +466,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertSame(Rules\PolyhedralSurface::EMPTY_PATCH_ERROR, $last->getCode());
     }
 
+    /**
+     * Verify thin envelope and close disjoint planes are not collapsed.
+     */
     public function testThinEnvelopeAndCloseDisjointPlanesAreNotCollapsed(): void
     {
         $faces = self::tetrahedron();
@@ -432,6 +499,9 @@ final class PolyhedralSurfaceValidationTest extends TestCase
         self::assertSame(Rules\PolyhedralSurface::CONNECTED_ERROR, $violations->get(0)->getCode());
     }
 
+    /**
+     * Verify vertical holed face keeps available orientation warning separate.
+     */
     public function testVerticalHoledFaceKeepsAvailableOrientationWarningSeparate(): void
     {
         $rings = [

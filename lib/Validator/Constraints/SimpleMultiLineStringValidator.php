@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,6 +29,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Explicit aggregate property, independent from ordinary validity. */
 final class SimpleMultiLineStringValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleMultiLineString) {
@@ -63,7 +70,12 @@ final class SimpleMultiLineStringValidator extends ConstraintValidator
         $this->compare($value, $lines);
     }
 
-    /** @param array<int, list<list<float>>> $lines */
+    /**
+     * @param MultiLineStringInterface $value spatial value to validate
+     * @param array                    $lines lines
+     *
+     * @phpstan-param array<int, list<list<float>>> $lines
+     */
     private function compare(MultiLineStringInterface $value, array $lines): void
     {
         foreach ($lines as $index => $positions) {
@@ -80,7 +92,12 @@ final class SimpleMultiLineStringValidator extends ConstraintValidator
         }
     }
 
-    /** @return array<int, list<list<float>>> */
+    /**
+     * @param MultiLineStringInterface $value      spatial value to validate
+     * @param SimpleMultiLineString    $constraint applied validation constraint
+     *
+     * @return array<int, list<list<float>>>
+     */
     private function positions(MultiLineStringInterface $value, SimpleMultiLineString $constraint): array
     {
         $lines = [];
@@ -101,6 +118,11 @@ final class SimpleMultiLineStringValidator extends ConstraintValidator
         return $lines;
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleMultiLineString $constraint applied validation constraint
+     */
     private function unavailable(SimpleMultiLineString $constraint): void
     {
         $warning = clone $constraint;

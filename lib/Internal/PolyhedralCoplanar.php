@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -18,10 +19,16 @@ namespace LongitudeOne\SpatialValidator\Internal;
 /** @internal coincident patch interiors along common coplanar boundaries */
 final class PolyhedralCoplanar
 {
-    /** Detect coincident interiors even when every vertex lies on a shared boundary.
-     * @param list<list<list<float>>> $first
-     * @param list<list<list<float>>> $second
-     * @param array{int, int}         $axes
+    /**
+     * Detect coincident interiors even when every vertex lies on a shared boundary.
+     *
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $axes   axes
+     *
+     * @phpstan-param list<list<list<float>>> $first
+     * @phpstan-param list<list<list<float>>> $second
+     * @phpstan-param array{int, int} $axes
      */
     public static function sameSide(array $first, array $second, array $axes): bool
     {
@@ -49,8 +56,12 @@ final class PolyhedralCoplanar
         return false;
     }
 
-    /** @param list<list<float>> $ring
-     * @param array{int, int} $axes
+    /**
+     * @param array $ring ring
+     * @param array $axes axes
+     *
+     * @phpstan-param list<list<float>> $ring
+     * @phpstan-param array{int, int} $axes
      *
      * @return list<list<float>>
      */

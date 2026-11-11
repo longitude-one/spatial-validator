@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -30,6 +31,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Compose member validity before inspecting contributing endpoints. */
 final class CompoundCurveValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof CompoundCurve) {
@@ -57,8 +64,14 @@ final class CompoundCurveValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<float> $previous
-     * @param list<float> $start
+     * @param array                  $previous   previous
+     * @param array                  $start      start
+     * @param CompoundCurveInterface $value      spatial value to validate
+     * @param CompoundCurve          $constraint applied validation constraint
+     * @param string                 $path       property path for the diagnostic
+     *
+     * @phpstan-param list<float> $previous
+     * @phpstan-param list<float> $start
      */
     private function join(
         array $previous,
@@ -89,6 +102,12 @@ final class CompoundCurveValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Joins.
+     *
+     * @param CompoundCurveInterface $value      spatial value to validate
+     * @param CompoundCurve          $constraint applied validation constraint
+     */
     private function joins(CompoundCurveInterface $value, CompoundCurve $constraint): void
     {
         $previous = null;
@@ -110,7 +129,11 @@ final class CompoundCurveValidator extends ConstraintValidator
         }
     }
 
-    /** @return list<list<float>> */
+    /**
+     * @param CurveInterface $curve curve
+     *
+     * @return list<list<float>>
+     */
     private function positions(CurveInterface $curve): array
     {
         $points = $curve instanceof LineStringInterface || $curve instanceof CircularStringInterface

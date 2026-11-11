@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -37,7 +38,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class RingValidationTest extends TestCase
 {
-    /** @return iterable<string, array{list<list<float|int|null>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, bool}>
+     */
     public static function closures(): iterable
     {
         yield 'EMPTY not closed' => [[], false];
@@ -53,7 +56,9 @@ final class RingValidationTest extends TestCase
         yield 'infinite endpoint' => [[[\INF, 2], [1, 2]], false];
     }
 
-    /** @return iterable<string, array{Constraint}> */
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
     public static function constraints(): iterable
     {
         yield 'ring' => [new SpatialAssert\Ring()];
@@ -61,7 +66,9 @@ final class RingValidationTest extends TestCase
         yield 'closure' => [new SpatialAssert\FirstPointEqualsLastPoint()];
     }
 
-    /** @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}>
+     */
     public static function rings(): iterable
     {
         $layout = CoordinateDimensionEnum::XY;
@@ -118,6 +125,11 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify declared type is rechecked.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDeclaredTypeIsRechecked(Constraint $constraint): void
     {
         $value = self::createStub(LineStringInterface::class);
@@ -127,6 +139,9 @@ final class RingValidationTest extends TestCase
         self::assertSame('This value should be of type {{ type }}.', $violations->get(0)->getMessageTemplate());
     }
 
+    /**
+     * Verify empty line remains valid but ring rejects it.
+     */
     public function testEmptyLineRemainsValidButRingRejectsIt(): void
     {
         $value = LineStringValidationTest::line([]);
@@ -138,6 +153,9 @@ final class RingValidationTest extends TestCase
         self::assertNull($violations->get(0)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify geography warns without mutating shared constraints.
+     */
     public function testGeographyWarnsWithoutMutatingSharedConstraints(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]], family: SpatialModelEnum::GEOGRAPHY);
@@ -161,6 +179,9 @@ final class RingValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $closure->payload);
     }
 
+    /**
+     * Verify groups payload and localized point errors.
+     */
     public function testGroupsPayloadAndLocalizedPointErrors(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [\INF, 0], [1, 1], [0, 0]]);
@@ -185,6 +206,9 @@ final class RingValidationTest extends TestCase
         self::assertSame(['source' => 'consumer'], $violations->get(1)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify independent boundary failures keep their constraints.
+     */
     public function testIndependentBoundaryFailuresKeepTheirConstraints(): void
     {
         $value = LineStringValidationTest::line([[0, 0], [1, 0], [1, 1]]);
@@ -201,6 +225,11 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testInputContract(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -212,6 +241,9 @@ final class RingValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify metadata compatibility is inherited from line validation.
+     */
     public function testMetadataCompatibilityIsInheritedFromLineValidation(): void
     {
         $points = LineStringValidationTest::line([[0, 0], [1, 0], [0, 1], [0, 0]])->getPoints();
@@ -235,7 +267,13 @@ final class RingValidationTest extends TestCase
         self::assertCount(12, $errors);
     }
 
-    /** @param list<list<float|int|null>> $coordinates */
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param bool                    $valid       valid
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('rings')]
     public function testRingRules(array $coordinates, CoordinateDimensionEnum $dimension, bool $valid): void
     {
@@ -244,7 +282,12 @@ final class RingValidationTest extends TestCase
         self::assertSame($valid, 0 === \count($violations));
     }
 
-    /** @param list<list<float|int|null>> $coordinates */
+    /**
+     * @param array $coordinates coordinates
+     * @param bool  $closed      closed
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('closures')]
     public function testStandaloneClosure(array $coordinates, bool $closed): void
     {
@@ -257,6 +300,11 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify unsupported values throw directly.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testUnsupportedValuesThrowDirectly(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -265,6 +313,11 @@ final class RingValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint takes precedence.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraintTakesPrecedence(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);

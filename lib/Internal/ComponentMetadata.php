@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -23,7 +24,12 @@ final class ComponentMetadata
 {
     public const string TYPE_ERROR = Components::TYPE_ERROR;
 
-    /** @return array<string, string> Violation code => message */
+    /**
+     * @param SpatialInterface $parent parent
+     * @param SpatialInterface $member member
+     *
+     * @return array<string, string> Violation code => message
+     */
     public static function errors(SpatialInterface $parent, SpatialInterface $member): array
     {
         $errors = [];

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -21,8 +22,11 @@ final class PolygonRingRelations
     /**
      * Return exact isolated contact positions, or null for a proper crossing/shared interval.
      *
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
      *
      * @return list<list<float>>|null
      */
@@ -54,9 +58,13 @@ final class PolygonRingRelations
      * Bitmask of inside=1/outside=2 open boundary intervals relative to the other ring.
      * Split at all contacts, including vertices of the other ring lying inside an edge.
      *
-     * @param list<list<float>> $ring
-     * @param list<list<float>> $other
-     * @param list<list<float>> $contacts
+     * @param array $ring     ring
+     * @param array $other    other
+     * @param array $contacts contacts
+     *
+     * @phpstan-param list<list<float>> $ring
+     * @phpstan-param list<list<float>> $other
+     * @phpstan-param list<list<float>> $contacts
      */
     public static function locations(array $ring, array $other, array $contacts): int
     {
@@ -79,10 +87,15 @@ final class PolygonRingRelations
     }
 
     /**
-     * @param list<float> $start
-     * @param list<float> $end
-     * @param list<float> $otherStart
-     * @param list<float> $otherEnd
+     * @param array $start      start
+     * @param array $end        end
+     * @param array $otherStart other start
+     * @param array $otherEnd   other end
+     *
+     * @phpstan-param list<float> $start
+     * @phpstan-param list<float> $end
+     * @phpstan-param list<float> $otherStart
+     * @phpstan-param list<float> $otherEnd
      *
      * @return list<list<float>>
      */

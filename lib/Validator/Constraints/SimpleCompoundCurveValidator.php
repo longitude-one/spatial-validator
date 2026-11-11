@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -34,6 +35,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
  */
 final class SimpleCompoundCurveValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleCompoundCurve) {
@@ -64,8 +71,12 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<Arc>    $arcs
-     * @param list<string> $paths
+     * @param array               $arcs       arcs
+     * @param array               $paths      paths
+     * @param SimpleCompoundCurve $constraint applied validation constraint
+     *
+     * @phpstan-param list<Arc> $arcs
+     * @phpstan-param list<string> $paths
      */
     private function arcs(array $arcs, array $paths, SimpleCompoundCurve $constraint): void
     {
@@ -87,6 +98,11 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Invalid since.
+     *
+     * @param int $before number of violations before member validation
+     */
     private function invalidSince(int $before): bool
     {
         foreach ($this->context->getViolations() as $index => $violation) {
@@ -99,7 +115,11 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<Arc> $arcs
+     * @param array $arcs   arcs
+     * @param int   $first  first operand
+     * @param int   $second second operand
+     *
+     * @phpstan-param list<Arc> $arcs
      *
      * @return list<Vector>
      */
@@ -120,8 +140,11 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<Arc>    $arcs
-     * @param list<string> $paths
+     * @param array $arcs  arcs
+     * @param array $paths paths
+     *
+     * @phpstan-param list<Arc> $arcs
+     * @phpstan-param list<string> $paths
      */
     private function repeatedEndpoints(array $arcs, array $paths): void
     {
@@ -143,6 +166,12 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleCompoundCurve $constraint applied validation constraint
+     * @param string              $path       property path for the diagnostic
+     */
     private function unavailable(SimpleCompoundCurve $constraint, string $path = ''): void
     {
         $warning = clone $constraint;

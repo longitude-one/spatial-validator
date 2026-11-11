@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -55,19 +56,17 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         $this->surface($value, $constraint);
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param PolyhedralSurface $constraint applied validation constraint
+     * @param string            $code       violation code
+     * @param string            $path       property path for the diagnostic
+     */
     private function diagnostic(PolyhedralSurface $constraint, string $code, string $path = ''): void
     {
         $associated = $constraint;
-        $message = match ($code) {
-            PolyhedralSurface::DIMENSION_ERROR => 'A PolyhedralSurface requires Z coordinates.',
-            PolyhedralSurface::EMPTY_PATCH_ERROR => 'A non-empty PolyhedralSurface cannot contain an EMPTY patch.',
-            PolyhedralSurface::INCIDENCE_ERROR => 'A boundary segment must have at most two incident patches.',
-            PolyhedralSurface::ORIENTATION_ERROR => 'Shared patch boundaries must have opposite directions.',
-            PolyhedralSurface::CONNECTED_ERROR => 'Patches must form an edge-connected surface.',
-            PolyhedralSurface::INTERSECTION_ERROR => 'Patch interiors must not intersect other patches.',
-            PolyhedralSurface::MANIFOLD_ERROR => 'Each surface vertex must have one connected local face fan.',
-            default => 'Geography PolyhedralSurface topology is not implemented yet.',
-        };
+        $message = $this->message($code);
         if (PolyhedralSurface::UNAVAILABLE_ERROR === $code) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
@@ -81,7 +80,13 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         }
     }
 
-    /** @param array<mixed> $members
+    /**
+     * @param array             $members    spatial members to inspect
+     * @param PolyhedralSurface $constraint applied validation constraint
+     * @param int               $before     number of violations before member validation
+     *
+     * @phpstan-param array<mixed> $members
+     *
      * @return list<list<list<list<float>>>>
      */
     private function eligible(array $members, PolyhedralSurface $constraint, int $before): array
@@ -99,13 +104,40 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         return $eligible;
     }
 
-    /** @phpstan-assert-if-true PolygonInterface $member */
+    /**
+     * @param mixed $member member
+     *
+     * @phpstan-assert-if-true PolygonInterface $member
+     */
     private function isPolygon(mixed $member): bool
     {
         return $member instanceof PolygonInterface;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * Select the message for a surface diagnostic.
+     *
+     * @param string $code violation code
+     */
+    private function message(string $code): string
+    {
+        return match ($code) {
+            PolyhedralSurface::DIMENSION_ERROR => 'A PolyhedralSurface requires Z coordinates.',
+            PolyhedralSurface::EMPTY_PATCH_ERROR => 'A non-empty PolyhedralSurface cannot contain an EMPTY patch.',
+            PolyhedralSurface::INCIDENCE_ERROR => 'A boundary segment must have at most two incident patches.',
+            PolyhedralSurface::ORIENTATION_ERROR => 'Shared patch boundaries must have opposite directions.',
+            PolyhedralSurface::CONNECTED_ERROR => 'Patches must form an edge-connected surface.',
+            PolyhedralSurface::INTERSECTION_ERROR => 'Patch interiors must not intersect other patches.',
+            PolyhedralSurface::MANIFOLD_ERROR => 'Each surface vertex must have one connected local face fan.',
+            default => 'Geography PolyhedralSurface topology is not implemented yet.',
+        };
+    }
+
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     private function positions(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -117,6 +149,12 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         return $rings;
     }
 
+    /**
+     * Surface.
+     *
+     * @param PolyhedralSurfaceInterface $value      spatial value to validate
+     * @param PolyhedralSurface          $constraint applied validation constraint
+     */
     private function surface(PolyhedralSurfaceInterface $value, PolyhedralSurface $constraint): void
     {
         $before = \count($this->context->getViolations());
@@ -149,6 +187,12 @@ final class PolyhedralSurfaceValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Usable.
+     *
+     * @param int $index  component index
+     * @param int $before number of violations before member validation
+     */
     private function usable(int $index, int $before): bool
     {
         foreach ($this->context->getViolations() as $offset => $violation) {

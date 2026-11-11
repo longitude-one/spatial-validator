@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -31,7 +32,12 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpecializedInputTest extends TestCase
 {
-    /** @param class-string<SpatialInterface> $interface */
+    /**
+     * @param GeometryTypeEnum $type      type
+     * @param string           $interface interface
+     *
+     * @phpstan-param class-string<SpatialInterface> $interface
+     */
     #[DataProviderExternal(SpecializedValidationTest::class, 'types')]
     public function testIncompatibleDeclaredTypeIsRejected(GeometryTypeEnum $type, string $interface): void
     {
@@ -48,6 +54,11 @@ final class SpecializedInputTest extends TestCase
     }
 
     #[DataProviderExternal(SpecializedValidationTest::class, 'enumTypes')]
+    /**
+     * Verify null is ignored.
+     *
+     * @param GeometryTypeEnum $type type
+     */
     public function testNullIsIgnored(GeometryTypeEnum $type): void
     {
         $constraint = SpecializedValidationTest::constraint($type);
@@ -56,6 +67,11 @@ final class SpecializedInputTest extends TestCase
     }
 
     #[DataProviderExternal(SpecializedValidationTest::class, 'enumTypes')]
+    /**
+     * Verify unsupported php values are rejected.
+     *
+     * @param GeometryTypeEnum $type type
+     */
     public function testUnsupportedPhpValuesAreRejected(GeometryTypeEnum $type): void
     {
         $constraint = SpecializedValidationTest::constraint($type);
@@ -76,6 +92,11 @@ final class SpecializedInputTest extends TestCase
     }
 
     #[DataProviderExternal(SpecializedValidationTest::class, 'enumTypes')]
+    /**
+     * Verify wrong constraint precedes value handling.
+     *
+     * @param GeometryTypeEnum $type type
+     */
     public function testWrongConstraintPrecedesValueHandling(GeometryTypeEnum $type): void
     {
         $constraint = SpecializedValidationTest::constraint($type);

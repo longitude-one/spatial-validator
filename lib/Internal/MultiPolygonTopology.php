@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -22,8 +23,12 @@ namespace LongitudeOne\SpatialValidator\Internal;
  */
 final class MultiPolygonTopology
 {
-    /** @param list<list<list<float>>> $first
-     * @param list<list<list<float>>> $second
+    /**
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<list<list<float>>> $first
+     * @phpstan-param list<list<list<float>>> $second
      */
     public static function intersects(array $first, array $second): bool
     {
@@ -47,9 +52,15 @@ final class MultiPolygonTopology
         return self::coplanar($first, $second, $left, $right);
     }
 
-    /** @param list<list<list<float>>> $rings
-     * @param list<list<list<float>>> $other
-     * @param array{int, int}         $axes
+    /**
+     * @param array           $rings   rings
+     * @param array           $other   other
+     * @param RationalSurface $surface surface
+     * @param array           $axes    axes
+     *
+     * @phpstan-param list<list<list<float>>> $rings
+     * @phpstan-param list<list<list<float>>> $other
+     * @phpstan-param array{int, int} $axes
      */
     private static function boundaryInside(array $rings, array $other, RationalSurface $surface, array $axes): bool
     {
@@ -86,8 +97,14 @@ final class MultiPolygonTopology
         return false;
     }
 
-    /** @param list<list<list<float>>> $first
-     * @param list<list<list<float>>> $second
+    /**
+     * @param array           $first  first operand
+     * @param array           $second second operand
+     * @param RationalSurface $left   left
+     * @param RationalSurface $right  right
+     *
+     * @phpstan-param list<list<list<float>>> $first
+     * @phpstan-param list<list<list<float>>> $second
      */
     private static function coplanar(array $first, array $second, RationalSurface $left, RationalSurface $right): bool
     {
@@ -105,7 +122,13 @@ final class MultiPolygonTopology
             || self::boundaryInside($second, $first, $left, $axes);
     }
 
-    /** @param list<Rational> $direction */
+    /**
+     * @param RationalSurface $first     first operand
+     * @param RationalSurface $second    second operand
+     * @param array           $direction direction
+     *
+     * @phpstan-param list<Rational> $direction
+     */
     private static function differentPlanes(RationalSurface $first, RationalSurface $second, array $direction): bool
     {
         $axis = 0 !== $direction[0][0][0] ? 0 : (0 !== $direction[1][0][0] ? 1 : 2);
@@ -130,14 +153,24 @@ final class MultiPolygonTopology
         return false;
     }
 
+    /**
+     * Forbidden.
+     *
+     * @param int $first  first operand
+     * @param int $second second operand
+     */
     private static function forbidden(int $first, int $second): bool
     {
         // Alexandre, 2026-10-23: isolated boundary/interior contacts are permitted; contact segments are not.
         return 0 <= $first && 0 <= $second;
     }
 
-    /** @param list<list<float>> $ring
-     * @param array{int, int} $axes
+    /**
+     * @param array $ring ring
+     * @param array $axes axes
+     *
+     * @phpstan-param list<list<float>> $ring
+     * @phpstan-param array{int, int} $axes
      *
      * @return list<list<float>>
      */

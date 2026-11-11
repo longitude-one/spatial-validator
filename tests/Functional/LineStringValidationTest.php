@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -38,7 +39,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class LineStringValidationTest extends TestCase
 {
-    /** @return iterable<string, array{Constraint}> */
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
     public static function constraints(): iterable
     {
         yield 'cardinality' => [new SpatialAssert\MinimumPointCount()];
@@ -50,7 +53,13 @@ final class LineStringValidationTest extends TestCase
         yield 'simplicity' => [new SpatialAssert\SimpleLineString()];
     }
 
-    /** @param list<list<float|int|null>> $coordinates */
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param SpatialModelEnum        $family      family
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     public static function line(
         array $coordinates,
         CoordinateDimensionEnum $dimension = CoordinateDimensionEnum::XY,
@@ -85,7 +94,9 @@ final class LineStringValidationTest extends TestCase
         return $line;
     }
 
-    /** @return iterable<string, array{list<list<float|int|null>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, bool}>
+     */
     public static function validityCases(): iterable
     {
         yield 'EMPTY' => [[], true];
@@ -111,7 +122,9 @@ final class LineStringValidationTest extends TestCase
         yield 'NaN' => [[[\NAN, 0], [1, 1]], false];
     }
 
-    /** @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int|null>>, CoordinateDimensionEnum, bool}>
+     */
     public static function variants(): iterable
     {
         yield 'M does not separate' => [[[0, 0, 1], [0, 0, 2]], CoordinateDimensionEnum::XYM, false];
@@ -131,6 +144,9 @@ final class LineStringValidationTest extends TestCase
         yield 'distinct' => [[[3, 1], [3.000001, 1]], CoordinateDimensionEnum::XY, true];
     }
 
+    /**
+     * Verify custom minimum and empty allowance.
+     */
     public function testCustomMinimumAndEmptyAllowance(): void
     {
         $service = Validation::createValidator();
@@ -140,6 +156,9 @@ final class LineStringValidationTest extends TestCase
         self::assertSame('4', $violations->get(0)->getParameters()['{{ limit }}']);
     }
 
+    /**
+     * Verify groups payload paths and root.
+     */
     public function testGroupsPayloadPathsAndRoot(): void
     {
         $value = self::line([[0, 0], [0, 0], [200, 91]], family: SpatialModelEnum::GEOGRAPHY);
@@ -170,6 +189,9 @@ final class LineStringValidationTest extends TestCase
         self::assertContains(SpatialAssert\GeographyBounds::INVALID_ERROR, $codes);
     }
 
+    /**
+     * Verify minimum must be positive.
+     */
     public function testMinimumMustBePositive(): void
     {
         $this->expectException(InvalidMinimum::class);
@@ -177,6 +199,11 @@ final class LineStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify null and unsupported values.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testNullAndUnsupportedValues(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -189,6 +216,11 @@ final class LineStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify unsupported value throws directly.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testUnsupportedValueThrowsDirectly(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -196,7 +228,12 @@ final class LineStringValidationTest extends TestCase
         $validator->validate('', $constraint);
     }
 
-    /** @param list<list<float|int|null>> $coordinates */
+    /**
+     * @param array $coordinates coordinates
+     * @param bool  $valid       valid
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('validityCases')]
     public function testValidity(array $coordinates, bool $valid): void
     {
@@ -206,7 +243,13 @@ final class LineStringValidationTest extends TestCase
         self::assertSame([] === $coordinates, $value->isEmpty());
     }
 
-    /** @param list<list<float|int|null>> $coordinates */
+    /**
+     * @param array                   $coordinates coordinates
+     * @param CoordinateDimensionEnum $dimension   dimension
+     * @param bool                    $valid       valid
+     *
+     * @phpstan-param list<list<float|int|null>> $coordinates
+     */
     #[DataProvider('variants')]
     public function testVariantEquality(array $coordinates, CoordinateDimensionEnum $dimension, bool $valid): void
     {
@@ -218,6 +261,11 @@ final class LineStringValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint precedes null.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraintPrecedesNull(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);

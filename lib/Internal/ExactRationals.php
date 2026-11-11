@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -24,6 +25,8 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class ExactRationals
 {
     /**
+     * @param float $number number
+     *
      * @return Rational
      */
     public static function number(float $number): array
@@ -32,8 +35,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -50,8 +56,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -64,8 +73,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -78,8 +90,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Rational $first
-     * @param Rational $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param Rational $first
+     * @phpstan-param Rational $second
      *
      * @return Rational
      */
@@ -93,8 +108,11 @@ final class ExactRationals
     /**
      * Divide positive magnitudes known to divide exactly.
      *
-     * @param list<int> $value
-     * @param list<int> $divisor
+     * @param array $value   spatial value to validate
+     * @param array $divisor divisor
+     *
+     * @phpstan-param list<int> $value
+     * @phpstan-param list<int> $divisor
      *
      * @return list<int>
      */
@@ -114,8 +132,11 @@ final class ExactRationals
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */
@@ -135,7 +156,9 @@ final class ExactRationals
     }
 
     /**
-     * @param list<int> $digits
+     * @param array $digits digits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return array{list<int>, int}
      */
@@ -166,8 +189,11 @@ final class ExactRationals
     }
 
     /**
-     * @param Magnitude $numerator
-     * @param Magnitude $denominator
+     * @param array $numerator   numerator
+     * @param array $denominator denominator
+     *
+     * @phpstan-param Magnitude $numerator
+     * @phpstan-param Magnitude $denominator
      *
      * @return Rational
      */

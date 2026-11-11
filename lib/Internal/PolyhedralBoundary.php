@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -18,9 +19,14 @@ namespace LongitudeOne\SpatialValidator\Internal;
 /** @internal detect transverse unsplit boundary crossings */
 final class PolyhedralBoundary
 {
-    /** Boundary crossings at unsupplied positions cannot form a valid local face fan.
-     * @param list<list<list<float>>> $first
-     * @param list<list<list<float>>> $second
+    /**
+     * Boundary crossings at unsupplied positions cannot form a valid local face fan.
+     *
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<list<list<float>>> $first
+     * @phpstan-param list<list<list<float>>> $second
      */
     public static function crossing(array $first, array $second): bool
     {
@@ -42,10 +48,16 @@ final class PolyhedralBoundary
         return false;
     }
 
-    /** @param list<float> $start
-     * @param list<float> $end
-     * @param list<float> $left
-     * @param list<float> $right
+    /**
+     * @param array $start start
+     * @param array $end   end
+     * @param array $left  left
+     * @param array $right right
+     *
+     * @phpstan-param list<float> $start
+     * @phpstan-param list<float> $end
+     * @phpstan-param list<float> $left
+     * @phpstan-param list<float> $right
      */
     private static function endpointContact(array $start, array $end, array $left, array $right): bool
     {

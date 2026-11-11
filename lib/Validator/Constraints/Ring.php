@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -23,8 +24,10 @@ final class Ring extends Constraint
     public const string EMPTY_ERROR = 'ring-empty';
 
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = null)
     {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -29,14 +30,15 @@ use Symfony\Component\Validator\Validation;
  */
 final class SpatialValidationTest extends TestCase
 {
-    /** @return iterable<string, array{SpatialInterface}> */
+    /**
+     * @return iterable<string, array{SpatialInterface}>
+     */
     public static function spatialValues(): iterable
     {
         foreach (['Dimension2', 'Dimension3z', 'Dimension3m', 'Dimension4zm'] as $dimension) {
             foreach (['Geometry', 'Geography'] as $family) {
                 $class = 'LongitudeOne\SpatialTypes\Types\\'.$dimension.'\\'.$family.'\Point';
 
-                // @var class-string<SpatialInterface> $class
                 yield $dimension.' '.$family.' EMPTY' => [new $class()];
 
                 $ordinates = array_fill(0, match ($dimension) {
@@ -52,6 +54,9 @@ final class SpatialValidationTest extends TestCase
         yield 'non-empty Point' => [new Point(1, 2)];
     }
 
+    /**
+     * Verify standard payload is preserved without mutation.
+     */
     public function testStandardPayloadIsPreservedWithoutMutation(): void
     {
         $payload = ['severity' => 'warning', 'source' => 'consumer'];
@@ -64,6 +69,11 @@ final class SpatialValidationTest extends TestCase
     }
 
     #[DataProvider('spatialValues')]
+    /**
+     * Verify valid points pass through spatial.
+     *
+     * @param SpatialInterface $value spatial value to validate
+     */
     public function testValidPointsPassThroughSpatial(SpatialInterface $value): void
     {
         self::assertCount(0, Validation::createValidator()->validate($value, new Spatial()));

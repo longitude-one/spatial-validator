@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -32,7 +33,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class CircularStringSimplicityTest extends TestCase
 {
-    /** @return iterable<string, array{list<list<float|int>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int>>, bool}>
+     */
     public static function cases(): iterable
     {
         yield 'EMPTY' => [[], true];
@@ -60,7 +63,9 @@ final class CircularStringSimplicityTest extends TestCase
         yield 'arc and line interior crossing' => [[[-1, 0], [0, 1], [1, 0], [0, 1], [-1, 2]], false];
     }
 
-    /** @return iterable<string, array{list<list<float|int>>, list<list<float|int>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<float|int>>, list<list<float|int>>, bool}>
+     */
     public static function supportPairs(): iterable
     {
         yield 'full circle overlapping semicircle' => [
@@ -118,7 +123,12 @@ final class CircularStringSimplicityTest extends TestCase
             [[0, -2], [0, 0], [0, 2]], [[-1, 0], [0, 1], [1, 0]], true];
     }
 
-    /** @param list<list<float|int>> $coordinates */
+    /**
+     * @param array $coordinates coordinates
+     * @param bool  $simple      simple
+     *
+     * @phpstan-param list<list<float|int>> $coordinates
+     */
     #[DataProvider('cases')]
     public function testActualArcs(array $coordinates, bool $simple): void
     {
@@ -129,8 +139,14 @@ final class CircularStringSimplicityTest extends TestCase
         self::assertSame($simple, 0 === \count($violations));
     }
 
-    /** @param list<list<float|int>> $first
-     * @param list<list<float|int>> $second */
+    /**
+     * @param array $first    first operand
+     * @param array $second   second operand
+     * @param bool  $conflict conflict
+     *
+     * @phpstan-param list<list<float|int>> $first
+     * @phpstan-param list<list<float|int>> $second
+     */
     #[DataProvider('supportPairs')]
     public function testExactSupportInteractions(array $first, array $second, bool $conflict): void
     {
@@ -142,6 +158,9 @@ final class CircularStringSimplicityTest extends TestCase
         );
     }
 
+    /**
+     * Verify geography and indeterminate plane warnings.
+     */
     public function testGeographyAndIndeterminatePlaneWarnings(): void
     {
         $service = Validation::createValidator();
@@ -168,6 +187,9 @@ final class CircularStringSimplicityTest extends TestCase
         self::assertSame(SpatialAssert\SimpleCircularString::UNAVAILABLE_ERROR, $violations->get(1)->getCode());
     }
 
+    /**
+     * Verify literal semicircle closure and validity are separate.
+     */
     public function testLiteralSemicircleClosureAndValidityAreSeparate(): void
     {
         $service = Validation::createValidator();
@@ -187,6 +209,9 @@ final class CircularStringSimplicityTest extends TestCase
         }
     }
 
+    /**
+     * Verify near tangencies without proximity tolerance.
+     */
     public function testNearTangenciesWithoutProximityTolerance(): void
     {
         $first = CircularArcs::build([[1.0, 0.0], [-1.0, 0.0], [1.0, 0.0]])[0];
@@ -207,6 +232,9 @@ final class CircularStringSimplicityTest extends TestCase
         ));
     }
 
+    /**
+     * Verify scale and axis permutations.
+     */
     public function testScaleAndAxisPermutations(): void
     {
         foreach ([1.0e308, 1.0e-10, 1.0] as $scale) {
@@ -228,6 +256,9 @@ final class CircularStringSimplicityTest extends TestCase
         }
     }
 
+    /**
+     * Verify two tangent circles repeat boundary at an interior join.
+     */
     public function testTwoTangentCirclesRepeatBoundaryAtAnInteriorJoin(): void
     {
         $service = Validation::createValidator();

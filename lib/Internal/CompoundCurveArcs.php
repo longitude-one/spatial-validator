@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -26,7 +27,11 @@ use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
  */
 final class CompoundCurveArcs
 {
-    /** @return array{list<Arc>, list<string>} */
+    /**
+     * @param CompoundCurveInterface $value spatial value to validate
+     *
+     * @return array{list<Arc>, list<string>}
+     */
     public static function build(CompoundCurveInterface $value): array
     {
         $arcs = [];
@@ -48,7 +53,9 @@ final class CompoundCurveArcs
     }
 
     /**
-     * @param list<list<float>> $positions
+     * @param array $positions positions
+     *
+     * @phpstan-param list<list<float>> $positions
      *
      * @return list<Arc>
      */

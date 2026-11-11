@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -22,7 +23,9 @@ use LongitudeOne\SpatialValidator\Validator\Constraints\Polygon;
 final class PolygonTopology
 {
     /**
-     * @param list<list<list<float>>> $rings
+     * @param array $rings rings
+     *
+     * @phpstan-param list<list<list<float>>> $rings
      *
      * @return list<array{int, string}>
      */
@@ -58,7 +61,11 @@ final class PolygonTopology
         return $errors;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     public static function project(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -91,7 +98,9 @@ final class PolygonTopology
     /**
      * Q02 closure retains both supplied positions: inspect the resulting closing interval too.
      *
-     * @param list<list<list<float>>> $rings
+     * @param array $rings rings
+     *
+     * @phpstan-param list<list<list<float>>> $rings
      *
      * @return list<array{int, string}>
      */
@@ -112,9 +121,14 @@ final class PolygonTopology
     }
 
     /**
-     * @param list<list<float>> $first
-     * @param list<list<float>> $second
-     * @param list<list<float>> $contacts
+     * @param array $first    first operand
+     * @param array $second   second operand
+     * @param array $contacts contacts
+     * @param bool  $exterior exterior
+     *
+     * @phpstan-param list<list<float>> $first
+     * @phpstan-param list<list<float>> $second
+     * @phpstan-param list<list<float>> $contacts
      */
     private static function relationship(array $first, array $second, array $contacts, bool $exterior): ?string
     {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -31,8 +32,11 @@ final class RobustPredicates
     public const int BASE = 32768;
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
@@ -56,8 +60,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      */
     public static function compare(array $first, array $second): int
     {
@@ -75,10 +82,15 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<float> $first
-     * @param list<float> $second
-     * @param list<float> $third
-     * @param list<float> $fourth
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $fourth fourth
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param list<float> $fourth
      */
     public static function coplanar(array $first, array $second, array $third, array $fourth): bool
     {
@@ -103,8 +115,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first  Greater or equal magnitude
-     * @param list<int> $second
+     * @param array $first  Greater or equal magnitude
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */
@@ -121,7 +136,11 @@ final class RobustPredicates
         return $result;
     }
 
-    /** @return array{int, list<int>} */
+    /**
+     * @param float $value spatial value to validate
+     *
+     * @return array{int, list<int>}
+     */
     public static function integer(float $value): array
     {
         if (!is_finite($value)) {
@@ -149,8 +168,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
@@ -175,10 +197,15 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<float>     $first
-     * @param list<float>     $second
-     * @param list<float>     $third
-     * @param array{int, int} $axes
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $axes   axes
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param array{int, int} $axes
      */
     public static function orientation(array $first, array $second, array $third, array $axes = [0, 1]): int
     {
@@ -197,7 +224,10 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $digits
+     * @param array $digits digits
+     * @param int   $bits   bits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return list<int>
      */
@@ -217,7 +247,10 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $digits
+     * @param int   $sign   sign
+     * @param array $digits digits
+     *
+     * @phpstan-param list<int> $digits
      *
      * @return array{int, list<int>}
      */
@@ -231,8 +264,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param array{int, list<int>} $first
-     * @param array{int, list<int>} $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param array{int, list<int>} $first
+     * @phpstan-param array{int, list<int>} $second
      *
      * @return array{int, list<int>}
      */
@@ -242,8 +278,11 @@ final class RobustPredicates
     }
 
     /**
-     * @param list<int> $first
-     * @param list<int> $second
+     * @param array $first  first operand
+     * @param array $second second operand
+     *
+     * @phpstan-param list<int> $first
+     * @phpstan-param list<int> $second
      *
      * @return list<int>
      */

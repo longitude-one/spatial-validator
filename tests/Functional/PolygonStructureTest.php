@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -41,7 +42,14 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolygonStructureTest extends TestCase
 {
-    /** @param list<list<list<float|int|null>>> $coordinates */
+    /**
+     * @param array     $coordinates coordinates
+     * @param Dimension $dimension   dimension
+     * @param Family    $family      family
+     * @param bool|null $empty       empty
+     *
+     * @phpstan-param list<list<list<float|int|null>>> $coordinates
+     */
     public static function polygon(
         array $coordinates,
         Dimension $dimension = Dimension::XY,
@@ -63,7 +71,9 @@ final class PolygonStructureTest extends TestCase
         return $polygon;
     }
 
-    /** @return iterable<string, array{list<list<list<float|int|null>>>, Dimension, bool}> */
+    /**
+     * @return iterable<string, array{list<list<list<float|int|null>>>, Dimension, bool}>
+     */
     public static function structures(): iterable
     {
         $triangle = [[0, 0], [4, 0], [0, 4], [0, 0]];
@@ -154,7 +164,14 @@ final class PolygonStructureTest extends TestCase
         ];
     }
 
-    /** @param list<list<list<float|int|null>>> $coordinates */
+    /**
+     * @param array     $coordinates coordinates
+     * @param Dimension $dimension   dimension
+     * @param Family    $family      family
+     * @param bool|null $empty       empty
+     *
+     * @phpstan-param list<list<list<float|int|null>>> $coordinates
+     */
     public static function triangle(
         array $coordinates,
         Dimension $dimension = Dimension::XY,
@@ -175,6 +192,9 @@ final class PolygonStructureTest extends TestCase
         return $triangle;
     }
 
+    /**
+     * Verify boundary declared type is checked before ring delegation.
+     */
     public function testBoundaryDeclaredTypeIsCheckedBeforeRingDelegation(): void
     {
         $ring = self::createStub(LineStringInterface::class);
@@ -194,12 +214,18 @@ final class PolygonStructureTest extends TestCase
         self::assertSame('rings[0]', $violations->get(0)->getPropertyPath());
     }
 
+    /**
+     * Verify direct unsupported input.
+     */
     public function testDirectUnsupportedInput(): void
     {
         $this->expectException(UnexpectedValueException::class);
         new PolygonStructureValidator()->validate('', new PolygonStructure());
     }
 
+    /**
+     * Verify empty flags never hide members.
+     */
     public function testEmptyFlagsNeverHideMembers(): void
     {
         $service = Validation::createValidator();
@@ -210,6 +236,9 @@ final class PolygonStructureTest extends TestCase
         self::assertSame(PolygonStructure::EMPTY_ERROR, $violations->get(0)->getCode());
     }
 
+    /**
+     * Verify geography warns and retains explicit payload.
+     */
     public function testGeographyWarnsAndRetainsExplicitPayload(): void
     {
         $polygon = self::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]]], family: Family::GEOGRAPHY);
@@ -226,6 +255,9 @@ final class PolygonStructureTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($empty, new PolygonStructure()));
     }
 
+    /**
+     * Verify input service and public coverage remain explicit.
+     */
     public function testInputServiceAndPublicCoverageRemainExplicit(): void
     {
         $service = Validation::createValidator();
@@ -239,6 +271,9 @@ final class PolygonStructureTest extends TestCase
         self::assertNull(PolygonPlane::basis([]));
     }
 
+    /**
+     * Verify metadata and wrong declared boundary type.
+     */
     public function testMetadataAndWrongDeclaredBoundaryType(): void
     {
         $ring = LineStringValidationTest::line([[0, 0], [2, 0], [0, 2], [0, 0]]);
@@ -255,6 +290,9 @@ final class PolygonStructureTest extends TestCase
         self::assertSame(SpatialAssert\Components::REFERENCE_ERROR, $violations->get(2)->getCode());
     }
 
+    /**
+     * Verify plane diagnostics and payload.
+     */
     public function testPlaneDiagnosticsAndPayload(): void
     {
         $polygon = self::polygon([[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 1], [0, 0, 0]]], Dimension::XYZ);
@@ -266,6 +304,9 @@ final class PolygonStructureTest extends TestCase
         self::assertSame($constraint, $violations->get(0)->getConstraint());
     }
 
+    /**
+     * Verify point errors are reported once in the active context.
+     */
     public function testPointErrorsAreReportedOnceInTheActiveContext(): void
     {
         $polygon = self::polygon([[[0, 0], [\INF, 0], [0, 2], [0, 0]]]);
@@ -288,7 +329,13 @@ final class PolygonStructureTest extends TestCase
         }
     }
 
-    /** @param list<list<list<float|int|null>>> $coordinates */
+    /**
+     * @param array     $coordinates coordinates
+     * @param Dimension $dimension   dimension
+     * @param bool      $valid       valid
+     *
+     * @phpstan-param list<list<list<float|int|null>>> $coordinates
+     */
     #[DataProvider('structures')]
     public function testStructures(array $coordinates, Dimension $dimension, bool $valid): void
     {
@@ -297,6 +344,9 @@ final class PolygonStructureTest extends TestCase
         self::assertSame($valid, 0 === \count($violations), (string) $violations);
     }
 
+    /**
+     * Verify wrong constraint precedes null.
+     */
     public function testWrongConstraintPrecedesNull(): void
     {
         $this->expectException(UnexpectedTypeException::class);

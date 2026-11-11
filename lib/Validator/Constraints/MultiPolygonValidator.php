@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -73,11 +74,18 @@ final class MultiPolygonValidator extends ConstraintValidator
         $this->relationships($eligible, $constraint, SpatialModelEnum::GEOGRAPHY === $value->getFamily());
     }
 
+    /**
+     * Diagnostic.
+     *
+     * @param MultiPolygon $constraint applied validation constraint
+     * @param string       $code       violation code
+     * @param int          $first      first operand
+     * @param int          $second     second operand
+     */
     private function diagnostic(MultiPolygon $constraint, string $code, int $first, int $second): void
     {
         $associated = $constraint;
-        $message = 'Polygon members {{ first }} and {{ second }} must have disjoint interiors'
-            .' and only isolated boundary contacts.';
+        $message = 'Polygon members {{ first }} and {{ second }} must have disjoint interiors and only isolated boundary contacts.';
         if (MultiPolygon::UNAVAILABLE_ERROR === $code) {
             $associated = clone $constraint;
             $associated->payload = $constraint->payload ?? ['severity' => 'warning'];
@@ -95,13 +103,21 @@ final class MultiPolygonValidator extends ConstraintValidator
         }
     }
 
-    /** @phpstan-assert-if-true PolygonInterface $member */
+    /**
+     * @param mixed $member member
+     *
+     * @phpstan-assert-if-true PolygonInterface $member
+     */
     private function isPolygon(mixed $member): bool
     {
         return $member instanceof PolygonInterface;
     }
 
-    /** @return list<list<list<float>>> */
+    /**
+     * @param PolygonInterface $polygon polygon whose ring positions are extracted
+     *
+     * @return list<list<list<float>>>
+     */
     private function positions(PolygonInterface $polygon): array
     {
         $rings = [];
@@ -119,7 +135,13 @@ final class MultiPolygonValidator extends ConstraintValidator
         return $rings;
     }
 
-    /** @param array<int, PolygonInterface> $members */
+    /**
+     * @param array        $members    spatial members to inspect
+     * @param MultiPolygon $constraint applied validation constraint
+     * @param bool         $geography  whether the value uses the Geography model
+     *
+     * @phpstan-param array<int, PolygonInterface> $members
+     */
     private function relationships(array $members, MultiPolygon $constraint, bool $geography): void
     {
         foreach ($members as $second => $member) {
@@ -139,6 +161,12 @@ final class MultiPolygonValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Usable.
+     *
+     * @param int $index  component index
+     * @param int $before number of violations before member validation
+     */
     private function usable(int $index, int $before): bool
     {
         foreach ($this->context->getViolations() as $offset => $violation) {

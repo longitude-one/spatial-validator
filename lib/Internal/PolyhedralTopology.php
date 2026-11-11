@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -18,7 +19,11 @@ namespace LongitudeOne\SpatialValidator\Internal;
 /** @internal complete validated-face topology, without changing coordinates */
 final class PolyhedralTopology
 {
-    /** @param list<list<list<list<float>>>> $patches */
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     */
     public static function closed(array $patches): bool
     {
         if ([] === $patches) {
@@ -33,7 +38,11 @@ final class PolyhedralTopology
         return self::volume($patches);
     }
 
-    /** @param list<list<list<list<float>>>> $patches
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     *
      * @return list<string>
      */
     public static function errors(array $patches): array
@@ -69,7 +78,11 @@ final class PolyhedralTopology
         return array_values(array_unique($errors));
     }
 
-    /** @param array<int, list<int>> $graph */
+    /**
+     * @param array $graph graph
+     *
+     * @phpstan-param array<int, list<int>> $graph
+     */
     private static function connected(array $graph): bool
     {
         $pending = \array_slice(array_keys($graph), 0, 1);
@@ -86,7 +99,11 @@ final class PolyhedralTopology
         return \count($seen) === \count($graph);
     }
 
-    /** @param list<list<list<list<float>>>> $patches */
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     */
     private static function intersections(array $patches): bool
     {
         foreach ($patches as $second => $patch) {
@@ -103,6 +120,11 @@ final class PolyhedralTopology
         return false;
     }
 
+    /**
+     * Manifold.
+     *
+     * @param PolyhedralEdges $edges edges
+     */
     private static function manifold(PolyhedralEdges $edges): bool
     {
         foreach (array_keys($edges->vertices) as $vertex) {
@@ -131,8 +153,12 @@ final class PolyhedralTopology
         return true;
     }
 
-    /** Exact oriented tetrahedron sum; nonzero volume is independent of origin and scale.
-     * @param list<list<list<list<float>>>> $patches
+    /**
+     * Exact oriented tetrahedron sum; nonzero volume is independent of origin and scale.
+     *
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
      */
     private static function volume(array $patches): bool
     {

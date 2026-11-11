@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -28,7 +29,11 @@ final class PolyhedralEdges
     /** @var list<list<float>> */
     public readonly array $vertices;
 
-    /** @param list<list<list<list<float>>>> $patches */
+    /**
+     * @param array $patches patches
+     *
+     * @phpstan-param list<list<list<list<float>>>> $patches
+     */
     public function __construct(array $patches)
     {
         $vertices = [];
@@ -67,9 +72,14 @@ final class PolyhedralEdges
         $this->segments = $segments;
     }
 
-    /** @param list<float> $point
-     * @param list<float> $start
-     * @param list<float> $end
+    /**
+     * @param array $point point
+     * @param array $start start
+     * @param array $end   end
+     *
+     * @phpstan-param list<float> $point
+     * @phpstan-param list<float> $start
+     * @phpstan-param list<float> $end
      */
     public static function onSegment(array $point, array $start, array $end): bool
     {
@@ -83,9 +93,14 @@ final class PolyhedralEdges
         return true;
     }
 
-    /** Normalize only the direction used in incidence/volume algebra, preserving source rings and warnings.
-     * @param list<list<list<float>>> $rings
-     * @param int<0, max>             $index
+    /**
+     * Normalize only the direction used in incidence/volume algebra, preserving source rings and warnings.
+     *
+     * @param array $rings rings
+     * @param int   $index component index
+     *
+     * @phpstan-param list<list<list<float>>> $rings
+     * @phpstan-param int<0, max> $index
      */
     public static function ringDirection(array $rings, int $index): int
     {
@@ -101,8 +116,12 @@ final class PolyhedralEdges
             === PlanarRing::direction(self::project($rings[$index], $axes)) ? -1 : 1;
     }
 
-    /** @param list<list<float>> $ring
-     * @param array{int, int} $axes
+    /**
+     * @param array $ring ring
+     * @param array $axes axes
+     *
+     * @phpstan-param list<list<float>> $ring
+     * @phpstan-param array{int, int} $axes
      *
      * @return list<list<float>>
      */

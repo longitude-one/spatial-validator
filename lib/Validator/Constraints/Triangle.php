@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -26,8 +27,10 @@ final class Triangle extends Constraint
     public const string TOPOLOGY_ERROR = 'triangle-topology';
 
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = null)
     {

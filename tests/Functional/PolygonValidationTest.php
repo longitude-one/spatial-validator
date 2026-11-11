@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -32,7 +33,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class PolygonValidationTest extends TestCase
 {
-    /** @return iterable<string, array{list<list<list<int>>>, ?string}> */
+    /**
+     * @return iterable<string, array{list<list<list<int>>>, ?string}>
+     */
     public static function topologies(): iterable
     {
         $shell = [[0, 0], [12, 0], [12, 12], [0, 12], [0, 0]];
@@ -115,7 +118,9 @@ final class PolygonValidationTest extends TestCase
     }
 
     /**
-     * @param list<list<list<float|int>>> $rings
+     * @param array $rings rings
+     *
+     * @phpstan-param list<list<list<float|int>>> $rings
      *
      * @return list<list<list<float|int>>>
      */
@@ -131,7 +136,10 @@ final class PolygonValidationTest extends TestCase
     }
 
     /**
-     * @param list<list<list<float|int>>> $rings
+     * @param array       $rings rings
+     * @param string|null $error error
+     *
+     * @phpstan-param list<list<list<float|int>>> $rings
      */
     #[DataProvider('topologies')]
     public function testExplicitAndGenericTopology(array $rings, ?string $error): void
@@ -153,6 +161,9 @@ final class PolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify geography keeps structural errors and unavailable warnings.
+     */
     public function testGeographyKeepsStructuralErrorsAndUnavailableWarnings(): void
     {
         $polygon = PolygonStructureTest::polygon([[[0, 0], [2, 0], [0, 2], [0, 0]], []], family: Family::GEOGRAPHY);
@@ -170,6 +181,9 @@ final class PolygonValidationTest extends TestCase
         self::assertNull($constraint->payload);
     }
 
+    /**
+     * Verify measures and near contacts.
+     */
     public function testMeasuresAndNearContacts(): void
     {
         foreach ([Dimension::XY, Dimension::XYM, Dimension::XYZM] as $dimension) {
@@ -188,6 +202,9 @@ final class PolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify orientation warnings keep topology errors and symfony context.
+     */
     public function testOrientationWarningsKeepTopologyErrorsAndSymfonyContext(): void
     {
         $rings = [[[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]], [[10, 1], [12, 1], [10, 3], [10, 1]]];
@@ -225,6 +242,9 @@ final class PolygonValidationTest extends TestCase
         self::assertNull($generic->get(1)->getConstraint()?->payload);
     }
 
+    /**
+     * Verify outside near boundary and near degenerate hole use exact predicates.
+     */
     public function testOutsideNearBoundaryAndNearDegenerateHoleUseExactPredicates(): void
     {
         $shell = [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]];
@@ -237,6 +257,9 @@ final class PolygonValidationTest extends TestCase
         self::assertCount(0, Validation::createValidator()->validate($polygon, new Rules\Polygon()));
     }
 
+    /**
+     * Verify projection defensively declines missing or invalid plane data.
+     */
     public function testProjectionDefensivelyDeclinesMissingOrInvalidPlaneData(): void
     {
         self::assertSame([], PolygonTopology::project(PolygonStructureTest::polygon([])));
@@ -244,6 +267,9 @@ final class PolygonValidationTest extends TestCase
         self::assertSame([], PolygonTopology::project($polygon));
     }
 
+    /**
+     * Verify q02 closure retains both positions and checks the closing interval.
+     */
     public function testQ02ClosureRetainsBothPositionsAndChecksTheClosingInterval(): void
     {
         $origin = 1.0e18;
@@ -266,6 +292,9 @@ final class PolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify scale and actual plane without proximity inflation.
+     */
     public function testScaleAndActualPlaneWithoutProximityInflation(): void
     {
         foreach ([1.0e-10, 1.0, 1.0e150, 1.0e307] as $scale) {
@@ -287,6 +316,9 @@ final class PolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify spikes punctures and cut lines fail ring composition.
+     */
     public function testSpikesPuncturesAndCutLinesFailRingComposition(): void
     {
         $shell = [[0, 0], [8, 0], [8, 8], [0, 8], [0, 0]];
@@ -308,6 +340,9 @@ final class PolygonValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify structure failure prevents dependent topology.
+     */
     public function testStructureFailurePreventsDependentTopology(): void
     {
         foreach ([new Rules\Polygon(), new Rules\Spatial()] as $constraint) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -36,7 +37,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class PointValidationTest extends TestCase
 {
-    /** @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}> */
+    /**
+     * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
+     */
     public static function variants(): iterable
     {
         foreach (CoordinateDimensionEnum::cases() as $dimension) {
@@ -46,6 +49,9 @@ final class PointValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify bounds and absent axes.
+     */
     public function testBoundsAndAbsentAxes(): void
     {
         $service = Validation::createValidator();
@@ -77,6 +83,9 @@ final class PointValidationTest extends TestCase
         self::assertCount(0, $service->validate($point, new SpatialAssert\Point()));
     }
 
+    /**
+     * Verify context groups payload and generic routing.
+     */
     public function testContextGroupsPayloadAndGenericRouting(): void
     {
         $value = $this->candidate(CoordinateDimensionEnum::XY, SpatialModelEnum::GEOMETRY, [1, null, null, null], true);
@@ -108,6 +117,12 @@ final class PointValidationTest extends TestCase
     }
 
     #[DataProvider('variants')]
+    /**
+     * Verify declared variants.
+     *
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     */
     public function testDeclaredVariants(CoordinateDimensionEnum $dimension, SpatialModelEnum $family): void
     {
         $service = Validation::createValidator();
@@ -143,6 +158,9 @@ final class PointValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify elementary input contracts.
+     */
     public function testElementaryInputContracts(): void
     {
         $constraints = [
@@ -173,6 +191,9 @@ final class PointValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify presence and finite comparison.
+     */
     public function testPresenceAndFiniteComparison(): void
     {
         $service = Validation::createValidator();
@@ -193,7 +214,14 @@ final class PointValidationTest extends TestCase
         self::assertFalse(PointCoordinates::equal(0.0, \NAN));
     }
 
-    /** @param list<float|int|null> $values */
+    /**
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     * @param array                   $values    values
+     * @param bool                    $empty     empty
+     *
+     * @phpstan-param list<float|int|null> $values
+     */
     private function candidate(
         CoordinateDimensionEnum $dimension,
         SpatialModelEnum $family,

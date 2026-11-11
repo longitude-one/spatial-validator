@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -34,6 +35,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
  */
 final class SimpleCircularStringValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof SimpleCircularString) {
@@ -63,7 +70,12 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         $this->arcs(CircularArcs::build($positions), $constraint);
     }
 
-    /** @param list<Arc> $arcs */
+    /**
+     * @param array                $arcs       arcs
+     * @param SimpleCircularString $constraint applied validation constraint
+     *
+     * @phpstan-param list<Arc> $arcs
+     */
     private function arcs(array $arcs, SimpleCircularString $constraint): void
     {
         $this->repeatedEndpoints($arcs);
@@ -85,7 +97,11 @@ final class SimpleCircularStringValidator extends ConstraintValidator
     }
 
     /**
-     * @param list<Arc> $arcs
+     * @param array $arcs   arcs
+     * @param int   $first  first operand
+     * @param int   $second second operand
+     *
+     * @phpstan-param list<Arc> $arcs
      *
      * @return list<Vector>
      */
@@ -105,7 +121,11 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         return $permitted;
     }
 
-    /** @param list<Arc> $arcs */
+    /**
+     * @param array $arcs arcs
+     *
+     * @phpstan-param list<Arc> $arcs
+     */
     private function repeatedEndpoints(array $arcs): void
     {
         $vertices = [$arcs[0]['start']];
@@ -126,6 +146,11 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Unavailable.
+     *
+     * @param SimpleCircularString $constraint applied validation constraint
+     */
     private function unavailable(SimpleCircularString $constraint): void
     {
         $warning = clone $constraint;

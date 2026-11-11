@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -38,7 +39,9 @@ use Symfony\Component\Validator\Validation;
  */
 final class CompoundCurveValidationTest extends TestCase
 {
-    /** @return iterable<string, array{Constraint}> */
+    /**
+     * @return iterable<string, array{Constraint}>
+     */
     public static function constraints(): iterable
     {
         yield 'validity' => [new SpatialAssert\CompoundCurve()];
@@ -46,7 +49,13 @@ final class CompoundCurveValidationTest extends TestCase
         yield 'simplicity' => [new SpatialAssert\SimpleCompoundCurve()];
     }
 
-    /** @param list<SpatialInterface> $curves */
+    /**
+     * @param array                   $curves    curves
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     *
+     * @phpstan-param list<SpatialInterface> $curves
+     */
     public static function curve(
         array $curves,
         CoordinateDimensionEnum $dimension = CoordinateDimensionEnum::XY,
@@ -63,7 +72,10 @@ final class CompoundCurveValidationTest extends TestCase
         return $value;
     }
 
-    public function testBrokenZJoinAndLocalizedContext(): void
+    /**
+     * Verify broken z join and localized context.
+     */
+    public function testBrokenAltitudeJoinAndLocalizedContext(): void
     {
         $dimension = CoordinateDimensionEnum::XYZ;
         $first = LineStringValidationTest::line([[0, 0, 0], [1, 0, 0]], $dimension);
@@ -86,6 +98,9 @@ final class CompoundCurveValidationTest extends TestCase
         self::assertSame([$first, $second], $value->getCurves());
     }
 
+    /**
+     * Verify continuity and m.
+     */
     public function testContinuityAndM(): void
     {
         $service = Validation::createValidator();
@@ -110,6 +125,11 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify direct input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testDirectInputContract(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);
@@ -117,6 +137,9 @@ final class CompoundCurveValidationTest extends TestCase
         $validator->validate('', $constraint);
     }
 
+    /**
+     * Verify empty and invalid members.
+     */
     public function testEmptyAndInvalidMembers(): void
     {
         $service = Validation::createValidator();
@@ -140,6 +163,9 @@ final class CompoundCurveValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify finite join equality has no added tolerance.
+     */
     public function testFiniteJoinEqualityHasNoAddedTolerance(): void
     {
         $service = Validation::createValidator();
@@ -156,6 +182,9 @@ final class CompoundCurveValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify geography warnings and payload.
+     */
     public function testGeographyWarningsAndPayload(): void
     {
         $family = SpatialModelEnum::GEOGRAPHY;
@@ -182,6 +211,11 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify input contract.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testInputContract(Constraint $constraint): void
     {
         $service = Validation::createValidator();
@@ -194,6 +228,9 @@ final class CompoundCurveValidationTest extends TestCase
         self::assertCount(1, $service->validate($candidate, $constraint));
     }
 
+    /**
+     * Verify metadata and point failures remain localized.
+     */
     public function testMetadataAndPointFailuresRemainLocalized(): void
     {
         $member = LineStringValidationTest::line([[0, 0, 1], [1, 0, 2]], CoordinateDimensionEnum::XYM);
@@ -214,6 +251,11 @@ final class CompoundCurveValidationTest extends TestCase
     }
 
     #[DataProvider('constraints')]
+    /**
+     * Verify wrong constraint first.
+     *
+     * @param Constraint $constraint applied validation constraint
+     */
     public function testWrongConstraintFirst(Constraint $constraint): void
     {
         $validator = SpecializedValidationTest::validator($constraint);

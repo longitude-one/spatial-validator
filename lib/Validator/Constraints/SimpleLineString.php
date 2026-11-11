@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -24,8 +25,10 @@ final class SimpleLineString extends Constraint
     public const string UNAVAILABLE_ERROR = 'simplelinestring-unavailable';
 
     /**
-     * @param string[]|null $groups  Validation groups
-     * @param mixed         $payload Consumer metadata
+     * @param array|null $groups  Validation groups
+     * @param mixed      $payload Consumer metadata
+     *
+     * @phpstan-param string[]|null $groups
      */
     public function __construct(?array $groups = null, mixed $payload = null)
     {

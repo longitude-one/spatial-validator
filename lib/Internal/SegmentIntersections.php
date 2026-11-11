@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -19,10 +20,15 @@ namespace LongitudeOne\SpatialValidator\Internal;
 final class SegmentIntersections
 {
     /**
-     * @param list<float> $first
-     * @param list<float> $second
-     * @param list<float> $third
-     * @param list<float> $fourth
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $fourth fourth
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param list<float> $fourth
      */
     public static function kind(array $first, array $second, array $third, array $fourth): int
     {
@@ -53,7 +59,11 @@ final class SegmentIntersections
         return 0;
     }
 
-    /** @param list<list<float>> $positions */
+    /**
+     * @param array $positions positions
+     *
+     * @phpstan-param list<list<float>> $positions
+     */
     public static function simple(array $positions): bool
     {
         $segments = \count($positions) - 1;
@@ -77,6 +87,14 @@ final class SegmentIntersections
         return true;
     }
 
+    /**
+     * Interval.
+     *
+     * @param float $first  first operand
+     * @param float $second second operand
+     * @param float $third  third
+     * @param float $fourth fourth
+     */
     private static function interval(float $first, float $second, float $third, float $fourth): int
     {
         $lower = max(min($first, $second), min($third, $fourth));
@@ -85,7 +103,13 @@ final class SegmentIntersections
         return $lower > $upper ? 0 : ($lower === $upper ? 1 : 2);
     }
 
-    /** @param list<list<float>> $positions */
+    /**
+     * @param int   $first     first operand
+     * @param int   $second    second operand
+     * @param array $positions positions
+     *
+     * @phpstan-param list<list<float>> $positions
+     */
     private static function permittedContact(int $first, int $second, array $positions): bool
     {
         if ($second === $first + 1) {
@@ -101,10 +125,15 @@ final class SegmentIntersections
     }
 
     /**
-     * @param list<float> $first
-     * @param list<float> $second
-     * @param list<float> $third
-     * @param list<float> $fourth
+     * @param array $first  first operand
+     * @param array $second second operand
+     * @param array $third  third
+     * @param array $fourth fourth
+     *
+     * @phpstan-param list<float> $first
+     * @phpstan-param list<float> $second
+     * @phpstan-param list<float> $third
+     * @phpstan-param list<float> $fourth
      */
     private static function planar(array $first, array $second, array $third, array $fourth): int
     {

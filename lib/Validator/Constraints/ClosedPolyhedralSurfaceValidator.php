@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -27,6 +28,12 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 /** Add closure and enclosed nonzero volume to complete general surface validity. */
 final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
 {
+    /**
+     * Validate the supplied spatial value.
+     *
+     * @param mixed      $value      spatial value to validate
+     * @param Constraint $constraint applied validation constraint
+     */
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof ClosedPolyhedralSurface) {
@@ -60,6 +67,11 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * Has errors.
+     *
+     * @param int $before number of violations before member validation
+     */
     private function hasErrors(int $before): bool
     {
         foreach ($this->context->getViolations() as $index => $violation) {
@@ -71,7 +83,11 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         return false;
     }
 
-    /** @return list<list<list<list<float>>>> */
+    /**
+     * @param PolyhedralSurfaceInterface $value spatial value to validate
+     *
+     * @return list<list<list<list<float>>>>
+     */
     private function positions(PolyhedralSurfaceInterface $value): array
     {
         $patches = [];

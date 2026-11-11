@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of the spatial project.
  *
@@ -41,7 +42,15 @@ use Symfony\Component\Validator\Validation;
  */
 final class CollectionValidationTest extends TestCase
 {
-    /** @param array<mixed> $members */
+    /**
+     * @param string                  $type      type
+     * @param array                   $members   spatial members to inspect
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     * @param SpatialReference|null   $reference reference
+     *
+     * @phpstan-param array<mixed> $members
+     */
     public static function aggregate(
         string $type,
         array $members,
@@ -67,7 +76,9 @@ final class CollectionValidationTest extends TestCase
         return $value;
     }
 
-    /** @return iterable<string, array{list<list<list<float|int>>>, bool}> */
+    /**
+     * @return iterable<string, array{list<list<list<float|int>>>, bool}>
+     */
     public static function interactions(): iterable
     {
         yield 'boundary' => [[[[0, 0], [1, 1]], [[1, 1], [2, 0]]], true];
@@ -95,7 +106,9 @@ final class CollectionValidationTest extends TestCase
         yield 'close disjoint' => [[[[0, 0], [1, 0]], [[0, 1e-20], [1, 1e-20]]], true];
     }
 
-    /** @return iterable<string, array{string, string}> */
+    /**
+     * @return iterable<string, array{string, string}>
+     */
     public static function optionalRules(): iterable
     {
         yield 'point simplicity' => ['SimpleMultiPoint', 'MultiPoint'];
@@ -105,7 +118,9 @@ final class CollectionValidationTest extends TestCase
         yield 'line closure' => ['ClosedMultiLineString', 'MultiLineString'];
     }
 
-    /** @return iterable<string, array{string, string}> */
+    /**
+     * @return iterable<string, array{string, string}>
+     */
     public static function types(): iterable
     {
         yield 'general' => ['GeometryCollection', 'geometries'];
@@ -115,7 +130,9 @@ final class CollectionValidationTest extends TestCase
         yield 'lines' => ['MultiLineString', 'lineStrings'];
     }
 
-    /** @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}> */
+    /**
+     * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
+     */
     public static function variants(): iterable
     {
         foreach (CoordinateDimensionEnum::cases() as $dimension) {
@@ -125,6 +142,9 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify closure requires every member and aggregate non emptiness.
+     */
     public function testClosureRequiresEveryMemberAndAggregateNonEmptiness(): void
     {
         $service = Validation::createValidator();
@@ -153,6 +173,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('types')]
+    /**
+     * Verify empty and mixed members are retained.
+     *
+     * @param string $type type
+     * @param string $path property path for the diagnostic
+     */
     public function testEmptyAndMixedMembersAreRetained(string $type, string $path): void
     {
         $empty = 'MultiLineString' === $type ? LineStringValidationTest::line([]) : new Point();
@@ -169,6 +195,9 @@ final class CollectionValidationTest extends TestCase
         self::assertSame($path.'[1]', $violations->get(0)->getPropertyPath());
     }
 
+    /**
+     * Verify geography optional checks warn and preserve explicit payload.
+     */
     public function testGeographyOptionalChecksWarnAndPreserveExplicitPayload(): void
     {
         $point = new GeographyPoint(1, 2);
@@ -213,6 +242,9 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify heterogeneous nesting preserves context and polygon structure failure.
+     */
     public function testHeterogeneousNestingPreservesContextAndPolygonStructureFailure(): void
     {
         $polygon = self::createStub(PolygonInterface::class);
@@ -244,6 +276,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify invalid member prevents additional property claims.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testInvalidMemberPreventsAdditionalPropertyClaims(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
@@ -253,7 +291,10 @@ final class CollectionValidationTest extends TestCase
         self::assertSame(Rules\Components::TYPE_ERROR, $violations->get(0)->getCode());
     }
 
-    public function testMeasuredPointEqualityIgnoresMAndIncludesZ(): void
+    /**
+     * Verify measured point equality ignores m and includes z.
+     */
+    public function testMeasuredPointEqualityIgnoresMeasureAndIncludesAltitude(): void
     {
         $dimensions = [CoordinateDimensionEnum::XYZ, CoordinateDimensionEnum::XYM, CoordinateDimensionEnum::XYZM];
         foreach ($dimensions as $dimension) {
@@ -267,6 +308,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('types')]
+    /**
+     * Verify metadata and invalid member remain visible under empty parent.
+     *
+     * @param string $type type
+     * @param string $path property path for the diagnostic
+     */
     public function testMetadataAndInvalidMemberRemainVisibleUnderEmptyParent(string $type, string $path): void
     {
         $point = self::createStub(PointInterface::class);
@@ -302,7 +349,12 @@ final class CollectionValidationTest extends TestCase
         );
     }
 
-    /** @param list<list<list<float|int>>> $lines */
+    /**
+     * @param array $lines  lines
+     * @param bool  $simple simple
+     *
+     * @phpstan-param list<list<list<float|int>>> $lines
+     */
     #[DataProvider('interactions')]
     public function testMultiLineSimplicity(array $lines, bool $simple): void
     {
@@ -317,6 +369,9 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
+    /**
+     * Verify multi point simplicity is separate and skips empty positions.
+     */
     public function testMultiPointSimplicityIsSeparateAndSkipsEmptyPositions(): void
     {
         $value = self::aggregate(
@@ -337,6 +392,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify optional diagnostics preserve nested context.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testOptionalDiagnosticsPreserveNestedContext(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
@@ -364,6 +425,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('optionalRules')]
+    /**
+     * Verify optional input contracts.
+     *
+     * @param string $name name
+     * @param string $type type
+     */
     public function testOptionalInputContracts(string $name, string $type): void
     {
         /** @var class-string<Constraint> $class */
@@ -393,7 +460,10 @@ final class CollectionValidationTest extends TestCase
         }
     }
 
-    public function testSpatialLineInteractionsUseZAndActualContact(): void
+    /**
+     * Verify spatial line interactions use z and actual contact.
+     */
+    public function testSpatialLineInteractionsUseAltitudeAndActualContact(): void
     {
         $cases = [
             [[[0, 0, 0], [2, 2, 0]], [[0, 2, 1], [2, 0, 1]], true],
@@ -416,6 +486,12 @@ final class CollectionValidationTest extends TestCase
     }
 
     #[DataProvider('variants')]
+    /**
+     * Verify variants and empty geography properties.
+     *
+     * @param CoordinateDimensionEnum $dimension dimension
+     * @param SpatialModelEnum        $family    family
+     */
     public function testVariantsAndEmptyGeographyProperties(
         CoordinateDimensionEnum $dimension,
         SpatialModelEnum $family,
