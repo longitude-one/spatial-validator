@@ -360,8 +360,7 @@ final class PolyhedralSurfaceValidationTest extends TestCase
     #[DataProvider('invalidSurfaces')]
     public function testInvalidTopology(array $faces, string $code): void
     {
-        foreach (
-            [new Rules\PolyhedralSurface(), new Rules\ClosedPolyhedralSurface(), new Rules\Spatial()] as $constraint
+        foreach ([new Rules\PolyhedralSurface(), new Rules\ClosedPolyhedralSurface(), new Rules\Spatial()] as $constraint
         ) {
             $violations = Validation::createValidator()->validate(self::candidate($faces), $constraint);
             $codes = array_map(static fn ($violation) => $violation->getCode(), iterator_to_array($violations));

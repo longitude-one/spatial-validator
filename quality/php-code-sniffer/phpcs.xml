@@ -21,11 +21,7 @@
     <!-- Exclude third party code -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
 
-    <!-- Use the modern multiline-condition check alongside the shared PSR-2 rules. -->
-    <rule ref="PSR2">
-        <exclude name="PSR2.ControlStructures.ControlStructureSpacing"/>
-    </rule>
-    <rule ref="PSR12.ControlStructures.ControlStructureSpacing"/>
+    <rule ref="PSR2"/>
 
     <!--
         A class or interface must not be defined in multiple files.
@@ -239,7 +235,7 @@
     <!--
       Checks that control structures have PSR2 style spacing around brackets.
     -->
-    <rule ref="PSR12.ControlStructures.ControlStructureSpacing"/>
+    <rule ref="PSR2.ControlStructures.ControlStructureSpacing"/>
 
     <!--
       Ensures that switch statements are defined according to PSR2.

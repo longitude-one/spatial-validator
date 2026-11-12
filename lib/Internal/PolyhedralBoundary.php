@@ -31,8 +31,7 @@ final class PolyhedralBoundary
             foreach ($second as $other) {
                 foreach (PlanarRing::edges($ring) as [$start, $end]) {
                     foreach (PlanarRing::edges($other) as [$left, $right]) {
-                        if (
-                            1 === SegmentIntersections::kind($start, $end, $left, $right)
+                        if (1 === SegmentIntersections::kind($start, $end, $left, $right)
                             && !self::endpointContact($start, $end, $left, $right)
                         ) {
                             return true;

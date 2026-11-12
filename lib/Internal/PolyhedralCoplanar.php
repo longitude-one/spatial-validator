@@ -38,8 +38,7 @@ final class PolyhedralCoplanar
                 foreach (PlanarRing::edges($projected) as [$start, $end]) {
                     foreach (PlanarRing::edges($otherProjected) as [$left, $right]) {
                         $axis = $start[0] !== $end[0] ? 0 : 1;
-                        if (
-                            2 === SegmentIntersections::kind($start, $end, $left, $right)
+                        if (2 === SegmentIntersections::kind($start, $end, $left, $right)
                             && 0 < (($end[$axis] <=> $start[$axis]) * $side)
                             * (($right[$axis] <=> $left[$axis]) * $otherSide)
                         ) {

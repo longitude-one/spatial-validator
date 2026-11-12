@@ -108,8 +108,7 @@ final class SimpleCircularStringValidator extends ConstraintValidator
         if ($second === $first + 1) {
             $permitted[] = $arcs[$first]['end'];
         }
-        if (
-            0 === $first && $second === \count($arcs) - 1
+        if (0 === $first && $second === \count($arcs) - 1
             && $arcs[$first]['start'] === $arcs[$second]['end']
         ) {
             $permitted[] = $arcs[$first]['start'];

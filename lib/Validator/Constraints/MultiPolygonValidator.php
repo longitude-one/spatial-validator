@@ -61,8 +61,7 @@ final class MultiPolygonValidator extends ConstraintValidator
         $eligible = [];
         foreach ($members as $index => $member) {
             $geography = SpatialModelEnum::GEOGRAPHY === $value->getFamily();
-            if (
-                $this->isPolygon($member) && [] !== $member->getRings()
+            if ($this->isPolygon($member) && [] !== $member->getRings()
                 && ($geography || $this->usable($index, $before))
             ) {
                 $eligible[$index] = $member;

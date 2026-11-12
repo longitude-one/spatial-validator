@@ -39,8 +39,7 @@ final class ClosedPolyhedralSurfaceValidator extends ConstraintValidator
         if (null === $value) {
             return;
         }
-        if (
-            !$value instanceof PolyhedralSurfaceInterface
+        if (!$value instanceof PolyhedralSurfaceInterface
             || GeometryTypeEnum::POLYHEDRALSURFACE !== $value->getType()
         ) {
             throw new UnexpectedValueException($value, PolyhedralSurfaceInterface::class);

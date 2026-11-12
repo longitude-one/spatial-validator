@@ -64,8 +64,7 @@ final class MultiLineContacts
             return false;
         }
         foreach ($firstEnds as $endpoint) {
-            if (
-                \in_array($endpoint, $secondEnds, true)
+            if (\in_array($endpoint, $secondEnds, true)
                 && \in_array($endpoint, [$first[$left], $first[$left + 1]], true)
                 && \in_array($endpoint, [$second[$right], $second[$right + 1]], true)
             ) {
