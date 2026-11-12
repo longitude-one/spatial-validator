@@ -1,14 +1,10 @@
 <?php
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -36,8 +32,11 @@ $header = str_replace('%year%', __copyright(FIRST_YEAR), $header);
 $finder = Finder::create()
     ->in([
         __DIR__.'/../../lib/',
-        __DIR__.'/../../quality/php-cs-fixer/',
         __DIR__.'/../../tests/',
+        __DIR__.'/../../quality/',
+    ])
+    ->append([
+        __FILE__,
     ])
 ;
 
@@ -57,7 +56,7 @@ return $config->setRules([
 
     // Headers
     'header_comment' => [
-        'comment_type' => 'PHPDoc',
+        'comment_type' => 'comment',
         'header' => $header,
         'location' => 'after_open',
         'separate' => 'bottom',
@@ -72,6 +71,7 @@ return $config->setRules([
     'ordered_class_elements' => [
         'order' => [
             'use_trait',
+            'case',
             'constant_public',
             'constant_protected',
             'constant_private',
@@ -102,6 +102,13 @@ return $config->setRules([
 
     // LongitudeOne conventions / overrides
     'declare_strict_types' => true,
+    'php_unit_test_case_static_method_calls' => [
+        'call_type' => 'self',
+        'target' => 'newest',
+    ],
+    'new_expression_parentheses' => [
+        'use_parentheses' => false,
+    ],
 ])
     ->setRiskyAllowed(true)
     ->setFinder($finder)
