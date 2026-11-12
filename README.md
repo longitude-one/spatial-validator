@@ -20,9 +20,29 @@ Symfony Validator 5.4, 6, 7 and 8 are supported. `spatial-types` supplies the sp
 composer require longitude-one/spatial-validator
 ```
 
-PCOV and the quality tools are development requirements only; consumer installations do not require PCOV.
+## Explicit validation
+
+Use the `Spatial` constraint with Symfony Validator to dispatch by geometry type:
+
+```php
+use LongitudeOne\SpatialTypes\Types\Dimension2\LineString;
+use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
+use Symfony\Component\Validator\Validation;
+
+$line = new LineString([[0, 0], [1, 0], [0, 1], [0, 0]]);
+$violations = Validation::createValidator()->validate($line, new Spatial());
+```
+
+Constraints and their validators live under `LongitudeOne\SpatialValidator\Validator\Constraints`.
+`Spatial` delegates to one dedicated constraint per `GeometryTypeEnum` case.
+You can also apply a specialized constraint directly, for example `Point` or `Triangle`.
+Standard Symfony groups and payload are accepted; delegation preserves the validation root,
+property path and active group. `Spatial` has no warning payload by default and does not copy
+its payload to specialized constraints.
 
 ## Development
+
+PCOV and the quality tools are development requirements only; consumer installations do not require PCOV.
 
 Use PHP 8.4.1 or later (PHPUnit 13 requirement), Composer 2, Node.js 22 and the PCOV extension.
 From a clean checkout:
@@ -70,26 +90,6 @@ Mutable Geometry and Geography share these classes: pass `family: SpatialModelEn
 Validation uses interfaces for both mutable and immutable values. Point EMPTY state comes from
 `getCoordinates() === null`; sequence and surface structure comes from their points, curves and rings.
 Apply explicit constraints for closure and simplicity.
-
-## Explicit validation
-
-Use the `Spatial` constraint with Symfony Validator to dispatch by geometry type:
-
-```php
-use LongitudeOne\SpatialTypes\Types\Dimension2\LineString;
-use LongitudeOne\SpatialValidator\Validator\Constraints\Spatial;
-use Symfony\Component\Validator\Validation;
-
-$line = new LineString([[0, 0], [1, 0], [0, 1], [0, 0]]);
-$violations = Validation::createValidator()->validate($line, new Spatial());
-```
-
-Constraints and their validators live under `LongitudeOne\SpatialValidator\Validator\Constraints`.
-`Spatial` delegates to one dedicated constraint per `GeometryTypeEnum` case.
-You can also apply a specialized constraint directly, for example `Point` or `Triangle`.
-Standard Symfony groups and payload are accepted; delegation preserves the validation root,
-property path and active group. `Spatial` has no warning payload by default and does not copy
-its payload to specialized constraints.
 
 ### Current coverage
 
