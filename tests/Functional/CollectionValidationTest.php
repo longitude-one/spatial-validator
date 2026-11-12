@@ -23,7 +23,6 @@ use LongitudeOne\SpatialTypes\Reference\SpatialReference;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints as Rules;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -36,7 +35,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class CollectionValidationTest extends TestCase
+final class CollectionValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @param string                  $type      type
@@ -64,7 +63,7 @@ final class CollectionValidationTest extends TestCase
         $value->method('getFamily')->willReturn($family);
         $value->method('getSpatialReference')->willReturn($reference ?? SpatialReference::fromSrid(0));
         $value->method('getElements')->willReturn($members);
-        if ('MultiPoint' === $type) {
+        if ($value instanceof \LongitudeOne\SpatialTypes\Interfaces\MultiPointInterface) {
             $value->method('getPoints')->willReturn($members);
         }
 
@@ -441,14 +440,14 @@ final class CollectionValidationTest extends TestCase
         }
 
         try {
-            new $validatorClass()->validate(null, new Assert\NotNull());
+            self::validateConstraint(new $validatorClass(), null, new Assert\NotNull());
             self::fail('Wrong constraint must throw.');
         } catch (UnexpectedTypeException $exception) {
             self::assertStringContainsString($name, $exception->getMessage());
         }
 
         try {
-            new $validatorClass()->validate('', $constraint);
+            self::validateConstraint(new $validatorClass(), '', $constraint);
             self::fail('Strings must throw directly.');
         } catch (UnexpectedValueException $exception) {
             self::assertStringContainsString($type, $exception->getMessage());

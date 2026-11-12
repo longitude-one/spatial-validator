@@ -21,7 +21,6 @@ use LongitudeOne\SpatialTypes\Value\Coordinates;
 use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -33,7 +32,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class PointValidationTest extends TestCase
+final class PointValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
@@ -170,18 +169,18 @@ final class PointValidationTest extends TestCase
             $class = $constraint->validatedBy();
             $validator = new $class();
             self::assertInstanceOf(ConstraintValidator::class, $validator);
-            $validator->validate(null, $constraint);
+            self::validateConstraint($validator, null, $constraint);
             self::assertCount(0, Validation::createValidator()->validate(null, $constraint));
 
             try {
-                $validator->validate(null, new Assert\NotNull());
+                self::validateConstraint($validator, null, new Assert\NotNull());
                 self::fail('Wrong constraint must throw.');
             } catch (UnexpectedTypeException $exception) {
                 self::assertStringContainsString($constraint::class, $exception->getMessage());
             }
 
             try {
-                $validator->validate('', $constraint);
+                self::validateConstraint($validator, '', $constraint);
                 self::fail('Strings must throw.');
             } catch (UnexpectedValueException $exception) {
                 self::assertSame(PointInterface::class, $exception->getExpectedType());

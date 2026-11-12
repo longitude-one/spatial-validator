@@ -25,7 +25,6 @@ use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
 use LongitudeOne\SpatialValidator\Internal\PolygonStructureValidator;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use stdClass as UnsupportedObject;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -37,7 +36,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class PolygonStructureTest extends TestCase
+final class PolygonStructureTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @param array     $coordinates coordinates
@@ -211,7 +210,7 @@ final class PolygonStructureTest extends TestCase
     public function testDirectUnsupportedInput(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        new PolygonStructureValidator()->validate('', new PolygonStructure());
+        self::validateConstraint(new PolygonStructureValidator(), '', new PolygonStructure());
     }
 
     /**
@@ -340,6 +339,6 @@ final class PolygonStructureTest extends TestCase
     public function testWrongConstraintPrecedesNull(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        new PolygonStructureValidator()->validate(null, new Assert\NotNull());
+        self::validateConstraint(new PolygonStructureValidator(), null, new Assert\NotNull());
     }
 }

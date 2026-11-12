@@ -24,7 +24,6 @@ use LongitudeOne\SpatialValidator\Internal\RobustPredicates;
 use LongitudeOne\SpatialValidator\Internal\SegmentIntersections;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ContextualValidatorInterface;
@@ -35,7 +34,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @coversNothing
  */
-final class LineStringSimplicityTest extends TestCase
+final class LineStringSimplicityTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{LineStringInterface}>
@@ -183,8 +182,7 @@ final class LineStringSimplicityTest extends TestCase
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\LineStringValidator();
-        $validator->initialize($context);
-        $validator->validate($value, $constraint);
+        self::validateConstraint($validator, $value, $constraint, $context);
     }
 
     /**

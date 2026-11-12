@@ -19,7 +19,6 @@ use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
 use LongitudeOne\SpatialValidator\Internal\PolygonStructure;
 use LongitudeOne\SpatialValidator\Validator\Constraints as Rules;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 use Symfony\Component\Validator\Validation;
@@ -29,7 +28,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class TriangleValidationTest extends TestCase
+final class TriangleValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{list<list<list<float|int|null>>>, ?string}>
@@ -229,6 +228,6 @@ final class TriangleValidationTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame(TriangleInterface::class, $violations->get(0)->getParameters()['{{ type }}']);
         $this->expectException(UnexpectedValueException::class);
-        new Rules\TriangleValidator()->validate($polygon, new Rules\Triangle());
+        self::validateConstraint(new Rules\TriangleValidator(), $polygon, new Rules\Triangle());
     }
 }

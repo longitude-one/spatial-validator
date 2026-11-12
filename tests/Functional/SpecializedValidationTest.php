@@ -21,7 +21,6 @@ use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -36,7 +35,7 @@ use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
  *
  * @coversNothing
  */
-final class SpecializedValidationTest extends TestCase
+final class SpecializedValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * Constraint.
@@ -47,7 +46,7 @@ final class SpecializedValidationTest extends TestCase
     {
         $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$type->value;
         $constraint = new $class();
-        self::assertInstanceOf(Constraint::class, $constraint);
+        self::assertSame($type->value, substr($constraint::class, strrpos($constraint::class, '\\') + 1));
 
         return $constraint;
     }
@@ -162,8 +161,7 @@ final class SpecializedValidationTest extends TestCase
         ;
         $context->expects($this->never())->method('getValidator');
         $validator = self::validator(self::constraint($type));
-        $validator->initialize($context);
-        $validator->validate($value, self::constraint($type));
+        self::validateConstraint($validator, $value, self::constraint($type), $context);
     }
 
     /**
@@ -252,8 +250,7 @@ final class SpecializedValidationTest extends TestCase
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\RingValidator();
-        $validator->initialize($context);
-        $validator->validate($value, $constraint);
+        self::validateConstraint($validator, $value, $constraint, $context);
     }
 
     /**
@@ -299,7 +296,7 @@ final class SpecializedValidationTest extends TestCase
         self::assertSame($constraint, $violations->get(0)->getConstraint());
         self::assertSame($value, $violations->get(0)->getRoot());
         self::assertSame($value, $violations->get(0)->getInvalidValue());
-        self::assertInstanceOf(ConstraintValidator::class, self::validator($constraint));
+        self::assertSame($constraint->validatedBy(), self::validator($constraint)::class);
     }
 
     /**

@@ -22,7 +22,6 @@ use LongitudeOne\SpatialTypes\Reference\SpatialReference;
 use LongitudeOne\SpatialTypes\Types\Dimension2\Polygon;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -34,7 +33,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class CompoundCurveValidationTest extends TestCase
+final class CompoundCurveValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{Constraint}>
@@ -130,7 +129,7 @@ final class CompoundCurveValidationTest extends TestCase
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedValueException::class);
-        $validator->validate('', $constraint);
+        self::validateConstraint($validator, '', $constraint);
     }
 
     /**
@@ -256,6 +255,6 @@ final class CompoundCurveValidationTest extends TestCase
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
-        $validator->validate(null, new Assert\NotNull());
+        self::validateConstraint($validator, null, new Assert\NotNull());
     }
 }

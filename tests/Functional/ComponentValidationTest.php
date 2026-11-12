@@ -26,7 +26,6 @@ use LongitudeOne\SpatialTypes\Value\Coordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
-use PHPUnit\Framework\TestCase;
 use RuntimeException as AccessorFailure;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -38,7 +37,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class ComponentValidationTest extends TestCase
+final class ComponentValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{string, string}>
@@ -468,7 +467,7 @@ final class ComponentValidationTest extends TestCase
     public function testUnsupportedValueThrowsDirectly(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        new SpatialAssert\ComponentsValidator()->validate('', new SpatialAssert\Components());
+        self::validateConstraint(new SpatialAssert\ComponentsValidator(), '', new SpatialAssert\Components());
     }
 
     /**
@@ -477,7 +476,7 @@ final class ComponentValidationTest extends TestCase
     public function testWrongConstraintTakesPrecedence(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        new SpatialAssert\ComponentsValidator()->validate(null, new Assert\NotNull());
+        self::validateConstraint(new SpatialAssert\ComponentsValidator(), null, new Assert\NotNull());
     }
 
     /**
@@ -530,19 +529,7 @@ final class ComponentValidationTest extends TestCase
         $value->method('getFamily')->willReturn($family);
         $value->method('getDimension')->willReturn($dimension);
         $value->method('getSpatialReference')->willReturn($reference ?? SpatialReference::fromSrid(0));
-        $getter = match ($type) {
-            'Polygon', 'Triangle' => 'getRings',
-            'CompoundCurve' => 'getCurves',
-            'PolyhedralSurface' => 'getPatches',
-            'LineString', 'CircularString', 'MultiPoint' => 'getPoints',
-            default => 'getElements',
-        };
-        if ($members instanceof \Closure) {
-            $value->method($getter)->willReturnCallback($members);
-
-            return $value;
-        }
-        $value->method($getter)->willReturn($members);
+        AggregateStubConfigurator::configure($value, $members);
 
         return $value;
     }

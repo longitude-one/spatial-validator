@@ -18,7 +18,6 @@ use LongitudeOne\SpatialTypes\Interfaces\PolyhedralSurfaceInterface;
 use LongitudeOne\SpatialValidator\Internal\PolyhedralIntersections;
 use LongitudeOne\SpatialValidator\Internal\PolyhedralTopology;
 use LongitudeOne\SpatialValidator\Validator\Constraints as Rules;
-use PHPUnit\Framework\TestCase;
 use stdClass as GenericObject;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -28,21 +27,21 @@ use Symfony\Component\Validator\Validation;
 /** @internal
  * @coversNothing
  */
-final class PolyhedralSurfaceContractTest extends TestCase
+final class PolyhedralSurfaceContractTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * Verify closed null and unsupported values.
      */
     public function testClosedNullAndUnsupportedValues(): void
     {
-        new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\ClosedPolyhedralSurface());
+        self::validateConstraint(new Rules\ClosedPolyhedralSurfaceValidator(), null, new Rules\ClosedPolyhedralSurface());
         $validator = Validation::createValidator();
         self::assertCount(0, $validator->validate(null, new Rules\ClosedPolyhedralSurface()));
         foreach (['', 'POLYHEDRALSURFACE EMPTY', 42, new GenericObject()] as $value) {
             self::assertCount(1, $validator->validate($value, new Rules\ClosedPolyhedralSurface()));
         }
         $this->expectException(UnexpectedValueException::class);
-        new Rules\ClosedPolyhedralSurfaceValidator()->validate('', new Rules\ClosedPolyhedralSurface());
+        self::validateConstraint(new Rules\ClosedPolyhedralSurfaceValidator(), '', new Rules\ClosedPolyhedralSurface());
     }
 
     /**
@@ -53,7 +52,7 @@ final class PolyhedralSurfaceContractTest extends TestCase
         $candidate = self::createStub(PolyhedralSurfaceInterface::class);
         $candidate->method('getType')->willReturn(GeometryTypeEnum::POLYGON);
         $this->expectException(UnexpectedValueException::class);
-        new Rules\ClosedPolyhedralSurfaceValidator()->validate($candidate, new Rules\ClosedPolyhedralSurface());
+        self::validateConstraint(new Rules\ClosedPolyhedralSurfaceValidator(), $candidate, new Rules\ClosedPolyhedralSurface());
     }
 
     /**
@@ -62,7 +61,7 @@ final class PolyhedralSurfaceContractTest extends TestCase
     public function testClosedWrongConstraintPrecedesNullHandling(): void
     {
         $this->expectException(UnexpectedTypeException::class);
-        new Rules\ClosedPolyhedralSurfaceValidator()->validate(null, new Rules\Spatial());
+        self::validateConstraint(new Rules\ClosedPolyhedralSurfaceValidator(), null, new Rules\Spatial());
     }
 
     /**
