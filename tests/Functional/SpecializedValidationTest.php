@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -154,12 +155,12 @@ final class SpecializedValidationTest extends TestCase
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $builder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $builder->expects(self::once())->method('addViolation');
+        $builder->expects($this->once())->method('addViolation');
         $context = $this->createMock(ExecutionContextInterface::class);
-        $context->expects(self::once())->method('buildViolation')
+        $context->expects($this->once())->method('buildViolation')
             ->with($type->value.' validation is not implemented yet.')->willReturn($builder)
         ;
-        $context->expects(self::never())->method('getValidator');
+        $context->expects($this->never())->method('getValidator');
         $validator = self::validator(self::constraint($type));
         $validator->initialize($context);
         $validator->validate($value, self::constraint($type));
@@ -238,8 +239,8 @@ final class SpecializedValidationTest extends TestCase
         $service = $this->createMock(ValidatorInterface::class);
         $contextual = $this->createMock(ContextualValidatorInterface::class);
         $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')
+        $context->expects($this->once())->method('getValidator')->willReturn($service);
+        $service->expects($this->once())->method('inContext')
             ->with(self::identicalTo($context))->willReturn($contextual)
         ;
         $rules = [
@@ -247,7 +248,7 @@ final class SpecializedValidationTest extends TestCase
             new SpatialAssert\FirstPointEqualsLastPoint(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\SimpleLineString(groups: ['direct'], payload: $constraint->payload),
         ];
-        $contextual->expects(self::once())->method('validate')
+        $contextual->expects($this->once())->method('validate')
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\RingValidator();

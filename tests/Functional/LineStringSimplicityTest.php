@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -168,8 +169,8 @@ final class LineStringSimplicityTest extends TestCase
         $service = $this->createMock(ValidatorInterface::class);
         $contextual = $this->createMock(ContextualValidatorInterface::class);
         $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')->with(self::identicalTo($context))
+        $context->expects($this->once())->method('getValidator')->willReturn($service);
+        $service->expects($this->once())->method('inContext')->with(self::identicalTo($context))
             ->willReturn($contextual)
         ;
         $rules = [
@@ -178,7 +179,7 @@ final class LineStringSimplicityTest extends TestCase
             new SpatialAssert\NonEmptyPoints(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\NoConsecutiveDuplicatePoints(groups: ['direct'], payload: $constraint->payload),
         ];
-        $contextual->expects(self::once())->method('validate')
+        $contextual->expects($this->once())->method('validate')
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\LineStringValidator();
