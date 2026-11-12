@@ -123,11 +123,15 @@ It is reference material for later rule implementations, not part of the active 
 CI tests the cross product of PHP 8.4/8.5 and Symfony 5.4/6/7/8.
 Each entry resolves its own enforced Symfony branch, verifies the installed version and runs PHPUnit.
 PHP 8.4.0 is excluded from development because PHPUnit 13 requires PHP 8.4.1 or later.
-PCOV remains loaded in every matrix entry so Composer can satisfy the development requirements.
-A separate job runs all quality checks and enforces 100% source statement coverage with PCOV.
+PCOV is installed only in coverage jobs. Matrix dependency installation ignores
+only the development requirement `ext-pcov`; all PHP and Symfony constraints remain enforced.
+A separate job runs PHP quality checks and enforces 100% source statement coverage with PCOV.
 Jobs use Ubuntu 24.04 and Node.js 24-compatible Actions.
 The quality job runs strict validation of the root Composer manifest and audits all PHP dependency environments
-through `composer check`; a failed validation or audit fails the job. Tool manifests are not strictly validated.
+using the dedicated Composer scripts; a failed validation or audit fails the job.
+Tool manifests are not strictly validated. Markdown checks run separately, including on documentation-only PRs.
+CI sends only Clover XML to Codecov, without HTML/text coverage reports or coverage artifacts.
+A lightweight workflow updates Codecov after relevant changes reach `main`.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
 
 ## Release tooling

@@ -99,3 +99,7 @@ Do not commit dependencies, lockfiles, caches or generated reports.
 Pull Requests must link the work item and explain resulting behavior, verification, API/compatibility impact
 and any remaining limitations. An independent Reviewer verifies the change before merge.
 Only merged work satisfying the shared Definition of Done may be marked Done.
+
+CI coverage uses `composer coverage-ci` and `phpunit.ci.xml` (Clover XML only).
+Local `composer coverage` reports are unchanged. See `CONTRIBUTING.md` for triggers,
+cache policy and the aggregate `CI` check.
