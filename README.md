@@ -49,7 +49,7 @@ From a clean checkout:
 
 ```sh
 composer install
-composer install-tools
+composer update-tools
 npm install --ignore-scripts
 composer check
 ```
@@ -63,7 +63,7 @@ Run `composer update` in the corresponding directory to refresh an existing loca
 | `composer audit` | Audit the root PHP dependency environment |
 | `composer audit-dependencies` | Audit root and all four isolated PHP tool environments |
 | `composer test` | PHPUnit, failing on an empty suite |
-| `composer coverage` | PCOV text, Clover XML and HTML reports under `build/` |
+| `composer coverage` | PCOV text, Clover XML and HTML reports under `build/coverage/` |
 | `composer coverage-check` | Require 100% source statement coverage from the Clover report |
 | `composer cs-check` | PHP-CS-Fixer check without file changes |
 | `composer cs-fix` | Apply coding fixes locally |
@@ -75,7 +75,7 @@ Run `composer update` in the corresponding directory to refresh an existing loca
 | `composer check` | Root Composer validation, all PHP audits, tests, coverage and quality checks |
 
 Coverage enables PCOV explicitly and restricts instrumentation to `lib/`.
-Read `build/coverage.txt`, `build/clover.xml`, or `build/coverage/index.html` after running it.
+Read `build/coverage/coverage.txt`, `build/coverage/clover.xml`, or `build/coverage/html/index.html` after running it.
 
 Markdown checks use `markdownlint-cli`. Transitive overrides select patched KaTeX, TOML and YAML
 versions until the CLI updates its own requirements; keep `npm audit` clean when updating these tools.

@@ -52,7 +52,7 @@ jobs:
         with:
           node-version: '22'
       - run: composer install --prefer-dist --no-interaction
-      - run: composer install-tools
+      - run: composer update-tools
       - run: npm install --ignore-scripts
       - run: npm audit
       - name: Validate root Composer manifest, audit dependencies and run all checks
@@ -62,7 +62,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: longitude-one/spatial-validator
-          files: build/clover.xml
+          files: build/coverage/clover.xml
           disable_search: true
       - uses: actions/upload-artifact@v7
         if: always()
