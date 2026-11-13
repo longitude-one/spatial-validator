@@ -1,45 +1,23 @@
 {
-  "tagPrefix": "v",
-  "types": [
+  "releaseCommitMessageFormat": "chore(release): v{{currentTag}} 🎉",
+  "packageFiles": [],
+  "bumpFiles": [
     {
-      "type": "feat",
-      "section": "✨ Features"
-    },
-    {
-      "type": "fix",
-      "section": "🐛 Bug Fixes"
-    },
-    {
-      "type": "perf",
-      "section": "⚡ Performance"
-    },
-    {
-      "type": "refactor",
-      "section": "♻️ Refactoring"
-    },
-    {
-      "type": "docs",
-      "section": "📚 Documentation"
-    },
-    {
-      "type": "test",
-      "section": "🧪 Tests"
-    },
-    {
-      "type": "build",
-      "section": "🏗 Build"
-    },
-    {
-      "type": "ci",
-      "section": "🚀 CI"
-    },
-    {
-      "type": "revert",
-      "section": "⏪ Reverts"
-    },
-    {
-      "type": "chore",
-      "section": "📦 Maintenance and chores"
+      "filename": "README.md",
+      "updater": "quality/commit-and-tag-version/readme-version-updater.cjs"
     }
-  ]
+  ],
+  "types": [
+    {"type": "feat", "section": "✨ New Features"},
+    {"type": "fix", "section": "🐛 Bug Fixes"},
+    {"type": "perf", "section": "⚡ Performance Improvements"},
+    {"type": "refactor", "section": "♻️ Refactoring"},
+    {"type": "docs", "section": "📚 Documentation"},
+    {"type": "eco", "section": "🌳 Environmental Impact"},
+    {"type": "ci", "section": "👷 CI/CD"},
+    {"type": "chore", "section": "🔧 Maintenance"},
+    {"type": "quality", "section": "📊​ Quality tools"},
+    {"type": "test", "section": "📗​ PHPUnit tests"}
+  ],
+  "tagPrefix": ""
 }

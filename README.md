@@ -17,7 +17,7 @@ Symfony Validator 5.4, 6, 7 and 8 are supported. `spatial-types` supplies the sp
 ## Installation
 
 ```sh
-composer require longitude-one/spatial-validator
+composer require longitude-one/spatial-validator:1.0.0
 ```
 
 ## Explicit validation
@@ -137,8 +137,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
 ## Release tooling
 
 `npm run release -- --dry-run` previews release generation without changing files, commits or tags.
-`commit-and-tag-version` uses `.versionrc.json`, copied from `spatial-types`, for the `v` tag prefix
-and Conventional Commits changelog sections. See [CHANGELOG.md](CHANGELOG.md).
+`commit-and-tag-version` uses `.versionrc.json` for tags without a prefix, Conventional Commits
+changelog sections and installation version updates in this README. See [CHANGELOG.md](CHANGELOG.md).
 Actual releases require the maintainer's authorization.
 
 ## Input compatibility
