@@ -17,7 +17,7 @@ Symfony Validator 5.4, 6, 7 and 8 are supported. `spatial-types` supplies the sp
 ## Installation
 
 ```sh
-composer require longitude-one/spatial-validator:1.0.0
+composer require longitude-one/spatial-validator:^1.0.0
 ```
 
 ## Explicit validation
