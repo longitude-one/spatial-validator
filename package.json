@@ -2,7 +2,7 @@
   "name": "spatial-validator-quality",
   "private": true,
   "scripts": {
-    "lint:markdown": "markdownlint \"**/*.md\" --ignore \"**/vendor/**\" --ignore \"node_modules/**\"",
+    "lint:markdown": "markdownlint \"**/*.md\" --ignore \"**/vendor/**\" --ignore \"**/node_modules/**\" --ignore \"build/**\"",
     "release": "commit-and-tag-version"
   },
   "devDependencies": {

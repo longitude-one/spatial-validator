@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -363,8 +360,7 @@ final class PolyhedralSurfaceValidationTest extends TestCase
     #[DataProvider('invalidSurfaces')]
     public function testInvalidTopology(array $faces, string $code): void
     {
-        foreach (
-            [new Rules\PolyhedralSurface(), new Rules\ClosedPolyhedralSurface(), new Rules\Spatial()] as $constraint
+        foreach ([new Rules\PolyhedralSurface(), new Rules\ClosedPolyhedralSurface(), new Rules\Spatial()] as $constraint
         ) {
             $violations = Validation::createValidator()->validate(self::candidate($faces), $constraint);
             $codes = array_map(static fn ($violation) => $violation->getCode(), iterator_to_array($violations));

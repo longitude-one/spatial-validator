@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -24,7 +21,6 @@ use LongitudeOne\SpatialTypes\Value\Coordinates;
 use LongitudeOne\SpatialValidator\Internal\PointCoordinates;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -36,7 +32,7 @@ use Symfony\Component\Validator\Validation;
  *
  * @coversNothing
  */
-final class PointValidationTest extends TestCase
+final class PointValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{CoordinateDimensionEnum, SpatialModelEnum}>
@@ -173,18 +169,18 @@ final class PointValidationTest extends TestCase
             $class = $constraint->validatedBy();
             $validator = new $class();
             self::assertInstanceOf(ConstraintValidator::class, $validator);
-            $validator->validate(null, $constraint);
+            self::validateConstraint($validator, null, $constraint);
             self::assertCount(0, Validation::createValidator()->validate(null, $constraint));
 
             try {
-                $validator->validate(null, new Assert\NotNull());
+                self::validateConstraint($validator, null, new Assert\NotNull());
                 self::fail('Wrong constraint must throw.');
             } catch (UnexpectedTypeException $exception) {
                 self::assertStringContainsString($constraint::class, $exception->getMessage());
             }
 
             try {
-                $validator->validate('', $constraint);
+                self::validateConstraint($validator, '', $constraint);
                 self::fail('Strings must throw.');
             } catch (UnexpectedValueException $exception) {
                 self::assertSame(PointInterface::class, $exception->getExpectedType());

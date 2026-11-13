@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -24,7 +21,6 @@ use LongitudeOne\SpatialTypes\Types\Dimension2\Point;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use LongitudeOne\SpatialValidator\Validator\Constraints\Triangle;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -39,7 +35,7 @@ use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
  *
  * @coversNothing
  */
-final class SpecializedValidationTest extends TestCase
+final class SpecializedValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * Constraint.
@@ -50,7 +46,7 @@ final class SpecializedValidationTest extends TestCase
     {
         $class = 'LongitudeOne\SpatialValidator\Validator\Constraints\\'.$type->value;
         $constraint = new $class();
-        self::assertInstanceOf(Constraint::class, $constraint);
+        self::assertSame($type->value, substr($constraint::class, strrpos($constraint::class, '\\') + 1));
 
         return $constraint;
     }
@@ -158,15 +154,14 @@ final class SpecializedValidationTest extends TestCase
         $value = self::createStub($interface);
         $value->method('getType')->willReturn($type);
         $builder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $builder->expects(self::once())->method('addViolation');
+        $builder->expects($this->once())->method('addViolation');
         $context = $this->createMock(ExecutionContextInterface::class);
-        $context->expects(self::once())->method('buildViolation')
+        $context->expects($this->once())->method('buildViolation')
             ->with($type->value.' validation is not implemented yet.')->willReturn($builder)
         ;
-        $context->expects(self::never())->method('getValidator');
+        $context->expects($this->never())->method('getValidator');
         $validator = self::validator(self::constraint($type));
-        $validator->initialize($context);
-        $validator->validate($value, self::constraint($type));
+        self::validateConstraint($validator, $value, self::constraint($type), $context);
     }
 
     /**
@@ -242,8 +237,8 @@ final class SpecializedValidationTest extends TestCase
         $service = $this->createMock(ValidatorInterface::class);
         $contextual = $this->createMock(ContextualValidatorInterface::class);
         $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')
+        $context->expects($this->once())->method('getValidator')->willReturn($service);
+        $service->expects($this->once())->method('inContext')
             ->with(self::identicalTo($context))->willReturn($contextual)
         ;
         $rules = [
@@ -251,12 +246,11 @@ final class SpecializedValidationTest extends TestCase
             new SpatialAssert\FirstPointEqualsLastPoint(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\SimpleLineString(groups: ['direct'], payload: $constraint->payload),
         ];
-        $contextual->expects(self::once())->method('validate')
+        $contextual->expects($this->once())->method('validate')
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\RingValidator();
-        $validator->initialize($context);
-        $validator->validate($value, $constraint);
+        self::validateConstraint($validator, $value, $constraint, $context);
     }
 
     /**
@@ -302,7 +296,7 @@ final class SpecializedValidationTest extends TestCase
         self::assertSame($constraint, $violations->get(0)->getConstraint());
         self::assertSame($value, $violations->get(0)->getRoot());
         self::assertSame($value, $violations->get(0)->getInvalidValue());
-        self::assertInstanceOf(ConstraintValidator::class, self::validator($constraint));
+        self::assertSame($constraint->validatedBy(), self::validator($constraint)::class);
     }
 
     /**

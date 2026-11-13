@@ -66,16 +66,16 @@ avoid APIs available only in newer branches.
 | Command | Purpose |
 | --- | --- |
 | `composer install` | Install library and PHPUnit dependencies |
-| `composer install-tools` | Install the four isolated quality environments |
+| `composer update-tools` | Update the four isolated quality environments |
 | `npm install --ignore-scripts` | Install Markdown and release tools |
 | `composer test` | Run PHPUnit |
-| `composer coverage` | Run tests with PCOV reports under `build/` |
+| `composer coverage` | Run tests with PCOV reports under `build/coverage/` |
 | `composer coverage-check` | Enforce 100% production statement coverage |
 | `composer cs-fix` | Apply the configured formatting |
 | `composer quality` | Check style, PHPStan level 9, PHPMD, PHPCS and Markdown |
 | `composer check` | Validate Composer, audit dependencies, run coverage and quality |
 
-There is no `composer test-local` script. `composer quality` checks formatting without changing files.
+`composer quality` checks formatting without changing files.
 PHPMD uses the repository's `pdepend.yml` memory cache to avoid stale user-wide metrics.
 For PHP behavior changes, add meaningful tests and run tests, coverage checks and quality.
 Before submitting the implementation, run `composer check` and report any failed or unavailable checks.
@@ -99,3 +99,7 @@ Do not commit dependencies, lockfiles, caches or generated reports.
 Pull Requests must link the work item and explain resulting behavior, verification, API/compatibility impact
 and any remaining limitations. An independent Reviewer verifies the change before merge.
 Only merged work satisfying the shared Definition of Done may be marked Done.
+
+CI coverage uses `composer coverage-ci` and `phpunit.ci.xml` (Clover XML only).
+Local `composer coverage` reports are unchanged. See `CONTRIBUTING.md` for triggers,
+cache policy and the aggregate `CI` check.

@@ -11,7 +11,7 @@ Call `$validator->validate($value, new Spatial())` with Symfony Validator and
 
 ## Input and presence
 
-The [input compatibility contract](../README.md#input-compatibility) applies to generic,
+The [input compatibility contract](validation.md#input-compatibility) applies to generic,
 specialized and elementary spatial constraints: only PHP `null` is ignored.
 Every string is rejected, including `''`, whitespace-only strings, numeric strings and WKT.
 Direct calls raise Symfony `UnexpectedValueException`; the Symfony Validator service returns a type violation.
@@ -142,7 +142,7 @@ separately defines ST_3DIsSimple. The new API does not claim the XY-only semanti
 
 Non-empty Geography simplicity remains unavailable; valid EMPTY Geography is simple. Warnings use a cloned
 constraint and default warning payload; explicit payload is preserved. Other errors default to payload null.
-See the [usage and coverage](../README.md#linestring-validity-and-explicit-simplicity).
+See the [usage and coverage](validation.md#linestring-validity-and-explicit-simplicity).
 
 ## Linear-ring rules
 

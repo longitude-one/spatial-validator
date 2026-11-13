@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -129,8 +126,7 @@ final class SimpleCompoundCurveValidator extends ConstraintValidator
         if ($second === $first + 1 && $arcs[$first]['end'] === $arcs[$second]['start']) {
             $permitted[] = $arcs[$first]['end'];
         }
-        if (
-            0 === $first && $second === \count($arcs) - 1
+        if (0 === $first && $second === \count($arcs) - 1
             && $arcs[$first]['start'] === $arcs[$second]['end']
         ) {
             $permitted[] = $arcs[$first]['start'];

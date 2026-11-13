@@ -1,8 +1,21 @@
+includes:
+#    - vendor/phpstan/phpstan-phpunit/rules.neon
+     - phpstan-baseline.neon
 parameters:
-    level: 9
+    treatPhpDocTypesAsCertain: false
     paths:
+        - ../../quality
         - ../../lib
         - ../../tests
-    tmpDir: ../../build/phpstan
-    bootstrapFiles:
-        - ../../vendor/autoload.php
+    ignoreErrors:
+        # Symfony < 8.1 compatibility only; remove when the minimum version reaches 8.1.
+        -
+            identifier: method.deprecated
+            message: '#^Call to deprecated method initialize\(\) of interface Symfony\\Component\\Validator\\ConstraintValidatorInterface:#'
+            path: ../../tests/Functional/CompatibleConstraintValidatorTestCase.php
+            reportUnmatched: false
+        -
+            identifier: method.deprecated
+            message: '#^Call to deprecated method validate\(\) of interface Symfony\\Component\\Validator\\ConstraintValidatorInterface:#'
+            path: ../../tests/Functional/CompatibleConstraintValidatorTestCase.php
+            reportUnmatched: false

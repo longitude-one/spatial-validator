@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -41,8 +38,7 @@ final class PolyhedralCoplanar
                 foreach (PlanarRing::edges($projected) as [$start, $end]) {
                     foreach (PlanarRing::edges($otherProjected) as [$left, $right]) {
                         $axis = $start[0] !== $end[0] ? 0 : 1;
-                        if (
-                            2 === SegmentIntersections::kind($start, $end, $left, $right)
+                        if (2 === SegmentIntersections::kind($start, $end, $left, $right)
                             && 0 < (($end[$axis] <=> $start[$axis]) * $side)
                             * (($right[$axis] <=> $left[$axis]) * $otherSide)
                         ) {

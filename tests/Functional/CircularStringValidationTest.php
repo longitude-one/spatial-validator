@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -23,7 +20,6 @@ use LongitudeOne\SpatialTypes\Interfaces\CircularStringInterface;
 use LongitudeOne\SpatialTypes\Reference\SpatialReference;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -38,7 +34,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @coversNothing
  */
-final class CircularStringValidationTest extends TestCase
+final class CircularStringValidationTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{list<list<float|int|null>>, bool}>
@@ -154,19 +150,18 @@ final class CircularStringValidationTest extends TestCase
         $service = $this->createMock(ValidatorInterface::class);
         $contextual = $this->createMock(ContextualValidatorInterface::class);
         $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')
+        $context->expects($this->once())->method('getValidator')->willReturn($service);
+        $service->expects($this->once())->method('inContext')
             ->with(self::identicalTo($context))->willReturn($contextual)
         ;
         $rules = [new SpatialAssert\Components(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\CircularPointCount(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\CircularArcPoints(groups: ['direct'], payload: $constraint->payload)];
-        $contextual->expects(self::once())->method('validate')
+        $contextual->expects($this->once())->method('validate')
             ->with(self::identicalTo($curve), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\CircularStringValidator();
-        $validator->initialize($context);
-        $validator->validate($curve, $constraint);
+        self::validateConstraint($validator, $curve, $constraint, $context);
     }
 
     #[DataProvider('constraints')]
@@ -179,7 +174,7 @@ final class CircularStringValidationTest extends TestCase
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedValueException::class);
-        $validator->validate('', $constraint);
+        self::validateConstraint($validator, '', $constraint);
     }
 
     #[DataProvider('constraints')]
@@ -246,6 +241,6 @@ final class CircularStringValidationTest extends TestCase
     {
         $validator = SpecializedValidationTest::validator($constraint);
         $this->expectException(UnexpectedTypeException::class);
-        $validator->validate(null, new Assert\NotNull());
+        self::validateConstraint($validator, null, new Assert\NotNull());
     }
 }

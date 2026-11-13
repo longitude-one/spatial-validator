@@ -1,15 +1,12 @@
 <?php
 
-/**
- * This file is part of the spatial project.
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
+ * See LICENSE for copyright and license information.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -27,7 +24,6 @@ use LongitudeOne\SpatialValidator\Internal\RobustPredicates;
 use LongitudeOne\SpatialValidator\Internal\SegmentIntersections;
 use LongitudeOne\SpatialValidator\Validator\Constraints as SpatialAssert;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ContextualValidatorInterface;
@@ -38,7 +34,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @coversNothing
  */
-final class LineStringSimplicityTest extends TestCase
+final class LineStringSimplicityTest extends CompatibleConstraintValidatorTestCase
 {
     /**
      * @return iterable<string, array{LineStringInterface}>
@@ -172,8 +168,8 @@ final class LineStringSimplicityTest extends TestCase
         $service = $this->createMock(ValidatorInterface::class);
         $contextual = $this->createMock(ContextualValidatorInterface::class);
         $context->method('getGroup')->willReturn('direct');
-        $context->expects(self::once())->method('getValidator')->willReturn($service);
-        $service->expects(self::once())->method('inContext')->with(self::identicalTo($context))
+        $context->expects($this->once())->method('getValidator')->willReturn($service);
+        $service->expects($this->once())->method('inContext')->with(self::identicalTo($context))
             ->willReturn($contextual)
         ;
         $rules = [
@@ -182,12 +178,11 @@ final class LineStringSimplicityTest extends TestCase
             new SpatialAssert\NonEmptyPoints(groups: ['direct'], payload: $constraint->payload),
             new SpatialAssert\NoConsecutiveDuplicatePoints(groups: ['direct'], payload: $constraint->payload),
         ];
-        $contextual->expects(self::once())->method('validate')
+        $contextual->expects($this->once())->method('validate')
             ->with(self::identicalTo($value), $rules, 'direct')->willReturnSelf()
         ;
         $validator = new SpatialAssert\LineStringValidator();
-        $validator->initialize($context);
-        $validator->validate($value, $constraint);
+        self::validateConstraint($validator, $value, $constraint, $context);
     }
 
     /**
