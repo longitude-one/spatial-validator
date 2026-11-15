@@ -40,7 +40,7 @@ fix(parser): handle empty input
 docs: clarify installation
 ```
 
-Use the commit types configured in [.versionrc.json](.versionrc.json).
+Use the commit types configured in [.versionrc.json](quality/commit-and-tag-version/.versionrc.json).
 
 ## Submitting a pull request
 
@@ -118,6 +118,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
 ## Release tooling
 
 `npm run release -- --dry-run` previews release generation without changing files, commits or tags.
-`commit-and-tag-version` uses `.versionrc.json` for tags without a prefix, Conventional Commits
+`commit-and-tag-version` uses `quality/commit-and-tag-version/.versionrc.json` for tags without a prefix, Conventional Commits
 changelog sections and installation version updates in [README.md](README.md). See [CHANGELOG.md](CHANGELOG.md).
 Actual releases require the maintainer's authorization.
