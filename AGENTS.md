@@ -94,7 +94,7 @@ Use readable fixtures and focused assertions; data providers are appropriate for
 
 ## Delivery
 
-Use Conventional Commits with types recognized by `.versionrc.json`.
+Use Conventional Commits with types recognized by `quality/commit-and-tag-version/.versionrc.json`.
 Do not commit dependencies, lockfiles, caches or generated reports.
 Pull Requests must link the work item and explain resulting behavior, verification, API/compatibility impact
 and any remaining limitations. An independent Reviewer verifies the change before merge.
